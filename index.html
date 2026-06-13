@@ -1,0 +1,1939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Home Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "firebase/app":       "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+      "firebase/analytics": "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js",
+      "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
+    }
+  }
+  </script>
+  <style>
+  /* ═══ Variables & Reset ══════════════════════════════ */
+  :root {
+    --primary:#2D6A4F; --primary-light:#52B788; --primary-dark:#1B4332;
+    --accent:#D4A017; --danger:#E63946; --warning:#F4A261; --info:#3B82F6;
+    --bg:#F0EDE8; --bg-card:#FFF; --bg-surface:#F8F5F0;
+    --text:#1B1F23; --text-muted:#6B7280; --text-light:#9CA3AF;
+    --border:#E5E0D8; --border-focus:#52B788;
+    --shadow-sm:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+    --shadow:0 4px 16px rgba(0,0,0,.10),0 2px 4px rgba(0,0,0,.06);
+    --shadow-lg:0 10px 40px rgba(0,0,0,.15),0 4px 8px rgba(0,0,0,.08);
+    --radius-sm:8px; --radius:16px; --radius-lg:24px;
+    --ease:cubic-bezier(0.4,0,0.2,1); --T:all .25s var(--ease);
+    --hh:60px;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{font-size:16px;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);
+    min-height:100vh;max-width:480px;margin:0 auto;overflow-x:hidden}
+  @media(min-width:481px){body{box-shadow:0 0 60px rgba(0,0,0,.12)}}
+
+  /* ═══ Header ══════════════════════════════════════════ */
+  #app-header{position:sticky;top:0;z-index:100;height:var(--hh);
+    background:var(--primary-dark);display:flex;align-items:center;
+    padding:0 16px;gap:12px;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+  #btn-back{display:none;background:rgba(255,255,255,.15);border:none;color:#fff;
+    width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1.15rem;
+    align-items:center;justify-content:center;transition:var(--T);flex-shrink:0}
+  #btn-back.visible{display:flex} #btn-back:active{transform:scale(.9)}
+  #header-title{font-family:'Poppins',sans-serif;font-size:1.05rem;font-weight:600;color:#fff;flex:1}
+
+  /* ═══ Payment Alert ═══════════════════════════════════ */
+  #payment-alert{display:none;background:linear-gradient(135deg,#c62828,var(--danger));
+    color:#fff;padding:11px 16px;align-items:center;gap:10px;
+    position:sticky;top:var(--hh);z-index:90;box-shadow:0 2px 8px rgba(230,57,70,.4)}
+  #payment-alert.visible{display:flex}
+  .alert-icon{font-size:1.2rem;animation:pulse 1.2s ease-in-out infinite;flex-shrink:0}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
+  #payment-alert p{flex:1;font-size:.83rem;font-weight:500;line-height:1.4}
+  .alert-btn{background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);
+    color:#fff;padding:5px 13px;border-radius:20px;font-size:.78rem;font-weight:600;
+    cursor:pointer;white-space:nowrap;transition:var(--T)}
+
+  /* ═══ Views ═══════════════════════════════════════════ */
+  .view{display:none;padding:20px 16px 100px;min-height:calc(100vh - var(--hh));
+    animation:viewIn .28s var(--ease)}
+  .view.active{display:block}
+  @keyframes viewIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
+  #view-dashboard{padding:22px 16px 100px}
+
+  /* ═══ Dashboard ════════════════════════════════════════ */
+  .dash-greeting{margin-bottom:22px}
+  .dash-greeting h2{font-family:'Poppins',sans-serif;font-size:1.45rem;font-weight:700;
+    color:var(--primary-dark);line-height:1.3}
+  .dash-greeting p{font-size:.87rem;color:var(--text-muted);margin-top:3px}
+  .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .dash-card{background:var(--bg-card);border-radius:var(--radius);padding:20px 16px 16px;
+    cursor:pointer;box-shadow:var(--shadow-sm);border:1.5px solid var(--border);
+    transition:var(--T);position:relative;overflow:hidden;min-height:120px;
+    display:flex;flex-direction:column;justify-content:space-between;user-select:none}
+  .dash-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;
+    background:var(--ca,var(--primary))}
+  .dash-card.wide{grid-column:1/-1;min-height:76px;flex-direction:row;align-items:center;gap:14px}
+  .dash-card.wide .card-emoji{font-size:1.7rem;margin-bottom:0;flex-shrink:0}
+  .dash-card:active{transform:scale(.97);box-shadow:var(--shadow)}
+  .card-emoji{font-size:1.9rem;line-height:1;margin-bottom:8px}
+  .card-label{font-size:.88rem;font-weight:600}
+  .card-sub{font-size:.73rem;color:var(--text-muted);margin-top:2px}
+  .card-arrow{position:absolute;bottom:13px;right:13px;color:var(--text-light);font-size:.95rem}
+  .dash-card.wide .card-arrow{position:static;margin-left:auto}
+  .dash-card[data-view="chores"]{--ca:#52B788}
+  .dash-card[data-view="expenses"]{--ca:#D4A017}
+  .dash-card[data-view="vault"]{--ca:#6C63FF}
+  .dash-card[data-view="shopping"]{--ca:#E63946}
+  .dash-card[data-view="calendar"]{--ca:#3B82F6}
+
+  /* ═══ Submenu ═══════════════════════════════════════════ */
+  .submenu-list{display:flex;flex-direction:column;gap:10px}
+  .submenu-card{background:var(--bg-card);border-radius:var(--radius);padding:16px 18px;
+    display:flex;align-items:center;gap:14px;cursor:pointer;border:1.5px solid var(--border);
+    box-shadow:var(--shadow-sm);transition:var(--T);user-select:none}
+  .submenu-card:active{transform:scale(.98);background:var(--bg-surface)}
+  .icon-wrap{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;
+    justify-content:center;font-size:1.4rem;background:var(--icon-bg,#f0f0f0);flex-shrink:0}
+  .item-text{flex:1}
+  .item-title{font-size:.93rem;font-weight:600}
+  .item-desc{font-size:.76rem;color:var(--text-muted);margin-top:2px}
+  .item-arrow{color:var(--text-light)}
+
+  /* ═══ Section title ══════════════════════════════════════ */
+  .section-title{font-family:'Poppins',sans-serif;font-size:.92rem;font-weight:600;
+    color:var(--primary-dark);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+  /* ═══ Tabs ════════════════════════════════════════════════ */
+  .tab-bar{display:flex;background:var(--bg-surface);border-radius:var(--radius-sm);
+    padding:4px;margin-bottom:18px;border:1.5px solid var(--border)}
+  .tab-btn{flex:1;padding:9px 6px;border:none;background:transparent;border-radius:6px;
+    font-size:.8rem;font-weight:500;color:var(--text-muted);cursor:pointer;transition:var(--T);
+    font-family:inherit}
+  .tab-btn.active{background:var(--bg-card);color:var(--primary);font-weight:600;box-shadow:var(--shadow-sm)}
+  .tab-panel{display:none}
+  .tab-panel.active{display:block}
+
+  /* ═══ Checklist ══════════════════════════════════════════ */
+  .manage-tasks-bar{display:flex;justify-content:flex-end;margin-bottom:12px}
+  .manage-tasks-btn{display:flex;align-items:center;gap:5px;background:var(--bg-card);
+    border:1.5px solid var(--border);color:var(--text-muted);padding:7px 13px;
+    border-radius:20px;font-size:.78rem;font-weight:600;cursor:pointer;
+    transition:var(--T);font-family:inherit}
+  .manage-tasks-btn:active{background:var(--bg-surface);transform:scale(.97)}
+  .checklist-meta{background:var(--primary-dark);color:#fff;
+    border-radius:var(--radius-sm) var(--radius-sm) 0 0;
+    padding:10px 14px;font-size:.8rem;display:flex;justify-content:space-between;align-items:center}
+  .checklist-meta strong{font-weight:600}
+  .progress-wrap{margin-bottom:14px}
+  .progress-label{font-size:.76rem;color:var(--text-muted);text-align:right;margin-bottom:5px}
+  .progress-track{background:var(--border);border-radius:20px;height:6px;overflow:hidden}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-light));
+    border-radius:20px;transition:width .4s var(--ease)}
+  .checklist-table{width:100%;border-collapse:collapse;background:var(--bg-card);
+    border-radius:0 0 var(--radius-sm) var(--radius-sm);overflow:hidden;
+    box-shadow:var(--shadow-sm);border:1.5px solid var(--border);border-top:none}
+  .checklist-table thead th{background:var(--bg-surface);padding:9px 12px;font-size:.74rem;
+    font-weight:600;color:var(--text-muted);text-align:left;text-transform:uppercase;letter-spacing:.5px}
+  .checklist-table tbody tr{border-bottom:1px solid var(--border);transition:var(--T)}
+  .checklist-table tbody tr:last-child{border-bottom:none}
+  .checklist-table tbody tr.done{background:rgba(82,183,136,.07)}
+  .checklist-table tbody td{padding:11px 12px;font-size:.86rem}
+  .checklist-table .task-name{font-weight:500}
+  .checklist-table .task-room{color:var(--text-muted);font-size:.76rem}
+  .checklist-table tr.done .task-name{color:var(--text-muted);text-decoration:line-through}
+  .task-check{width:21px;height:21px;border-radius:6px;border:2px solid var(--border);
+    appearance:none;-webkit-appearance:none;cursor:pointer;transition:var(--T);
+    position:relative;display:block}
+  .task-check:checked{background:var(--primary);border-color:var(--primary)}
+  .task-check:checked::after{content:'✓';position:absolute;color:#fff;font-size:12px;
+    font-weight:700;top:50%;left:50%;transform:translate(-50%,-50%)}
+
+  /* ═══ Manage tasks modal list ════════════════════════════ */
+  .manage-task-item{display:flex;align-items:center;gap:9px;padding:11px 0;
+    border-bottom:1px solid var(--border)}
+  .manage-task-item:last-child{border-bottom:none}
+  .freq-badge{font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:20px;
+    flex-shrink:0;white-space:nowrap}
+  .freq-badge.freq-w{background:rgba(59,130,246,.12);color:var(--info)}
+  .freq-badge.freq-m{background:rgba(212,160,23,.12);color:var(--accent)}
+  .manage-task-info{flex:1;min-width:0}
+  .manage-task-name{font-size:.84rem;font-weight:500;display:block;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .manage-task-area{font-size:.73rem;color:var(--text-muted);display:block;margin-top:1px}
+
+  /* ═══ Gardening ══════════════════════════════════════════ */
+  .water-table-wrap{border-radius:var(--radius-sm);overflow:hidden;
+    box-shadow:var(--shadow-sm);border:1.5px solid var(--border);margin-bottom:22px}
+  .water-table{width:100%;border-collapse:collapse;background:var(--bg-card)}
+  .water-table thead th{background:var(--primary);color:#fff;padding:10px 12px;
+    font-size:.78rem;font-weight:600;text-align:left}
+  .water-table tbody tr{border-bottom:1px solid var(--border)}
+  .water-table tbody tr:last-child{border-bottom:none}
+  .water-table tbody td{padding:11px 12px;font-size:.85rem;vertical-align:middle}
+  .plant-name{font-weight:500}
+  .last-watered{color:var(--text-muted);font-size:.76rem}
+  .btn-water{background:linear-gradient(135deg,var(--info),#1D4ED8);color:#fff;border:none;
+    padding:6px 13px;border-radius:20px;font-size:.78rem;font-weight:600;
+    cursor:pointer;transition:var(--T);font-family:inherit}
+  .btn-water:active{transform:scale(.95)}
+  .btn-water:disabled{opacity:.6;cursor:default}
+  .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
+  .dot-ok{background:var(--primary-light)}
+  .dot-warn{background:var(--warning)}
+  .dot-late{background:var(--danger)}
+  .away-card{background:var(--bg-card);border-radius:var(--radius);padding:18px;
+    border:1.5px solid var(--border);box-shadow:var(--shadow-sm)}
+  .away-card h3{font-size:.88rem;font-weight:600;color:var(--primary-dark);margin-bottom:10px}
+  .away-card p,.away-card li{font-size:.83rem;color:var(--text-muted);line-height:1.65}
+  .away-card ul{padding-left:17px}
+  .away-card li{margin-bottom:4px}
+
+  /* ═══ Plant add bar ══════════════════════════════════════ */
+  .plant-add-bar{display:flex;gap:10px;align-items:center;margin-bottom:20px}
+  .plant-add-bar .name-input{flex:1;padding:11px 13px;border:1.5px solid var(--border);
+    border-radius:var(--radius-sm);font-size:.88rem;background:var(--bg-card);
+    color:var(--text);font-family:inherit;transition:var(--T)}
+  .plant-add-bar .name-input:focus{outline:none;border-color:var(--border-focus);
+    box-shadow:0 0 0 3px rgba(82,183,136,.15)}
+  .plant-add-bar .name-input.err{border-color:var(--danger)}
+  .plant-add-bar .days-input{width:68px;padding:11px 10px;border:1.5px solid var(--border);
+    border-radius:var(--radius-sm);font-size:.85rem;background:var(--bg-card);
+    color:var(--text);font-family:inherit;text-align:center;transition:var(--T)}
+  .plant-add-bar .days-input:focus{outline:none;border-color:var(--border-focus);
+    box-shadow:0 0 0 3px rgba(82,183,136,.15)}
+  .btn-add-plant{width:46px;height:46px;background:var(--primary);color:#fff;border:none;
+    border-radius:var(--radius-sm);font-size:1.45rem;cursor:pointer;flex-shrink:0;
+    transition:var(--T);display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .btn-add-plant:active{transform:scale(.93)}
+
+  /* ═══ Forms ══════════════════════════════════════════════ */
+  .form-card{background:var(--bg-card);border-radius:var(--radius);padding:18px;
+    box-shadow:var(--shadow-sm);border:1.5px solid var(--border)}
+  .form-group{margin-bottom:13px}
+  .form-group label{display:block;font-size:.77rem;font-weight:600;color:var(--text-muted);
+    text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+  .form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 13px;
+    border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.88rem;
+    background:var(--bg-surface);color:var(--text);transition:var(--T);font-family:inherit;
+    appearance:none;-webkit-appearance:none}
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+    outline:none;border-color:var(--border-focus);background:#fff;
+    box-shadow:0 0 0 3px rgba(82,183,136,.15)}
+  .form-group input.err{border-color:var(--danger);box-shadow:0 0 0 3px rgba(230,57,70,.1)}
+  .err-msg{font-size:.74rem;color:var(--danger);margin-top:4px;display:none}
+  .err-msg.show{display:block}
+  .bills-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btn-send{width:100%;padding:13px;
+    background:linear-gradient(135deg,var(--primary),var(--primary-light));
+    color:#fff;border:none;border-radius:var(--radius);font-size:.93rem;font-weight:600;
+    cursor:pointer;box-shadow:var(--shadow);transition:var(--T);
+    display:flex;align-items:center;justify-content:center;gap:7px;font-family:inherit}
+  .btn-send:active{transform:scale(.99)}
+  .btn-send:disabled{opacity:.6;cursor:default}
+
+  /* ═══ Payments / Bills ════════════════════════════════════ */
+  .confirm-card{background:var(--bg-card);border-radius:var(--radius);padding:18px;
+    border:1.5px solid var(--border)}
+  .confirm-card p{font-size:.83rem;color:var(--text-muted);line-height:1.6;margin-bottom:10px}
+  .last-conf{font-size:.78rem;color:var(--text-muted);margin-bottom:14px}
+  .last-conf strong{color:var(--text)}
+  .btn-confirm{width:100%;padding:13px;
+    background:linear-gradient(135deg,var(--primary),var(--primary-light));
+    color:#fff;border:none;border-radius:var(--radius);font-size:.93rem;font-weight:600;
+    cursor:pointer;box-shadow:var(--shadow);transition:var(--T);
+    display:flex;align-items:center;justify-content:center;gap:7px;font-family:inherit}
+  .btn-confirm:active{transform:scale(.99)}
+  .bill-card{background:var(--bg-card);border-radius:var(--radius-sm);
+    border:1.5px solid var(--border);margin-bottom:8px;overflow:hidden}
+  .bill-card-header{display:flex;align-items:center;padding:11px 14px;gap:10px;
+    background:var(--bg-surface);border-bottom:1px solid var(--border)}
+  .bill-month{flex:1;font-size:.88rem;font-weight:600}
+  .bill-total{font-weight:700;color:var(--primary-dark);font-size:.9rem}
+  .bill-details{display:grid;grid-template-columns:repeat(4,1fr);padding:9px 14px;gap:4px}
+  .bill-details span{font-size:.74rem;color:var(--text-muted);text-align:center}
+
+  /* ═══ Trash button ════════════════════════════════════════ */
+  .btn-trash{background:none;border:none;cursor:pointer;font-size:1rem;padding:4px 6px;
+    border-radius:6px;transition:var(--T);color:var(--text-muted);line-height:1;flex-shrink:0}
+  .btn-trash:hover{background:rgba(230,57,70,.1);color:var(--danger)}
+  .btn-trash:active{transform:scale(.9)}
+
+  /* ═══ Maintenance Log ════════════════════════════════════ */
+  .maint-item{background:var(--bg-card);border-radius:var(--radius-sm);
+    border:1.5px solid var(--border);padding:14px;margin-bottom:10px}
+  .maint-item-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+  .maint-title-text{flex:1;font-size:.88rem;font-weight:600;line-height:1.4;color:var(--text)}
+  .maint-meta{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  .maint-date-label{font-size:.74rem;color:var(--text-muted)}
+  .maint-status-pill{font-size:.71rem;font-weight:700;padding:3px 9px;border-radius:20px}
+  .pill-pending{background:rgba(244,162,97,.15);color:#c07832}
+  .pill-in-progress{background:rgba(59,130,246,.12);color:var(--info)}
+  .pill-resolved{background:rgba(82,183,136,.15);color:var(--primary)}
+  .maint-status-sel{width:100%;padding:9px 11px;border:1.5px solid var(--border);
+    border-radius:var(--radius-sm);font-size:.83rem;background:var(--bg-surface);
+    font-family:inherit;color:var(--text);appearance:none;-webkit-appearance:none;
+    cursor:pointer;transition:var(--T)}
+  .maint-status-sel:focus{outline:none;border-color:var(--border-focus);background:#fff}
+
+  /* ═══ Current Status ══════════════════════════════════════ */
+  .stat-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+  .stat-card{background:var(--bg-card);border-radius:var(--radius-sm);padding:14px;
+    border:1.5px solid var(--border);box-shadow:var(--shadow-sm)}
+  .stat-card.full{grid-column:1/-1}
+  .stat-label{font-size:.72rem;font-weight:600;text-transform:uppercase;
+    letter-spacing:.5px;color:var(--text-muted)}
+  .stat-value{font-family:'Poppins',sans-serif;font-size:1.4rem;font-weight:700;
+    color:var(--primary-dark);margin-top:3px}
+  .stat-value.accent{color:var(--accent)}
+  .live-table-wrap{background:var(--bg-card);border-radius:var(--radius-sm);overflow:hidden;
+    box-shadow:var(--shadow-sm);border:1.5px solid var(--border)}
+  .live-table{width:100%;border-collapse:collapse}
+  .live-table thead th{background:var(--bg-surface);padding:9px 13px;font-size:.74rem;
+    font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);
+    text-align:left}
+  .live-table tbody tr{border-bottom:1px solid var(--border)}
+  .live-table tbody tr:last-child{border-bottom:none}
+  .live-table tbody td{padding:10px 13px;font-size:.84rem;vertical-align:middle}
+  .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;
+    font-size:.72rem;font-weight:600}
+  .badge-grocery{background:rgba(82,183,136,.15);color:var(--primary)}
+  .badge-upgrade{background:rgba(108,99,255,.15);color:#6C63FF}
+
+  /* ═══ Monthly Report ══════════════════════════════════════ */
+  .report-hero{background:linear-gradient(135deg,var(--primary-dark),var(--primary));
+    border-radius:var(--radius);padding:20px;color:#fff;margin-bottom:18px;box-shadow:var(--shadow)}
+  .report-hero h3{font-family:'Poppins',sans-serif;font-size:.98rem;font-weight:700;margin-bottom:3px}
+  .report-hero p{font-size:.8rem;opacity:.8}
+  .report-total{font-family:'Poppins',sans-serif;font-size:2rem;font-weight:700;margin-top:8px}
+  .chart-card{background:var(--bg-card);border-radius:var(--radius);padding:16px;
+    margin-bottom:14px;box-shadow:var(--shadow-sm);border:1.5px solid var(--border)}
+  .chart-card h4{font-size:.75rem;font-weight:600;color:var(--text-muted);
+    text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+  #expense-pie{max-height:210px}
+  .legend{display:flex;flex-direction:column;gap:7px;margin-top:12px}
+  .legend-row{display:flex;align-items:center;gap:9px;font-size:.83rem}
+  .legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .legend-label{flex:1}
+  .legend-val{font-weight:600}
+  .report-detail{width:100%;border-collapse:collapse}
+  .report-detail tr{border-bottom:1px solid var(--border)}
+  .report-detail tr:last-child{border-bottom:none}
+  .report-detail td{padding:8px 6px;font-size:.83rem}
+  .report-detail td:last-child{text-align:right;font-weight:500}
+  .report-detail tfoot tr:last-child{border-top:2px solid var(--border)!important}
+  .report-detail tfoot td{font-weight:700;font-size:.88rem}
+  .spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--primary);
+    border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ═══ Vault — Drive Card ══════════════════════════════════ */
+  #view-vault{display:none;align-items:center;justify-content:center;
+    padding:20px 24px 100px;min-height:calc(100vh - var(--hh))}
+  #view-vault.active{display:flex;flex-direction:column}
+  .drive-card{background:var(--bg-card);border-radius:var(--radius-lg);padding:38px 28px 32px;
+    text-align:center;box-shadow:var(--shadow-lg);border:1.5px solid var(--border);
+    width:100%;max-width:340px;position:relative;overflow:hidden;margin:auto}
+  .drive-card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;
+    background:linear-gradient(90deg,#4285F4 0%,#34A853 33%,#FBBC05 66%,#EA4335 100%)}
+  .drive-card-glyph{font-size:4rem;line-height:1;margin-bottom:18px;
+    filter:drop-shadow(0 4px 8px rgba(0,0,0,.12))}
+  .drive-card-title{font-family:'Poppins',sans-serif;font-size:1.18rem;font-weight:700;
+    color:var(--text);margin-bottom:8px;direction:rtl;line-height:1.35}
+  .drive-card-desc{font-size:.85rem;color:var(--text-muted);line-height:1.65;
+    margin-bottom:26px;direction:rtl}
+  .drive-open-btn{display:flex;align-items:center;justify-content:center;gap:10px;
+    background:linear-gradient(135deg,#1a73e8,#4285F4);color:#fff;text-decoration:none;
+    padding:15px 24px;border-radius:var(--radius);font-size:.96rem;font-weight:700;
+    box-shadow:0 4px 18px rgba(66,133,244,.38);transition:var(--T);direction:rtl;letter-spacing:.2px}
+  .drive-open-btn:active{transform:scale(.98);opacity:.92}
+  .drive-btn-icon{font-size:1.25rem;flex-shrink:0}
+  .drive-card-note{font-size:.73rem;color:var(--text-light);margin-top:14px;
+    display:flex;align-items:center;justify-content:center;gap:5px}
+
+  /* ═══ Shopping ════════════════════════════════════════════ */
+  .list-wrap{background:var(--bg-card);border-radius:var(--radius);overflow:hidden;
+    border:1.5px solid var(--border);box-shadow:var(--shadow-sm);margin-bottom:14px}
+  .list-header{padding:11px 15px;background:var(--bg-surface);display:flex;
+    justify-content:space-between;align-items:center}
+  .list-header h4{font-size:.85rem;font-weight:600;color:var(--text-muted)}
+  .btn-add{background:var(--primary);color:#fff;border:none;padding:5px 11px;
+    border-radius:20px;font-size:.76rem;font-weight:600;cursor:pointer;font-family:inherit}
+  .items-list{list-style:none}
+  .list-empty{padding:16px;text-align:center;font-size:.83rem;color:var(--text-muted)}
+  .shop-item{display:flex;align-items:center;padding:11px 15px;gap:11px;
+    border-bottom:1px solid var(--border)}
+  .shop-item:last-child{border-bottom:none}
+  .item-check{width:21px;height:21px;border-radius:6px;border:2px solid var(--border);
+    appearance:none;-webkit-appearance:none;cursor:pointer;transition:var(--T);
+    position:relative;flex-shrink:0}
+  .item-check:checked{background:var(--primary);border-color:var(--primary)}
+  .item-check:checked::after{content:'✓';position:absolute;color:#fff;font-size:12px;
+    font-weight:700;top:50%;left:50%;transform:translate(-50%,-50%)}
+  .item-label{flex:1;font-size:.86rem}
+  .shop-item.checked .item-label{text-decoration:line-through;color:var(--text-muted)}
+  .item-del{background:none;border:none;color:var(--text-light);cursor:pointer;font-size:.95rem;
+    padding:3px;transition:var(--T)}
+  .item-del:hover{color:var(--danger)}
+  .pantry-tag{font-size:.7rem;background:rgba(212,160,23,.15);color:var(--accent);
+    padding:2px 7px;border-radius:10px;font-weight:600;flex-shrink:0}
+
+  /* ═══ History ═════════════════════════════════════════════ */
+  .history-item{display:flex;align-items:center;gap:12px;padding:12px 14px;
+    background:var(--bg-card);border-radius:var(--radius-sm);
+    border:1.5px solid var(--border);margin-bottom:8px}
+  .history-item-left{flex:1}
+  .history-date{font-size:.86rem;font-weight:500}
+  .history-sub{font-size:.74rem;color:var(--text-muted);margin-top:2px}
+  .history-amount{font-weight:700;color:var(--primary-dark);font-size:.9rem;
+    margin-right:4px;white-space:nowrap}
+
+  /* ═══ Pantry ══════════════════════════════════════════════ */
+  .pantry-add-bar{display:flex;gap:10px;align-items:center;margin-bottom:20px}
+  .pantry-add-bar input{flex:1;padding:11px 13px;border:1.5px solid var(--border);
+    border-radius:var(--radius-sm);font-size:.88rem;background:var(--bg-card);
+    color:var(--text);font-family:inherit;transition:var(--T)}
+  .pantry-add-bar input:focus{outline:none;border-color:var(--border-focus);
+    box-shadow:0 0 0 3px rgba(82,183,136,.15)}
+  .pantry-add-bar input.err{border-color:var(--danger)}
+  .btn-add-staple{width:46px;height:46px;background:var(--primary);color:#fff;border:none;
+    border-radius:var(--radius-sm);font-size:1.45rem;cursor:pointer;flex-shrink:0;
+    transition:var(--T);display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .btn-add-staple:active{transform:scale(.93)}
+  .pantry-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .staple-wrap{position:relative}
+  .staple-btn{width:100%;padding:18px 12px 14px;border-radius:var(--radius);
+    border:2px solid transparent;cursor:pointer;transition:var(--T);
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    text-align:center;font-family:inherit;background:var(--bg-card)}
+  .staple-btn.stock{border-color:var(--primary-light);background:rgba(82,183,136,.08)}
+  .staple-btn.low{border-color:var(--danger);background:rgba(230,57,70,.06)}
+  .staple-btn:active{transform:scale(.96)}
+  .staple-name{font-size:.85rem;font-weight:600;color:var(--text);
+    word-break:break-word;line-height:1.3}
+  .staple-status-label{font-size:.74rem;font-weight:700}
+  .staple-btn.stock .staple-status-label{color:var(--primary)}
+  .staple-btn.low  .staple-status-label{color:var(--danger)}
+  .staple-del{position:absolute;top:6px;right:6px;width:20px;height:20px;
+    background:rgba(0,0,0,.1);border:none;border-radius:50%;font-size:.66rem;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    color:var(--text-muted);transition:var(--T);z-index:1;font-family:inherit}
+  .staple-del:active{background:rgba(230,57,70,.25);color:var(--danger)}
+  .pantry-empty{grid-column:1/-1;text-align:center;padding:36px 16px;
+    color:var(--text-muted);font-size:.85rem}
+
+  /* ═══ Calendar ════════════════════════════════════════════ */
+  .calendar-shell{background:var(--bg-card);border-radius:var(--radius);
+    overflow:hidden;border:1.5px solid var(--border);box-shadow:var(--shadow-sm)}
+  .calendar-shell iframe{display:block;width:100%;min-height:520px;border:none}
+  .calendar-note{font-size:.73rem;color:var(--text-muted);text-align:center;margin-top:10px}
+
+  /* ═══ Modal ═══════════════════════════════════════════════ */
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
+    z-index:200;align-items:flex-end}
+  .modal-bg.open{display:flex;animation:fadeIn .2s var(--ease)}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modal-sheet{width:100%;background:var(--bg-card);
+    border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+    padding:22px 20px 44px;animation:slideUp .3s var(--ease);max-height:82vh;overflow-y:auto}
+  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .modal-handle{width:38px;height:4px;background:var(--border);
+    border-radius:2px;margin:0 auto 18px}
+  .modal-title{font-family:'Poppins',sans-serif;font-size:1.05rem;font-weight:700;margin-bottom:16px}
+
+  /* ═══ Toast ═══════════════════════════════════════════════ */
+  #toast{position:fixed;bottom:80px;left:50%;
+    transform:translateX(-50%) translateY(16px);
+    background:#1B1F23;color:#fff;padding:11px 18px;border-radius:24px;
+    font-size:.83rem;font-weight:500;opacity:0;pointer-events:none;
+    transition:opacity .3s,transform .3s;z-index:999;white-space:nowrap;
+    box-shadow:var(--shadow-lg);max-width:92vw}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.success{background:var(--primary-dark)}
+  #toast.error{background:var(--danger)}
+
+  /* ═══ Empty state ═════════════════════════════════════════ */
+  .empty{text-align:center;padding:36px 16px;color:var(--text-muted);font-size:.85rem}
+  .empty-icon{font-size:2.6rem;margin-bottom:10px;opacity:.45}
+  </style>
+</head>
+<body>
+
+<!-- ═════════════════ HEADER ════════════════════════════ -->
+<header id="app-header">
+  <button id="btn-back" aria-label="Go back">&#8592;</button>
+  <span id="header-title">🏠 Home Manager</span>
+</header>
+
+<!-- PAYMENT ALERT -->
+<div id="payment-alert" role="alert">
+  <span class="alert-icon">🔔</span>
+  <p>Monthly bills are due! Please pay and confirm.</p>
+  <button class="alert-btn" id="alert-view-btn">View →</button>
+</div>
+
+<!-- ═════════════════ DASHBOARD ═════════════════════════ -->
+<main id="view-dashboard" class="view active">
+  <div class="dash-greeting">
+    <h2 id="greeting-text">Good morning! 👋</h2>
+    <p id="greeting-date">—</p>
+  </div>
+  <div class="dash-grid">
+    <div class="dash-card" data-view="chores"   onclick="navigateTo('chores')">
+      <div class="card-emoji">🧹</div>
+      <div><div class="card-label">Chores</div><div class="card-sub">Tasks &amp; Garden</div></div>
+      <span class="card-arrow">›</span>
+    </div>
+    <div class="dash-card" data-view="expenses" onclick="navigateTo('expenses')">
+      <div class="card-emoji">💰</div>
+      <div><div class="card-label">Expenses</div><div class="card-sub">Reports &amp; Status</div></div>
+      <span class="card-arrow">›</span>
+    </div>
+    <div class="dash-card" data-view="vault"    onclick="navigateTo('vault')">
+      <div class="card-emoji">🔐</div>
+      <div><div class="card-label">The Vault</div><div class="card-sub">Documents</div></div>
+      <span class="card-arrow">›</span>
+    </div>
+    <div class="dash-card" data-view="shopping" onclick="navigateTo('shopping')">
+      <div class="card-emoji">🛒</div>
+      <div><div class="card-label">Shopping</div><div class="card-sub">Lists &amp; Pantry</div></div>
+      <span class="card-arrow">›</span>
+    </div>
+    <div class="dash-card wide" data-view="calendar" onclick="navigateTo('calendar')">
+      <div class="card-emoji">🗓️</div>
+      <div><div class="card-label">House Calendar</div><div class="card-sub">יומן הבית המשותף</div></div>
+      <span class="card-arrow">›</span>
+    </div>
+  </div>
+</main>
+
+<!-- ═════════════════ CHORES ════════════════════════════ -->
+<main id="view-chores" class="view">
+  <div class="submenu-list">
+    <div class="submenu-card" onclick="navigateTo('chores-cleaning')">
+      <div class="icon-wrap" style="--icon-bg:rgba(82,183,136,.15)">🧼</div>
+      <div class="item-text"><div class="item-title">Cleaning</div><div class="item-desc">Weekly &amp; monthly checklists</div></div>
+      <span class="item-arrow">›</span>
+    </div>
+    <div class="submenu-card" onclick="navigateTo('chores-gardening')">
+      <div class="icon-wrap" style="--icon-bg:rgba(74,181,74,.15)">🌱</div>
+      <div class="item-text"><div class="item-title">Gardening</div><div class="item-desc">Watering tracker &amp; away notes</div></div>
+      <span class="item-arrow">›</span>
+    </div>
+    <div class="submenu-card" onclick="navigateTo('chores-payments')">
+      <div class="icon-wrap" style="--icon-bg:rgba(230,57,70,.12)">💳</div>
+      <div class="item-text"><div class="item-title">Payments</div><div class="item-desc">Bills &amp; monthly reminders</div></div>
+      <span class="item-arrow">›</span>
+    </div>
+    <div class="submenu-card" onclick="navigateTo('chores-maintenance')">
+      <div class="icon-wrap" style="--icon-bg:rgba(59,130,246,.12)">🔧</div>
+      <div class="item-text"><div class="item-title">Maintenance Log</div><div class="item-desc">יומן תקלות — track apartment issues</div></div>
+      <span class="item-arrow">›</span>
+    </div>
+  </div>
+</main>
+
+<!-- ═════════════════ CLEANING ══════════════════════════ -->
+<main id="view-chores-cleaning" class="view">
+  <div class="manage-tasks-bar">
+    <button class="manage-tasks-btn" onclick="openManageTasks()">⚙️ Manage Tasks</button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('cleaning','weekly',this)">📅 Weekly</button>
+    <button class="tab-btn"        onclick="switchTab('cleaning','monthly',this)">🗓️ Monthly Grand</button>
+  </div>
+
+  <!-- Weekly -->
+  <div id="tab-cleaning-weekly" class="tab-panel active">
+    <div class="progress-wrap">
+      <div class="progress-label" id="weekly-prog-label">0 / 0 done</div>
+      <div class="progress-track"><div class="progress-fill" id="weekly-prog-fill" style="width:0%"></div></div>
+    </div>
+    <div class="checklist-meta">
+      <span>Week of <strong id="weekly-start">—</strong></span><span>Resets Sunday</span>
+    </div>
+    <table class="checklist-table">
+      <thead><tr><th style="width:34px"></th><th>Task</th><th>Area</th></tr></thead>
+      <tbody id="weekly-tbody">
+        <tr><td colspan="3"><div class="empty"><div class="empty-icon">⏳</div>Loading…</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Monthly Grand -->
+  <div id="tab-cleaning-monthly" class="tab-panel">
+    <div class="progress-wrap">
+      <div class="progress-label" id="monthly-prog-label">0 / 0 done</div>
+      <div class="progress-track"><div class="progress-fill" id="monthly-prog-fill" style="width:0%"></div></div>
+    </div>
+    <div class="checklist-meta">
+      <span>Month of <strong id="monthly-month">—</strong></span><span>Resets 1st</span>
+    </div>
+    <table class="checklist-table">
+      <thead><tr><th style="width:34px"></th><th>Task</th><th>Area</th></tr></thead>
+      <tbody id="monthly-tbody">
+        <tr><td colspan="3"><div class="empty"><div class="empty-icon">⏳</div>Loading…</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<!-- ═════════════════ GARDENING ═════════════════════════ -->
+<main id="view-chores-gardening" class="view">
+  <div class="plant-add-bar">
+    <input type="text" id="plant-name-input" class="name-input"
+           placeholder="Plant name (e.g. Monstera)"
+           onkeydown="if(event.key==='Enter') addPlant()">
+    <input type="number" id="plant-days-input" class="days-input"
+           placeholder="Days" min="1" max="60" value="3" title="Water every X days">
+    <button class="btn-add-plant" onclick="addPlant()" title="Add plant">＋</button>
+  </div>
+  <p class="section-title">💧 Watering Tracker</p>
+  <div class="water-table-wrap">
+    <table class="water-table">
+      <thead><tr><th>Plant</th><th>Last Watered</th><th>Status</th><th></th><th style="width:34px"></th></tr></thead>
+      <tbody id="plants-tbody">
+        <tr><td colspan="5"><div class="empty"><div class="empty-icon">⏳</div>Loading…</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="section-title">✈️ Away Instructions</p>
+  <div class="away-card">
+    <h3>🏡 While We're Away</h3>
+    <p style="margin-bottom:9px">Please water according to this schedule:</p>
+    <ul>
+      <li><strong>Monstera &amp; Fiddle Leaf:</strong> Every 3 days, thorough soak</li>
+      <li><strong>Succulents &amp; Cacti:</strong> Once a week, small amount</li>
+      <li><strong>Kitchen Herbs:</strong> Every 2 days, keep moist</li>
+      <li><strong>Outdoor Pots:</strong> Daily in summer, every other day in winter</li>
+      <li><strong>Lavender:</strong> Weekly — drought-tolerant, don't over-water</li>
+    </ul>
+  </div>
+</main>
+
+<!-- ═════════════════ PAYMENTS ══════════════════════════ -->
+<main id="view-chores-payments" class="view">
+  <p class="section-title">✅ Payment Status</p>
+  <div class="confirm-card">
+    <p>Once all bills are paid, tap below to dismiss the reminder for <strong>30 days</strong>.</p>
+    <p class="last-conf">Last confirmed: <strong id="last-confirmed-label">Never</strong></p>
+    <button class="btn-confirm" id="btn-confirm-pay">✅ Mark All Bills as Paid</button>
+  </div>
+
+  <p class="section-title" style="margin-top:22px">📝 Record Monthly Bills</p>
+  <div class="form-card">
+    <div class="form-group">
+      <label for="bills-month-sel">Month</label>
+      <select id="bills-month-sel"></select>
+    </div>
+    <div class="bills-grid">
+      <div class="form-group">
+        <label for="bill-rent">🏠 Rent</label>
+        <input type="number" id="bill-rent" placeholder="0" min="0">
+      </div>
+      <div class="form-group">
+        <label for="bill-elec">⚡ Electricity</label>
+        <input type="number" id="bill-elec" placeholder="0" min="0">
+      </div>
+      <div class="form-group">
+        <label for="bill-water">💧 Water</label>
+        <input type="number" id="bill-water" placeholder="0" min="0">
+      </div>
+      <div class="form-group">
+        <label for="bill-arnona">🏛️ Arnona</label>
+        <input type="number" id="bill-arnona" placeholder="0" min="0">
+      </div>
+    </div>
+    <button class="btn-send" id="btn-save-bills">💾 Save Bills for this Month</button>
+  </div>
+
+  <p class="section-title" style="margin-top:22px">📋 Saved Bills</p>
+  <div id="bills-history"><div class="empty"><div class="empty-icon">📄</div>No bills saved yet.</div></div>
+</main>
+
+<!-- ═════════════════ MAINTENANCE LOG ════════════════════ -->
+<main id="view-chores-maintenance" class="view">
+  <p class="section-title">➕ Log New Issue</p>
+  <div class="form-card" style="margin-bottom:20px">
+    <div class="form-group">
+      <label for="maint-title-input">Issue Title</label>
+      <input type="text" id="maint-title-input" placeholder="e.g. Leaky faucet in bathroom">
+    </div>
+    <div class="form-group">
+      <label for="maint-date-input">Date Reported</label>
+      <input type="date" id="maint-date-input">
+    </div>
+    <div class="form-group">
+      <label for="maint-status-input">Status</label>
+      <select id="maint-status-input">
+        <option value="pending">⏳ Pending</option>
+        <option value="in-progress">🔧 In Progress</option>
+        <option value="resolved">✅ Resolved</option>
+      </select>
+    </div>
+    <button class="btn-send" id="btn-log-maint">📋 Log Issue</button>
+  </div>
+  <p class="section-title">📋 Issue Tracker</p>
+  <div id="maint-list">
+    <div class="empty"><div class="empty-icon">🔧</div>No issues logged yet.</div>
+  </div>
+</main>
+
+<!-- ═════════════════ EXPENSES ══════════════════════════ -->
+<main id="view-expenses" class="view">
+  <div class="submenu-list">
+    <div class="submenu-card" onclick="navigateTo('expenses-status')">
+      <div class="icon-wrap" style="--icon-bg:rgba(212,160,23,.15)">📊</div>
+      <div class="item-text"><div class="item-title">Current Status</div><div class="item-desc">Live month-to-date variable expenses</div></div>
+      <span class="item-arrow">›</span>
+    </div>
+    <div class="submenu-card" onclick="navigateTo('expenses-reports')">
+      <div class="icon-wrap" style="--icon-bg:rgba(108,99,255,.15)">📋</div>
+      <div class="item-text"><div class="item-title">Monthly Reports</div><div class="item-desc">End-of-month summaries with charts</div></div>
+      <span class="item-arrow">›</span>
+    </div>
+  </div>
+</main>
+
+<!-- ═════════════════ CURRENT STATUS ════════════════════ -->
+<main id="view-expenses-status" class="view">
+  <div class="stat-cards">
+    <div class="stat-card"><div class="stat-label">🛒 Groceries</div><div class="stat-value" id="stat-groceries">₪0</div></div>
+    <div class="stat-card"><div class="stat-label">🏠 Upgrades</div><div class="stat-value accent" id="stat-upgrades">₪0</div></div>
+    <div class="stat-card full"><div class="stat-label">Total Variable This Month</div><div class="stat-value" id="stat-total">₪0</div></div>
+  </div>
+  <p class="section-title">📋 All Entries</p>
+  <div class="live-table-wrap">
+    <table class="live-table">
+      <thead><tr><th>Date</th><th>Category</th><th>Amount</th><th style="width:40px"></th></tr></thead>
+      <tbody id="live-tbody">
+        <tr><td colspan="4"><div class="empty"><div class="empty-icon">📭</div>No entries yet this month.</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<!-- ═════════════════ MONTHLY REPORTS ═══════════════════ -->
+<main id="view-expenses-reports" class="view">
+  <div style="margin-bottom:16px">
+    <label style="font-size:.77rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);display:block;margin-bottom:7px">Select Month</label>
+    <select id="report-select" onchange="loadReport(this.value)"
+      style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.88rem;background:var(--bg-card);color:var(--text);font-family:inherit;appearance:none">
+      <option value="">— Select a month —</option>
+    </select>
+  </div>
+  <div id="report-content">
+    <div class="empty"><div class="empty-icon">📊</div>Select a month to view its report.</div>
+  </div>
+</main>
+
+<!-- ═════════════════ VAULT ══════════════════════════════ -->
+<main id="view-vault" class="view">
+  <div class="drive-card">
+    <div class="drive-card-glyph">📁</div>
+    <h2 class="drive-card-title">התיקייה המשותפת שלנו</h2>
+    <p class="drive-card-desc">כל המסמכים, החוזים, הקבלות<br>וההוצאות — במקום אחד</p>
+    <a class="drive-open-btn"
+       href="https://drive.google.com/drive/folders/1UfYu1A3na8fxhU-ny3rIUztINhvAfwu_?usp=drive_link"
+       target="_blank" rel="noopener noreferrer">
+      <span class="drive-btn-icon">🔗</span>
+      <span>פתיחת תיקיית הדרייב המשותפת</span>
+    </a>
+    <p class="drive-card-note">נפתח ב-Google Drive</p>
+  </div>
+</main>
+
+<!-- ═════════════════ SHOPPING ═══════════════════════════ -->
+<main id="view-shopping" class="view">
+  <div class="submenu-list">
+    <div class="submenu-card" onclick="navigateTo('shopping-groceries')">
+      <div class="icon-wrap" style="--icon-bg:rgba(82,183,136,.15)">🛒</div>
+      <div class="item-text"><div class="item-title">Groceries</div><div class="item-desc">Shopping list with amount tracking</div></div>
+      <span class="item-arrow">›</span>
+    </div>
+    <div class="submenu-card" onclick="navigateTo('shopping-upgrades')">
+      <div class="icon-wrap" style="--icon-bg:rgba(108,99,255,.15)">🏠</div>
+      <div class="item-text"><div class="item-title">House Upgrades</div><div class="item-desc">Improvement purchases &amp; costs</div></div>
+      <span class="item-arrow">›</span>
+    </div>
+    <div class="submenu-card" onclick="navigateTo('pantry')">
+      <div class="icon-wrap" style="--icon-bg:rgba(212,160,23,.15)">🧺</div>
+      <div class="item-text"><div class="item-title">Pantry Staples</div><div class="item-desc">מלאי קריטי — track what's running low</div></div>
+      <span class="item-arrow">›</span>
+    </div>
+  </div>
+</main>
+
+<!-- ═════════════════ GROCERIES ══════════════════════════ -->
+<main id="view-shopping-groceries" class="view">
+  <div class="list-wrap">
+    <div class="list-header"><h4>🛒 Items</h4><button class="btn-add" onclick="openAddModal('groceries')">＋ Add</button></div>
+    <ul class="items-list" id="grocery-list"><li class="list-empty">Tap "＋ Add" to start your list.</li></ul>
+  </div>
+  <div class="form-card" style="margin-bottom:20px">
+    <div class="form-group">
+      <label for="grocery-date">📅 Shopping Date</label>
+      <input type="date" id="grocery-date">
+      <div class="err-msg" id="grocery-date-err">Please select a date.</div>
+    </div>
+    <div class="form-group">
+      <label for="grocery-amount">💰 Total Amount (₪)</label>
+      <input type="number" id="grocery-amount" placeholder="e.g. 250" min="0" step="0.01">
+      <div class="err-msg" id="grocery-amount-err">Please enter a total amount.</div>
+    </div>
+    <button class="btn-send" id="btn-send-groceries">📤 Send to Monthly Expenses</button>
+  </div>
+  <p class="section-title">📋 History</p>
+  <div id="grocery-history"><div class="empty"><div class="empty-icon">📭</div>No entries yet.</div></div>
+</main>
+
+<!-- ═════════════════ HOUSE UPGRADES ════════════════════ -->
+<main id="view-shopping-upgrades" class="view">
+  <div class="list-wrap">
+    <div class="list-header"><h4>🏠 Items</h4><button class="btn-add" onclick="openAddModal('upgrades')">＋ Add</button></div>
+    <ul class="items-list" id="upgrade-list"><li class="list-empty">Tap "＋ Add" to start your list.</li></ul>
+  </div>
+  <div class="form-card" style="margin-bottom:20px">
+    <div class="form-group">
+      <label for="upgrade-date">📅 Purchase Date</label>
+      <input type="date" id="upgrade-date">
+      <div class="err-msg" id="upgrade-date-err">Please select a date.</div>
+    </div>
+    <div class="form-group">
+      <label for="upgrade-amount">💰 Total Amount (₪)</label>
+      <input type="number" id="upgrade-amount" placeholder="e.g. 850" min="0" step="0.01">
+      <div class="err-msg" id="upgrade-amount-err">Please enter a total amount.</div>
+    </div>
+    <button class="btn-send" id="btn-send-upgrades">📤 Send to Monthly Expenses</button>
+  </div>
+  <p class="section-title">📋 History</p>
+  <div id="upgrade-history"><div class="empty"><div class="empty-icon">📭</div>No entries yet.</div></div>
+</main>
+
+<!-- ═════════════════ PANTRY ═════════════════════════════ -->
+<main id="view-pantry" class="view">
+  <div class="pantry-add-bar">
+    <input type="text" id="pantry-input" placeholder="Add staple (e.g. Oat Milk, Rice…)"
+           onkeydown="if(event.key==='Enter') addStaple()">
+    <button class="btn-add-staple" onclick="addStaple()">＋</button>
+  </div>
+  <p class="section-title">🧺 Your Staples</p>
+  <div class="pantry-grid" id="pantry-grid">
+    <div class="pantry-empty">
+      <div class="empty-icon">🧺</div>
+      <p>No staples yet — add one above!</p>
+    </div>
+  </div>
+</main>
+
+<!-- ═════════════════ HOUSE CALENDAR ════════════════════ -->
+<main id="view-calendar" class="view">
+  <p class="section-title">🗓️ יומן הבית</p>
+  <div class="calendar-shell">
+    <iframe
+      src="https://calendar.google.com/calendar/embed?src=400f18d1a48e283333e906058ceb70fee4ed0fb01ca7ac816ad2cf5513d5f3a7%40group.calendar.google.com&ctz=Asia%2FJerusalem&hl=iw&mode=AGENDA"
+      width="100%" height="560" frameborder="0" scrolling="no" allowfullscreen
+      title="House Calendar"></iframe>
+  </div>
+  <p class="calendar-note">📅 לחץ על אירוע לפרטים נוספים • נפתח ב-Google Calendar</p>
+</main>
+
+<!-- ═════════════════ ADD ITEM MODAL ════════════════════ -->
+<div id="add-modal" class="modal-bg" onclick="modalBgClick(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Item</div>
+    <div class="form-group">
+      <label for="new-item">Item Name</label>
+      <input type="text" id="new-item" placeholder="e.g. Milk, Paint roller…"
+             onkeydown="if(event.key==='Enter') confirmAddItem()">
+    </div>
+    <button class="btn-send" onclick="confirmAddItem()" style="margin-top:4px">＋ Add to List</button>
+  </div>
+</div>
+
+<!-- ═════════════════ MANAGE TASKS MODAL ════════════════ -->
+<div id="manage-tasks-modal" class="modal-bg" onclick="manageBgClick(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚙️ Manage Cleaning Tasks</div>
+    <div class="form-group">
+      <label for="task-name-input">Task Name <span style="color:var(--danger)">*</span></label>
+      <input type="text" id="task-name-input" placeholder="e.g. Clean the stovetop"
+             onkeydown="if(event.key==='Enter') addCleaningTask()">
+    </div>
+    <div class="form-group">
+      <label for="task-area-input">Area / Room (optional)</label>
+      <input type="text" id="task-area-input" placeholder="e.g. Kitchen, Bathroom">
+    </div>
+    <div class="form-group">
+      <label for="task-freq-select">Frequency</label>
+      <select id="task-freq-select">
+        <option value="weekly">📅 Weekly</option>
+        <option value="monthly">🗓️ Monthly Grand</option>
+      </select>
+    </div>
+    <button class="btn-send" id="btn-add-cleaning-task" onclick="addCleaningTask()" style="margin-bottom:24px">＋ Add Task</button>
+    <p class="section-title">All Tasks</p>
+    <div id="templates-list">
+      <div class="empty"><div class="spinner"></div>Loading…</div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ═════════════════ JAVASCRIPT ═════════════════════════ -->
+<script type="module">
+/* ══════════════════════════════════════════════════════════
+   FIREBASE INIT
+   Firestore collections (all read with flat getDocs — no composite indexes needed):
+   /cleaning_templates/{id}  → { name, area, frequency, createdAt }
+   /checklists/{key}         → { templateId: bool, … }
+   /watering/log             → { plantId: timestampMs, … }
+   /bills/{YYYY-MM}          → { rent, electricity, water, arnona, updatedAt }
+   /expenses/{id}            → { type, date, amount, items[], createdAt }
+   /maintenance/{id}         → { title, dateReported, status, createdAt }
+   /pantry/{id}              → { name, status:"stock"|"low", createdAt }
+   /grocery_queue/{pantryId} → { name, addedAt }
+══════════════════════════════════════════════════════════ */
+import { initializeApp }    from "firebase/app";
+import { getAnalytics }     from "firebase/analytics";
+import {
+  getFirestore,
+  collection, doc, getDoc, getDocs,
+  setDoc, addDoc, deleteDoc,
+  onSnapshot,
+  serverTimestamp
+} from "firebase/firestore";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyBeHKfDQkeXQwlx_ycE67Q19F1Ta2X6PtE",
+  authDomain:        "home-manager-29a1a.firebaseapp.com",
+  projectId:         "home-manager-29a1a",
+  storageBucket:     "home-manager-29a1a.firebasestorage.app",
+  messagingSenderId: "757092737699",
+  appId:             "1:757092737699:web:559a33e0ee9dd176241516",
+  measurementId:     "G-ZW7LHJW1XZ"
+};
+const app       = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db        = getFirestore(app);
+
+/* ══════════════════════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════════════════════ */
+const VIEW_META = {
+  "dashboard":           { title:"🏠 Home Manager",    back:null },
+  "chores":              { title:"🧹 Chores",           back:"dashboard" },
+  "chores-cleaning":     { title:"🧼 Cleaning",          back:"chores" },
+  "chores-gardening":    { title:"🌱 Gardening",         back:"chores" },
+  "chores-payments":     { title:"💳 Payments",          back:"chores" },
+  "chores-maintenance":  { title:"🔧 Maintenance Log",   back:"chores" },
+  "expenses":            { title:"💰 Expenses",          back:"dashboard" },
+  "expenses-status":     { title:"📊 Current Status",    back:"expenses" },
+  "expenses-reports":    { title:"📋 Monthly Reports",   back:"expenses" },
+  "vault":               { title:"🔐 The Vault",         back:"dashboard" },
+  "shopping":            { title:"🛒 Shopping",          back:"dashboard" },
+  "shopping-groceries":  { title:"🛒 Groceries",         back:"shopping" },
+  "shopping-upgrades":   { title:"🏠 House Upgrades",    back:"shopping" },
+  "pantry":              { title:"🧺 Pantry Staples",    back:"shopping" },
+  "calendar":            { title:"🗓️ House Calendar",    back:"dashboard" },
+};
+
+let _cur = "dashboard";
+const _unsubs = {};
+
+function _unsub(key) { if (_unsubs[key]) { _unsubs[key](); delete _unsubs[key]; } }
+
+function _cleanupLeaving(id) {
+  if (id === "expenses-status")    _unsub("status");
+  if (id === "shopping-groceries") _unsub("hist-groceries");
+  if (id === "shopping-upgrades")  _unsub("hist-upgrades");
+  if (id === "pantry")             _unsub("pantry");
+  if (id === "chores-maintenance") _unsub("maintenance");
+}
+
+window.navigateTo = function(viewId) {
+  _cleanupLeaving(_cur);
+  document.getElementById("view-" + _cur)?.classList.remove("active");
+  const next = document.getElementById("view-" + viewId);
+  if (!next) return;
+  next.classList.add("active");
+  _cur = viewId;
+
+  const meta = VIEW_META[viewId] || {};
+  document.getElementById("header-title").textContent = meta.title || viewId;
+  const backBtn = document.getElementById("btn-back");
+  if (meta.back !== null) {
+    backBtn.classList.add("visible");
+    backBtn.onclick = () => navigateTo(meta.back);
+  } else {
+    backBtn.classList.remove("visible");
+  }
+  window.scrollTo(0, 0);
+  _onEnter(viewId);
+};
+
+function _onEnter(id) {
+  if (id === "chores-cleaning")    initCleaning();
+  if (id === "chores-gardening")   initGardening();
+  if (id === "chores-payments")    initPayments();
+  if (id === "chores-maintenance") initMaintenance();
+  if (id === "expenses-status")    initExpensesStatus();
+  if (id === "expenses-reports")   initReportSelector();
+  if (id === "shopping-groceries") initShopping("groceries");
+  if (id === "shopping-upgrades")  initShopping("upgrades");
+  if (id === "pantry")             initPantry();
+}
+
+/* ══════════════════════════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════════════════════════ */
+function initDashboard() {
+  const h = new Date().getHours();
+  const g = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+  document.getElementById("greeting-text").textContent = `${g}! 👋`;
+  document.getElementById("greeting-date").textContent =
+    new Date().toLocaleDateString("en-GB", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+  _checkPaymentAlert();
+}
+
+function _checkPaymentAlert() {
+  const last = localStorage.getItem("lastPayConfirmed");
+  if (!last || (Date.now() - +last) > 30 * 864e5)
+    document.getElementById("payment-alert").classList.add("visible");
+}
+
+document.getElementById("alert-view-btn").addEventListener("click", () => navigateTo("chores-payments"));
+
+function confirmPayment() {
+  localStorage.setItem("lastPayConfirmed", Date.now());
+  document.getElementById("payment-alert").classList.remove("visible");
+  document.getElementById("last-confirmed-label").textContent =
+    new Date().toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" });
+  showToast("✅ Bills confirmed — reminder paused for 30 days", "success");
+}
+
+/* ══════════════════════════════════════════════════════════
+   TAB SWITCHER
+══════════════════════════════════════════════════════════ */
+window.switchTab = function(group, panel, btn) {
+  const root = document.getElementById(`view-chores-${group}`);
+  root.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  root.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById(`tab-${group}-${panel}`)?.classList.add("active");
+};
+
+/* ══════════════════════════════════════════════════════════
+   CLEANING — DYNAMIC TEMPLATES (flat queries, no indexes)
+══════════════════════════════════════════════════════════ */
+function _weekKey() {
+  const d = new Date(), sun = new Date(d);
+  sun.setDate(d.getDate() - d.getDay());
+  return `week_${sun.getFullYear()}_${sun.getMonth()+1}_${sun.getDate()}`;
+}
+function _monthKey() {
+  const d = new Date();
+  return `month_${d.getFullYear()}_${d.getMonth()+1}`;
+}
+
+// Safely read Firestore Timestamp or plain number as ms
+function _tsMs(val) {
+  if (!val) return 0;
+  if (typeof val.toMillis === "function") return val.toMillis();
+  if (typeof val.seconds  === "number")   return val.seconds * 1000;
+  return 0;
+}
+
+async function initCleaning() {
+  const now = new Date(), sun = new Date(now);
+  sun.setDate(now.getDate() - now.getDay());
+  document.getElementById("weekly-start").textContent =
+    sun.toLocaleDateString("en-GB", { day:"numeric", month:"short" });
+  document.getElementById("monthly-month").textContent =
+    now.toLocaleDateString("en-GB", { month:"long", year:"numeric" });
+
+  // Show loading spinners
+  ["weekly","monthly"].forEach(t => {
+    document.getElementById(`${t}-tbody`).innerHTML =
+      `<tr><td colspan="3"><div class="empty"><div class="spinner"></div>Loading…</div></td></tr>`;
+  });
+
+  const weekRef  = doc(db, "checklists", _weekKey());
+  const monthRef = doc(db, "checklists", _monthKey());
+
+  try {
+    // ✅ FLAT query — no where() + orderBy() = no composite index needed
+    const [tplSnap, ws, ms] = await Promise.all([
+      getDocs(collection(db, "cleaning_templates")),
+      getDoc(weekRef),
+      getDoc(monthRef)
+    ]);
+
+    // Collect all templates and sort by createdAt in JavaScript
+    const allTpls = [];
+    tplSnap.forEach(d => allTpls.push({ id: d.id, ...d.data() }));
+    allTpls.sort((a, b) => _tsMs(a.createdAt) - _tsMs(b.createdAt));
+
+    const weeklyTpls  = allTpls.filter(t => t.frequency === "weekly");
+    const monthlyTpls = allTpls.filter(t => t.frequency === "monthly");
+
+    const wData = ws.exists() ? ws.data() : {};
+    const mData = ms.exists() ? ms.data() : {};
+
+    renderChecklist("weekly",  weeklyTpls,  wData, weekRef);
+    renderChecklist("monthly", monthlyTpls, mData, monthRef);
+  } catch(err) {
+    console.error("initCleaning:", err);
+    ["weekly","monthly"].forEach(t => {
+      document.getElementById(`${t}-tbody`).innerHTML =
+        `<tr><td colspan="3"><div class="empty" style="color:var(--danger)">⚠️ ${err.message}</div></td></tr>`;
+    });
+  }
+}
+
+function renderChecklist(type, templates, data, docRef) {
+  const tbody = document.getElementById(`${type}-tbody`);
+  tbody.innerHTML = "";
+
+  if (!templates.length) {
+    tbody.innerHTML = `<tr><td colspan="3"><div class="empty">
+      <div class="empty-icon">✏️</div>
+      <p>No tasks yet.<br>Tap <strong>⚙️ Manage Tasks</strong> to add chores.</p>
+    </div></td></tr>`;
+    _progUpdate(type, [], {});
+    return;
+  }
+
+  templates.forEach(task => {
+    const done = data[task.id] === true;
+    const tr   = document.createElement("tr");
+    if (done) tr.classList.add("done");
+    tr.innerHTML = `
+      <td><input type="checkbox" class="task-check"${done ? " checked" : ""}></td>
+      <td class="task-name">${task.name}</td>
+      <td class="task-room">${task.area || "—"}</td>`;
+    tr.querySelector(".task-check").addEventListener("change", async function() {
+      tr.classList.toggle("done", this.checked);
+      await setDoc(docRef, { [task.id]: this.checked }, { merge: true });
+      const s = await getDoc(docRef);
+      _progUpdate(type, templates, s.exists() ? s.data() : {});
+    });
+    tbody.appendChild(tr);
+  });
+  _progUpdate(type, templates, data);
+}
+
+function _progUpdate(type, templates, data) {
+  const done  = templates.filter(t => data[t.id]).length;
+  const total = templates.length;
+  const pct   = total ? Math.round(done / total * 100) : 0;
+  document.getElementById(`${type}-prog-fill`).style.width  = pct + "%";
+  document.getElementById(`${type}-prog-label`).textContent = `${done} / ${total} done`;
+}
+
+/* ── Manage Tasks Modal ──────────────────────────────── */
+window.openManageTasks = function() {
+  document.getElementById("task-name-input").value  = "";
+  document.getElementById("task-area-input").value  = "";
+  document.getElementById("task-freq-select").value = "weekly";
+  document.getElementById("manage-tasks-modal").classList.add("open");
+  setTimeout(() => document.getElementById("task-name-input").focus(), 300);
+  _renderTemplatesList();
+};
+
+window.manageBgClick = function(e) {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove("open");
+};
+
+async function _renderTemplatesList() {
+  const el = document.getElementById("templates-list");
+  el.innerHTML = `<div class="empty"><div class="spinner"></div>Loading…</div>`;
+  try {
+    // ✅ FLAT query
+    const snap = await getDocs(collection(db, "cleaning_templates"));
+    if (snap.empty) {
+      el.innerHTML = `<div class="empty" style="padding:14px 0">
+        <div class="empty-icon">✏️</div>No tasks yet — add one above!</div>`;
+      return;
+    }
+    const items = [];
+    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+    // Sort: weekly first, then monthly; within each group sort by createdAt
+    items.sort((a, b) => {
+      if (a.frequency !== b.frequency)
+        return a.frequency === "weekly" ? -1 : 1;
+      return _tsMs(a.createdAt) - _tsMs(b.createdAt);
+    });
+    el.innerHTML = "";
+    items.forEach(t => {
+      const div = document.createElement("div");
+      div.className = "manage-task-item";
+      div.innerHTML = `
+        <span class="freq-badge ${t.frequency === "weekly" ? "freq-w" : "freq-m"}">
+          ${t.frequency === "weekly" ? "Weekly" : "Monthly"}
+        </span>
+        <div class="manage-task-info">
+          <span class="manage-task-name">${t.name}</span>
+          ${t.area ? `<span class="manage-task-area">${t.area}</span>` : ""}
+        </div>
+        <button class="btn-trash" title="Delete task">🗑️</button>`;
+      div.querySelector(".btn-trash").addEventListener("click", () => _deleteCleaningTask(t.id));
+      el.appendChild(div);
+    });
+  } catch(err) {
+    el.innerHTML = `<div class="empty" style="color:var(--danger)">⚠️ ${err.message}</div>`;
+  }
+}
+
+window.addCleaningTask = async function() {
+  const nameEl = document.getElementById("task-name-input");
+  const areaEl = document.getElementById("task-area-input");
+  const freqEl = document.getElementById("task-freq-select");
+  const name   = nameEl.value.trim();
+  if (!name) { nameEl.classList.add("err"); return; }
+  nameEl.classList.remove("err");
+
+  const btn = document.getElementById("btn-add-cleaning-task");
+  btn.disabled = true; btn.textContent = "⏳ Adding…";
+  try {
+    await addDoc(collection(db, "cleaning_templates"), {
+      name,
+      area:      areaEl.value.trim(),
+      frequency: freqEl.value,
+      createdAt: serverTimestamp()
+    });
+    nameEl.value = "";
+    areaEl.value = "";
+    await _renderTemplatesList();
+    initCleaning();
+    showToast("✅ Task added!", "success");
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+  finally { btn.disabled = false; btn.textContent = "＋ Add Task"; }
+};
+
+async function _deleteCleaningTask(id) {
+  if (!confirm("Delete this task from all future checklists?")) return;
+  try {
+    await deleteDoc(doc(db, "cleaning_templates", id));
+    await _renderTemplatesList();
+    initCleaning();
+    showToast("🗑️ Task deleted", "success");
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   GARDENING  (fully dynamic — /plants collection)
+   Schema: /plants/{autoId} → { name, intervalDays, createdAt }
+   Watering log: /watering/log → { plantId: timestampMs }
+══════════════════════════════════════════════════════════ */
+async function initGardening() {
+  const tbody = document.getElementById("plants-tbody");
+  tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="spinner"></div>Loading…</div></td></tr>`;
+  try {
+    // ✅ FLAT queries — no composite indexes needed
+    const [plantsSnap, waterSnap] = await Promise.all([
+      getDocs(collection(db, "plants")),
+      getDoc(doc(db, "watering", "log"))
+    ]);
+    const plants = [];
+    plantsSnap.forEach(d => plants.push({ id: d.id, ...d.data() }));
+    plants.sort((a, b) => _tsMs(a.createdAt) - _tsMs(b.createdAt));
+    const waterData = waterSnap.exists() ? waterSnap.data() : {};
+    _renderPlants(plants, waterData);
+  } catch(err) {
+    document.getElementById("plants-tbody").innerHTML =
+      `<tr><td colspan="5"><div class="empty" style="color:var(--danger)">⚠️ ${err.message}</div></td></tr>`;
+  }
+}
+
+function _renderPlants(plants, waterData) {
+  const tbody = document.getElementById("plants-tbody");
+  tbody.innerHTML = "";
+  if (!plants.length) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty">
+      <div class="empty-icon">🌱</div>
+      <p>No plants yet — type a name above and tap ＋ to add one!</p>
+    </div></td></tr>`;
+    return;
+  }
+  plants.forEach(p => {
+    const days = p.intervalDays || 3;
+    const ms   = waterData[p.id] || null;
+    const dt   = ms ? new Date(ms) : null;
+    const ago  = dt ? Math.floor((Date.now() - dt) / 864e5) : 999;
+    const cls  = ago <= days * .7 ? "dot-ok" : ago <= days ? "dot-warn" : "dot-late";
+    const str  = dt
+      ? dt.toLocaleDateString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})
+      : "Never";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>
+        <div class="plant-name">${p.name}</div>
+        <div class="last-watered" style="font-size:.7rem">every ${days}d</div>
+      </td>
+      <td class="last-watered" id="lw-${p.id}">${str}</td>
+      <td id="st-${p.id}"><span class="status-dot ${cls}"></span>${ago > 900 ? "—" : ago + "d ago"}</td>
+      <td><button class="btn-water" id="bw-${p.id}">💧 Water</button></td>
+      <td><button class="btn-trash" title="Remove plant">🗑️</button></td>`;
+    tr.querySelector(`#bw-${p.id}`).addEventListener("click", () => waterPlant(p.id, p.name, days));
+    tr.querySelector(".btn-trash").addEventListener("click", () => deletePlant(p.id, p.name));
+    tbody.appendChild(tr);
+  });
+}
+
+window.addPlant = async function() {
+  const nameEl = document.getElementById("plant-name-input");
+  const daysEl = document.getElementById("plant-days-input");
+  const name   = nameEl.value.trim();
+  if (!name) { nameEl.classList.add("err"); setTimeout(() => nameEl.classList.remove("err"), 1500); return; }
+  const intervalDays = Math.max(1, parseInt(daysEl.value) || 3);
+  try {
+    await addDoc(collection(db, "plants"), { name, intervalDays, createdAt: serverTimestamp() });
+    nameEl.value = ""; daysEl.value = "3";
+    showToast(`🌱 ${name} added!`, "success");
+    initGardening();
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+};
+
+async function deletePlant(id, name) {
+  if (!confirm(`Remove "${name}" from your garden?`)) return;
+  try {
+    await deleteDoc(doc(db, "plants", id));
+    // Remove from watering log (set to null with merge — harmless if missing)
+    await setDoc(doc(db, "watering", "log"), { [id]: null }, { merge: true }).catch(() => {});
+    showToast("🗑️ Plant removed", "success");
+    initGardening();
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+}
+
+async function waterPlant(id, name, days) {
+  const btn = document.getElementById(`bw-${id}`);
+  btn.disabled = true; btn.textContent = "⏳";
+  try {
+    const now = Date.now();
+    await setDoc(doc(db, "watering", "log"), { [id]: now }, { merge: true });
+    const str = new Date(now).toLocaleDateString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+    document.getElementById(`lw-${id}`).textContent = str;
+    document.getElementById(`st-${id}`).innerHTML = `<span class="status-dot dot-ok"></span>just now`;
+    btn.textContent = "✅";
+    setTimeout(() => { btn.disabled = false; btn.textContent = "💧 Water"; }, 2200);
+    showToast(`💧 ${name} watered!`, "success");
+  } catch(err) {
+    btn.disabled = false; btn.textContent = "💧 Water";
+    showToast("Error — check connection.", "error");
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   PAYMENTS — BILLS FORM
+══════════════════════════════════════════════════════════ */
+async function initPayments() {
+  document.getElementById("btn-confirm-pay").onclick = confirmPayment;
+  const last = localStorage.getItem("lastPayConfirmed");
+  if (last) document.getElementById("last-confirmed-label").textContent =
+    new Date(+last).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
+
+  const sel = document.getElementById("bills-month-sel");
+  if (!sel.options.length) {
+    const now = new Date();
+    for (let i = 0; i < 24; i++) {
+      const d   = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+      const o   = document.createElement("option");
+      o.value = val;
+      o.textContent = d.toLocaleDateString("en-GB",{month:"long",year:"numeric"});
+      sel.appendChild(o);
+    }
+  }
+  sel.onchange = () => _loadBillInputs(sel.value);
+  await _loadBillInputs(sel.value);
+  document.getElementById("btn-save-bills").onclick = saveBills;
+  await renderBillsHistory();
+}
+
+async function _loadBillInputs(monthStr) {
+  if (!monthStr) return;
+  const snap = await getDoc(doc(db, "bills", monthStr));
+  const d    = snap.exists() ? snap.data() : {};
+  document.getElementById("bill-rent").value   = d.rent        || "";
+  document.getElementById("bill-elec").value   = d.electricity || "";
+  document.getElementById("bill-water").value  = d.water       || "";
+  document.getElementById("bill-arnona").value = d.arnona      || "";
+}
+
+async function saveBills() {
+  const monthStr = document.getElementById("bills-month-sel").value;
+  if (!monthStr) return;
+  const btn = document.getElementById("btn-save-bills");
+  btn.disabled = true; btn.textContent = "⏳ Saving…";
+  try {
+    await setDoc(doc(db, "bills", monthStr), {
+      rent:        parseFloat(document.getElementById("bill-rent").value)   || 0,
+      electricity: parseFloat(document.getElementById("bill-elec").value)   || 0,
+      water:       parseFloat(document.getElementById("bill-water").value)  || 0,
+      arnona:      parseFloat(document.getElementById("bill-arnona").value) || 0,
+      updatedAt:   serverTimestamp()
+    });
+    showToast("✅ Bills saved!", "success");
+    await renderBillsHistory();
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+  finally { btn.disabled = false; btn.textContent = "💾 Save Bills for this Month"; }
+}
+
+async function renderBillsHistory() {
+  const el = document.getElementById("bills-history");
+  try {
+    // ✅ FLAT query
+    const snap = await getDocs(collection(db, "bills"));
+    if (snap.empty) {
+      el.innerHTML = `<div class="empty"><div class="empty-icon">📄</div>No bills saved yet.</div>`; return;
+    }
+    const rows = [];
+    snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+    rows.sort((a, b) => b.id.localeCompare(a.id)); // YYYY-MM sort descending
+    el.innerHTML = "";
+    rows.forEach(b => {
+      const total = (b.rent||0) + (b.electricity||0) + (b.water||0) + (b.arnona||0);
+      const div   = document.createElement("div"); div.className = "bill-card";
+      div.innerHTML = `
+        <div class="bill-card-header">
+          <span class="bill-month">${_monthLabel(b.id)}</span>
+          <span class="bill-total">₪${total.toFixed(0)}</span>
+          <button class="btn-trash" title="Delete">🗑️</button>
+        </div>
+        <div class="bill-details">
+          <span>🏠 ₪${b.rent||0}</span>
+          <span>⚡ ₪${b.electricity||0}</span>
+          <span>💧 ₪${b.water||0}</span>
+          <span>🏛️ ₪${b.arnona||0}</span>
+        </div>`;
+      div.querySelector(".btn-trash").addEventListener("click", () => deleteBill(b.id));
+      el.appendChild(div);
+    });
+  } catch(err) {
+    el.innerHTML = `<div class="empty" style="color:var(--danger)">⚠️ ${err.message}</div>`;
+  }
+}
+
+async function deleteBill(monthStr) {
+  if (!confirm(`Delete bills for ${_monthLabel(monthStr)}?`)) return;
+  try {
+    await deleteDoc(doc(db, "bills", monthStr));
+    showToast("🗑️ Deleted", "success");
+    await renderBillsHistory();
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   MAINTENANCE LOG (יומן תקלות)
+══════════════════════════════════════════════════════════ */
+function initMaintenance() {
+  document.getElementById("btn-log-maint").onclick = saveMaintenance;
+  // Default date to today
+  document.getElementById("maint-date-input").value = new Date().toISOString().slice(0, 10);
+
+  _unsub("maintenance");
+  // ✅ FLAT query — onSnapshot on whole collection, sort in JS
+  _unsubs["maintenance"] = onSnapshot(collection(db, "maintenance"), snap => {
+    const items = [];
+    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+    items.sort((a, b) => _tsMs(b.createdAt) - _tsMs(a.createdAt)); // newest first
+    renderMaintList(items);
+  });
+}
+
+async function saveMaintenance() {
+  const title  = document.getElementById("maint-title-input").value.trim();
+  const date   = document.getElementById("maint-date-input").value;
+  const status = document.getElementById("maint-status-input").value;
+  if (!title) { showToast("Please enter an issue title.", "error"); return; }
+  if (!date)  { showToast("Please select a date.", "error"); return; }
+  const btn = document.getElementById("btn-log-maint");
+  btn.disabled = true; btn.textContent = "⏳ Saving…";
+  try {
+    await addDoc(collection(db, "maintenance"), {
+      title, dateReported: date, status, createdAt: serverTimestamp()
+    });
+    document.getElementById("maint-title-input").value = "";
+    document.getElementById("maint-status-input").value = "pending";
+    showToast("✅ Issue logged!", "success");
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+  finally { btn.disabled = false; btn.textContent = "📋 Log Issue"; }
+}
+
+function renderMaintList(items) {
+  const el = document.getElementById("maint-list");
+  if (!items.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🔧</div>No issues logged yet.</div>`; return;
+  }
+  el.innerHTML = "";
+  const pillMap = {
+    "pending":     `<span class="maint-status-pill pill-pending">⏳ Pending</span>`,
+    "in-progress": `<span class="maint-status-pill pill-in-progress">🔧 In Progress</span>`,
+    "resolved":    `<span class="maint-status-pill pill-resolved">✅ Resolved</span>`,
+  };
+  items.forEach(item => {
+    const div = document.createElement("div"); div.className = "maint-item";
+    div.innerHTML = `
+      <div class="maint-item-header">
+        <span class="maint-title-text">${item.title}</span>
+        <button class="btn-trash" title="Delete">🗑️</button>
+      </div>
+      <div class="maint-meta">
+        <span class="maint-date-label">📅 ${_fmtDate(item.dateReported)}</span>
+        ${pillMap[item.status] || ""}
+      </div>
+      <select class="maint-status-sel">
+        <option value="pending"     ${item.status==="pending"     ? "selected":""}>⏳ Pending</option>
+        <option value="in-progress" ${item.status==="in-progress" ? "selected":""}>🔧 In Progress</option>
+        <option value="resolved"    ${item.status==="resolved"    ? "selected":""}>✅ Resolved</option>
+      </select>`;
+    div.querySelector(".btn-trash").addEventListener("click", () => deleteMaintenance(item.id));
+    div.querySelector(".maint-status-sel").addEventListener("change", async function() {
+      try {
+        await setDoc(doc(db, "maintenance", item.id), { status: this.value }, { merge: true });
+        showToast("✅ Status updated", "success");
+      } catch(err) { showToast("Error: " + err.message, "error"); }
+    });
+    el.appendChild(div);
+  });
+}
+
+async function deleteMaintenance(id) {
+  if (!confirm("Delete this issue?")) return;
+  try {
+    await deleteDoc(doc(db, "maintenance", id));
+    showToast("🗑️ Issue deleted", "success");
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   SHOPPING LISTS  (with grocery_queue pantry preload)
+══════════════════════════════════════════════════════════ */
+let _modalTarget = null;
+const _itemLists  = { groceries:[], upgrades:[] };
+
+window.openAddModal = function(type) {
+  _modalTarget = type;
+  document.getElementById("new-item").value = "";
+  document.getElementById("add-modal").classList.add("open");
+  setTimeout(() => document.getElementById("new-item").focus(), 280);
+};
+
+window.modalBgClick = function(e) {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove("open");
+};
+
+window.confirmAddItem = function() {
+  const input = document.getElementById("new-item");
+  const name  = input.value.trim();
+  if (!name) { input.classList.add("err"); return; }
+  input.classList.remove("err");
+  const prefix = _modalTarget === "groceries" ? "grocery" : "upgrade";
+  const ul     = document.getElementById(`${prefix}-list`);
+  _itemLists[_modalTarget].push(name);
+  _appendShopItem(ul, name, _modalTarget, false);
+  document.getElementById("add-modal").classList.remove("open");
+};
+
+function _appendShopItem(ul, name, type, fromPantry) {
+  ul.querySelector(".list-empty")?.remove();
+  const li = document.createElement("li"); li.className = "shop-item";
+  li.innerHTML = `
+    <input type="checkbox" class="item-check">
+    <span class="item-label">${name}</span>
+    ${fromPantry ? `<span class="pantry-tag">🧺</span>` : ""}
+    <button class="item-del" title="Remove">✕</button>`;
+  li.querySelector(".item-check").addEventListener("change", function() {
+    li.classList.toggle("checked", this.checked);
+  });
+  li.querySelector(".item-del").addEventListener("click", () => {
+    _itemLists[type] = _itemLists[type].filter(i => i !== name);
+    li.remove();
+    const listEl = document.getElementById(type === "groceries" ? "grocery-list" : "upgrade-list");
+    if (!listEl.querySelector(".shop-item"))
+      listEl.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
+  });
+  ul.appendChild(li);
+}
+
+async function initShopping(type) {
+  const prefix = type === "groceries" ? "grocery" : "upgrade";
+  document.getElementById(`btn-send-${type}`).onclick = () => sendEntry(type);
+  _itemLists[type] = [];
+  const ul = document.getElementById(`${prefix}-list`);
+  ul.innerHTML = "";
+  document.getElementById(`${prefix}-date`).value   = "";
+  document.getElementById(`${prefix}-amount`).value = "";
+
+  // Pre-load items from pantry grocery_queue (flat getDocs, no index needed)
+  if (type === "groceries") {
+    const qSnap = await getDocs(collection(db, "grocery_queue"));
+    if (!qSnap.empty) {
+      qSnap.forEach(d => {
+        const name = d.data().name;
+        _itemLists.groceries.push(name);
+        _appendShopItem(ul, name, "groceries", true);
+      });
+    } else {
+      ul.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
+    }
+  } else {
+    ul.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
+  }
+
+  // ✅ FLAT onSnapshot — filter by type in JS
+  _unsub(`hist-${type}`);
+  _unsubs[`hist-${type}`] = onSnapshot(collection(db, "expenses"), snap => {
+    const rows = [];
+    snap.forEach(d => {
+      const e = d.data();
+      if (e.type === type) rows.push({ id: d.id, ...e });
+    });
+    rows.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    _renderShopHistory(type, rows);
+  });
+}
+
+function _renderShopHistory(type, rows) {
+  const prefix    = type === "groceries" ? "grocery" : "upgrade";
+  const container = document.getElementById(`${prefix}-history`);
+  if (!rows.length) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">📭</div>No entries yet.</div>`; return;
+  }
+  container.innerHTML = "";
+  rows.forEach(e => {
+    const div = document.createElement("div"); div.className = "history-item";
+    const sub = e.items?.length
+      ? e.items.slice(0,3).join(", ") + (e.items.length > 3 ? ` +${e.items.length-3} more` : "")
+      : "";
+    div.innerHTML = `
+      <div class="history-item-left">
+        <div class="history-date">${_fmtDate(e.date)}</div>
+        ${sub ? `<div class="history-sub">${sub}</div>` : ""}
+      </div>
+      <span class="history-amount">₪${(e.amount||0).toFixed(2)}</span>
+      <button class="btn-trash" title="Delete">🗑️</button>`;
+    div.querySelector(".btn-trash").addEventListener("click", () => deleteExpense(e.id));
+    container.appendChild(div);
+  });
+}
+
+async function sendEntry(type) {
+  const prefix    = type === "groceries" ? "grocery" : "upgrade";
+  const dateEl    = document.getElementById(`${prefix}-date`);
+  const amountEl  = document.getElementById(`${prefix}-amount`);
+  const dateErr   = document.getElementById(`${prefix}-date-err`);
+  const amountErr = document.getElementById(`${prefix}-amount-err`);
+
+  [dateEl, amountEl].forEach(el => el.classList.remove("err"));
+  [dateErr, amountErr].forEach(el => el.classList.remove("show"));
+
+  let valid = true;
+  if (!dateEl.value)                            { dateEl.classList.add("err");   dateErr.classList.add("show");   valid=false; }
+  if (!amountEl.value || +amountEl.value <= 0)  { amountEl.classList.add("err"); amountErr.classList.add("show"); valid=false; }
+  if (!valid) return;
+
+  const btn = document.getElementById(`btn-send-${type}`);
+  btn.disabled = true; btn.textContent = "⏳ Sending…";
+  try {
+    await addDoc(collection(db, "expenses"), {
+      type, date: dateEl.value,
+      amount:    parseFloat(amountEl.value),
+      items:     [..._itemLists[type]],
+      createdAt: serverTimestamp()
+    });
+    showToast("✅ Entry saved to Monthly Expenses!", "success");
+    _itemLists[type] = [];
+    document.getElementById(`${prefix}-list`).innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
+    dateEl.value = ""; amountEl.value = "";
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+  finally { btn.disabled = false; btn.textContent = "📤 Send to Monthly Expenses"; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   PANTRY STAPLES  (מלאי קריטי)
+══════════════════════════════════════════════════════════ */
+function initPantry() {
+  _unsub("pantry");
+  // ✅ FLAT onSnapshot — sort in JS
+  _unsubs["pantry"] = onSnapshot(collection(db, "pantry"), snap => {
+    const items = [];
+    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+    items.sort((a, b) => _tsMs(a.createdAt) - _tsMs(b.createdAt));
+    _renderPantryGrid(items);
+  });
+}
+
+function _renderPantryGrid(items) {
+  const grid = document.getElementById("pantry-grid");
+  if (!items.length) {
+    grid.innerHTML = `<div class="pantry-empty">
+      <div class="empty-icon">🧺</div>
+      <p>No staples yet — add one above!</p></div>`;
+    return;
+  }
+  grid.innerHTML = "";
+  items.forEach(item => {
+    const isLow = item.status === "low";
+    const wrap  = document.createElement("div"); wrap.className = "staple-wrap";
+    wrap.innerHTML = `
+      <button class="staple-btn ${isLow ? "low" : "stock"}">
+        <span class="staple-name">${item.name}</span>
+        <span class="staple-status-label">${isLow ? "🔴 Running Low" : "✅ In Stock"}</span>
+      </button>
+      <button class="staple-del" title="Remove">✕</button>`;
+    wrap.querySelector(".staple-btn").addEventListener("click", () =>
+      _toggleStaple(item.id, item.name, item.status));
+    wrap.querySelector(".staple-del").addEventListener("click", e => {
+      e.stopPropagation();
+      _deleteStaple(item.id, item.name);
+    });
+    grid.appendChild(wrap);
+  });
+}
+
+window.addStaple = async function() {
+  const input = document.getElementById("pantry-input");
+  const name  = input.value.trim();
+  if (!name) { input.classList.add("err"); return; }
+  input.classList.remove("err");
+  try {
+    await addDoc(collection(db, "pantry"), { name, status:"stock", createdAt:serverTimestamp() });
+    input.value = "";
+    showToast(`✅ ${name} added to pantry`, "success");
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+};
+
+async function _toggleStaple(id, name, currentStatus) {
+  const newStatus = currentStatus === "stock" ? "low" : "stock";
+  try {
+    await setDoc(doc(db, "pantry", id), { status: newStatus }, { merge: true });
+    if (newStatus === "low") {
+      await setDoc(doc(db, "grocery_queue", id), { name, addedAt: serverTimestamp() });
+      showToast(`🛒 "${name}" added to Groceries list`, "success");
+    } else {
+      await deleteDoc(doc(db, "grocery_queue", id)).catch(() => {});
+      showToast(`✅ "${name}" back In Stock`, "success");
+    }
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+}
+
+async function _deleteStaple(id, name) {
+  if (!confirm(`Remove "${name}" from pantry?`)) return;
+  try {
+    await deleteDoc(doc(db, "pantry", id));
+    await deleteDoc(doc(db, "grocery_queue", id)).catch(() => {});
+    showToast("🗑️ Removed from pantry", "success");
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   EXPENSES — CURRENT STATUS  (flat query, no indexes)
+══════════════════════════════════════════════════════════ */
+window.deleteExpense = async function(id) {
+  if (!confirm("Delete this entry?")) return;
+  try {
+    await deleteDoc(doc(db, "expenses", id));
+    showToast("🗑️ Entry deleted", "success");
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+};
+
+function initExpensesStatus() {
+  const now  = new Date();
+  const yyyy = now.getFullYear();
+  const mm   = String(now.getMonth() + 1).padStart(2, "0");
+  const from = `${yyyy}-${mm}-01`;
+  const to   = `${yyyy}-${mm}-31`;
+
+  _unsub("status");
+  // ✅ FLAT onSnapshot — filter current month in JS
+  _unsubs["status"] = onSnapshot(collection(db, "expenses"), snap => {
+    const rows = [];
+    snap.forEach(d => {
+      const e = d.data();
+      if (e.date && e.date >= from && e.date <= to)
+        rows.push({ id: d.id, ...e });
+    });
+    rows.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+    const tbody = document.getElementById("live-tbody");
+    tbody.innerHTML = "";
+    let g = 0, u = 0;
+
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="4"><div class="empty"><div class="empty-icon">📭</div>No entries yet this month.</div></td></tr>`;
+    } else {
+      rows.forEach(e => {
+        if (e.type === "groceries") g += e.amount; else u += e.amount;
+        const badge = e.type === "groceries"
+          ? `<span class="badge badge-grocery">🛒 Groceries</span>`
+          : `<span class="badge badge-upgrade">🏠 Upgrade</span>`;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${_fmtDate(e.date)}</td>
+          <td>${badge}</td>
+          <td style="font-weight:600">₪${(e.amount||0).toFixed(2)}</td>
+          <td><button class="btn-trash" title="Delete">🗑️</button></td>`;
+        tr.querySelector(".btn-trash").addEventListener("click", () => deleteExpense(e.id));
+        tbody.appendChild(tr);
+      });
+    }
+    document.getElementById("stat-groceries").textContent = `₪${g.toFixed(0)}`;
+    document.getElementById("stat-upgrades").textContent  = `₪${u.toFixed(0)}`;
+    document.getElementById("stat-total").textContent     = `₪${(g+u).toFixed(0)}`;
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   MONTHLY REPORTS  (flat queries, no indexes)
+══════════════════════════════════════════════════════════ */
+let _pieChart = null;
+
+function initReportSelector() {
+  const sel = document.getElementById("report-select");
+  if (sel.options.length > 1) return;
+  const now = new Date();
+  for (let i = 0; i < 24; i++) {
+    const d   = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+    const o   = document.createElement("option");
+    o.value = val;
+    o.textContent = d.toLocaleDateString("en-GB",{month:"long",year:"numeric"});
+    sel.appendChild(o);
+  }
+}
+
+window.loadReport = async function(monthStr) {
+  if (!monthStr) return;
+  const container = document.getElementById("report-content");
+  container.innerHTML = `<div class="empty"><div class="spinner"></div>Loading…</div>`;
+  if (_pieChart) { _pieChart.destroy(); _pieChart = null; }
+  try {
+    const dateFrom = monthStr + "-01";
+    const dateTo   = monthStr + "-31";
+
+    // ✅ FLAT query — filter in JS
+    const [expSnap, bSnap] = await Promise.all([
+      getDocs(collection(db, "expenses")),
+      getDoc(doc(db, "bills", monthStr))
+    ]);
+
+    let groceries = 0, upgrades = 0;
+    expSnap.forEach(d => {
+      const e = d.data();
+      if (e.date && e.date >= dateFrom && e.date <= dateTo) {
+        if (e.type === "groceries") groceries += e.amount;
+        else if (e.type === "upgrades") upgrades += e.amount;
+      }
+    });
+
+    const b     = bSnap.exists() ? bSnap.data() : {};
+    const bills = { rent:b.rent||0, electricity:b.electricity||0, water:b.water||0, arnona:b.arnona||0 };
+    _renderReport(container, monthStr, groceries, upgrades, bills);
+  } catch(err) {
+    container.innerHTML = `<div class="empty" style="color:var(--danger)">⚠️ ${err.message}</div>`;
+  }
+};
+
+function _renderReport(container, monthStr, groceries, upgrades, bills) {
+  const [y, m] = monthStr.split("-");
+  const label  = new Date(+y, +m-1, 1).toLocaleDateString("en-GB",{month:"long",year:"numeric"});
+  const varT   = groceries + upgrades;
+  const fixT   = bills.rent + bills.electricity + bills.water + bills.arnona;
+  const grand  = varT + fixT;
+
+  const COLORS = ["#52B788","#6C63FF","#F4A261","#3B82F6","#D4A017","#E63946"];
+  const LABELS = ["Groceries","House Upgrades","Rent","Electricity","Water","Arnona"];
+  const VALUES = [groceries, upgrades, bills.rent, bills.electricity, bills.water, bills.arnona];
+
+  container.innerHTML = `
+    <div class="report-hero">
+      <h3>📋 ${label} Report</h3>
+      <p>Complete monthly expense summary</p>
+      <div class="report-total">₪${grand.toFixed(0)}</div>
+    </div>
+    <div class="chart-card">
+      <h4>Breakdown</h4>
+      <canvas id="expense-pie"></canvas>
+      <div class="legend" id="pie-legend"></div>
+    </div>
+    <div class="chart-card" style="margin-bottom:0">
+      <h4>Detail</h4>
+      <table class="report-detail">
+        <tbody>
+          ${LABELS.map((l,i) => `<tr><td>${l}</td><td>₪${VALUES[i].toFixed(2)}</td></tr>`).join("")}
+        </tbody>
+        <tfoot>
+          <tr><td>Variable Total</td><td>₪${varT.toFixed(2)}</td></tr>
+          <tr><td>Fixed Bills Total</td><td>₪${fixT.toFixed(2)}</td></tr>
+          <tr><td><strong>Grand Total</strong></td><td><strong>₪${grand.toFixed(2)}</strong></td></tr>
+        </tfoot>
+      </table>
+    </div>`;
+
+  _pieChart = new Chart(document.getElementById("expense-pie"), {
+    type:"doughnut",
+    data:{ labels:LABELS, datasets:[{ data:VALUES, backgroundColor:COLORS, borderWidth:2, borderColor:"#fff" }] },
+    options:{ responsive:true, plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:ctx => ` ₪${ctx.raw.toFixed(0)}`}}
+    }}
+  });
+
+  const legend = document.getElementById("pie-legend");
+  LABELS.forEach((l, i) => {
+    if (!VALUES[i]) return;
+    legend.innerHTML += `<div class="legend-row">
+      <div class="legend-dot" style="background:${COLORS[i]}"></div>
+      <span class="legend-label">${l}</span>
+      <span class="legend-val">₪${VALUES[i].toFixed(0)}</span></div>`;
+  });
+
+  // Persist to reports archive
+  setDoc(doc(db, "reports", monthStr),
+    { monthStr, label, total:grand, generatedAt:serverTimestamp() }, { merge:true })
+    .catch(e => console.warn("Report save:", e));
+}
+
+/* ══════════════════════════════════════════════════════════
+   VAULT  (static Google Drive card)
+══════════════════════════════════════════════════════════ */
+// Nothing to initialize — static HTML card
+
+/* ══════════════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════════════ */
+function _fmtDate(str) {
+  if (!str) return "—";
+  const [y, m, d] = str.split("-"); return `${d}/${m}/${y}`;
+}
+
+function _monthLabel(monthStr) {
+  const [y, m] = monthStr.split("-");
+  return new Date(+y, +m-1, 1).toLocaleDateString("en-GB",{month:"long",year:"numeric"});
+}
+
+window.showToast = function(msg, type = "") {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.className = `show ${type}`;
+  clearTimeout(t._t); t._t = setTimeout(() => { t.className = ""; }, 3200);
+};
+
+/* ══════════════════════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════════════════════ */
+initDashboard();
+
+</script>
+</body>
+</html>
