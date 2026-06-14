@@ -384,6 +384,68 @@
   .pantry-tag{font-size:.7rem;background:rgba(212,160,23,.15);color:var(--accent);
     padding:2px 7px;border-radius:10px;font-weight:600;flex-shrink:0}
 
+  /* ═══ Who Toggle ══════════════════════════════════════════ */
+  #who-toggle{margin-left:auto;display:flex;background:rgba(255,255,255,.12);
+    border-radius:20px;padding:3px;gap:2px;flex-shrink:0}
+  .who-btn{background:transparent;border:none;color:rgba(255,255,255,.6);
+    padding:5px 12px;border-radius:16px;font-size:.75rem;font-weight:600;
+    cursor:pointer;transition:var(--T);font-family:inherit;white-space:nowrap}
+  .who-btn.active{background:rgba(255,255,255,.22);color:#fff}
+
+  /* ═══ Activity Feed ══════════════════════════════════════ */
+  .activity-feed{display:flex;flex-direction:column;gap:9px}
+  .activity-item{background:var(--bg-card);border-radius:var(--radius);
+    border:1.5px solid var(--border);padding:12px 14px;display:flex;
+    align-items:flex-start;gap:11px;box-shadow:var(--shadow-sm)}
+  .av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;
+    justify-content:center;font-size:.85rem;font-weight:700;flex-shrink:0;margin-top:1px}
+  .av-alon{background:#D1FAE5;color:#065F46}
+  .av-tali{background:#DBEAFE;color:#1E40AF}
+  .activity-body{flex:1;min-width:0}
+  .activity-line{font-size:.84rem;color:var(--text);line-height:1.45}
+  .activity-line strong{font-weight:600}
+  .activity-time{font-size:.72rem;color:var(--text-light);margin-top:3px}
+  .activity-emoji{font-size:1.15rem;flex-shrink:0;align-self:center}
+  .badge-new{display:inline-block;background:rgba(45,106,79,.15);color:var(--primary);
+    font-size:.66rem;font-weight:700;padding:2px 7px;border-radius:10px;
+    margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
+  .activity-empty{text-align:center;padding:28px 16px;color:var(--text-muted);font-size:.84rem}
+  .activity-empty-icon{font-size:2rem;margin-bottom:8px;opacity:.4}
+  .btn-dismiss{background:none;border:none;color:var(--text-light);cursor:pointer;
+    font-size:.78rem;padding:4px 6px;border-radius:6px;transition:var(--T);
+    flex-shrink:0;align-self:flex-start;line-height:1;font-family:inherit}
+  .btn-dismiss:hover{background:rgba(0,0,0,.07);color:var(--text)}
+  .activity-see-all{text-align:center;padding:10px 0 2px}
+  .activity-see-all button{background:none;border:1.5px solid var(--border);
+    color:var(--text-muted);padding:8px 18px;border-radius:20px;font-size:.78rem;
+    font-weight:600;cursor:pointer;transition:var(--T);font-family:inherit}
+  .activity-see-all button:active{background:var(--bg-surface)}
+  /* ═══ Archive ═════════════════════════════════════════════ */
+  .archive-day-label{font-size:.74rem;font-weight:600;text-transform:uppercase;
+    letter-spacing:.5px;color:var(--text-muted);margin:18px 0 8px;
+    display:flex;align-items:center;gap:8px}
+  .archive-day-label::after{content:'';flex:1;height:1px;background:var(--border)}
+  .archive-item{background:var(--bg-card);border-radius:var(--radius);
+    border:1.5px solid var(--border);padding:12px 14px;display:flex;
+    align-items:center;gap:11px;margin-bottom:8px;box-shadow:var(--shadow-sm)}
+  .archive-item-body{flex:1;min-width:0}
+  .archive-item-line{font-size:.84rem;color:var(--text);line-height:1.4}
+  .archive-item-time{font-size:.71rem;color:var(--text-light);margin-top:2px}
+  /* ═══ Items peek (grocery list expand) ══════════════════ */
+  .items-toggle{background:none;border:1.5px solid var(--border);color:var(--text-muted);
+    font-size:.73rem;font-weight:600;padding:4px 11px;border-radius:20px;cursor:pointer;
+    margin-top:7px;display:inline-flex;align-items:center;gap:4px;
+    font-family:inherit;transition:var(--T);line-height:1.4}
+  .items-toggle:active{background:var(--bg-surface)}
+  .items-peek{margin-top:8px;background:var(--bg-surface);border-radius:var(--radius-sm);
+    border:1.5px solid var(--border);padding:9px 12px;display:none}
+  .items-peek.open{display:block}
+  .items-peek li{font-size:.82rem;color:var(--text);padding:4px 0;
+    border-bottom:1px solid var(--border);list-style:none;
+    display:flex;align-items:center;gap:7px}
+  .items-peek li::before{content:'✓';color:var(--primary-light);font-size:.76rem;font-weight:700;flex-shrink:0}
+  .items-peek li:last-child{border-bottom:none;padding-bottom:0}
+
   /* ═══ History ═════════════════════════════════════════════ */
   .history-item{display:flex;align-items:center;gap:12px;padding:12px 14px;
     background:var(--bg-card);border-radius:var(--radius-sm);
@@ -469,6 +531,10 @@
 <header id="app-header">
   <button id="btn-back" aria-label="Go back">&#8592;</button>
   <span id="header-title">🏠 Home Manager</span>
+  <div id="who-toggle">
+    <button class="who-btn active" id="who-alon" onclick="setUser('Alon')">Alon</button>
+    <button class="who-btn"        id="who-tali" onclick="setUser('Tali')">Tali</button>
+  </div>
 </header>
 
 <!-- PAYMENT ALERT -->
@@ -509,6 +575,14 @@
       <div class="card-emoji">🗓️</div>
       <div><div class="card-label">House Calendar</div><div class="card-sub">יומן הבית המשותף</div></div>
       <span class="card-arrow">›</span>
+    </div>
+  </div>
+
+  <p class="section-title" style="margin-top:24px">🔔 Recent Activity</p>
+  <div class="activity-feed" id="activity-feed">
+    <div class="activity-empty">
+      <div class="activity-empty-icon">🔔</div>
+      <p>No activity yet — actions will appear here.</p>
     </div>
   </div>
 </main>
@@ -844,6 +918,13 @@
   <p class="calendar-note">📅 לחץ על אירוע לפרטים נוספים • נפתח ב-Google Calendar</p>
 </main>
 
+<!-- ═════════════════ ACTIVITY ARCHIVE ══════════════════ -->
+<main id="view-activity-archive" class="view">
+  <div id="archive-list">
+    <div class="empty"><div class="spinner"></div>Loading…</div>
+  </div>
+</main>
+
 <!-- ═════════════════ ADD ITEM MODAL ════════════════════ -->
 <div id="add-modal" class="modal-bg" onclick="modalBgClick(event)">
   <div class="modal-sheet">
@@ -945,6 +1026,7 @@ const VIEW_META = {
   "shopping-upgrades":   { title:"🏠 House Upgrades",    back:"shopping" },
   "pantry":              { title:"🧺 Pantry Staples",    back:"shopping" },
   "calendar":            { title:"🗓️ House Calendar",    back:"dashboard" },
+  "activity-archive":    { title:"📋 Activity History",  back:"dashboard" },
 };
 
 let _cur = "dashboard";
@@ -953,6 +1035,7 @@ const _unsubs = {};
 function _unsub(key) { if (_unsubs[key]) { _unsubs[key](); delete _unsubs[key]; } }
 
 function _cleanupLeaving(id) {
+  if (id === "dashboard")          _unsub("activity");
   if (id === "expenses-status")    _unsub("status");
   if (id === "shopping-groceries") _unsub("hist-groceries");
   if (id === "shopping-upgrades")  _unsub("hist-upgrades");
@@ -982,6 +1065,8 @@ window.navigateTo = function(viewId) {
 };
 
 function _onEnter(id) {
+  if (id === "dashboard")          initActivityFeed();
+  if (id === "activity-archive")   initActivityArchive();
   if (id === "chores-cleaning")    initCleaning();
   if (id === "chores-gardening")   initGardening();
   if (id === "chores-payments")    initPayments();
@@ -1003,6 +1088,8 @@ function initDashboard() {
   document.getElementById("greeting-date").textContent =
     new Date().toLocaleDateString("en-GB", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
   _checkPaymentAlert();
+  _initWhoUI();
+  initActivityFeed();
 }
 
 function _checkPaymentAlert() {
@@ -1013,12 +1100,233 @@ function _checkPaymentAlert() {
 
 document.getElementById("alert-view-btn").addEventListener("click", () => navigateTo("chores-payments"));
 
+/* ══════════════════════════════════════════════════════════
+   WHO IS USING THE APP
+══════════════════════════════════════════════════════════ */
+function _currentUser() {
+  return localStorage.getItem("currentUser") || "Alon";
+}
+
+function _initWhoUI() {
+  const user = _currentUser();
+  document.getElementById("who-alon").classList.toggle("active", user === "Alon");
+  document.getElementById("who-tali").classList.toggle("active", user === "Tali");
+}
+
+window.setUser = function(name) {
+  localStorage.setItem("currentUser", name);
+  document.getElementById("who-alon").classList.toggle("active", name === "Alon");
+  document.getElementById("who-tali").classList.toggle("active", name === "Tali");
+  showToast(`👋 Switched to ${name}`, "success");
+};
+
+/* ══════════════════════════════════════════════════════════
+   ACTIVITY FEED  (/activity collection)
+   Schema: { who, emoji, action, createdAt }
+══════════════════════════════════════════════════════════ */
+async function _logActivity(emoji, action, items = null) {
+  try {
+    const data = { who: _currentUser(), emoji, action, createdAt: serverTimestamp() };
+    if (items && items.length) data.items = items;
+    await addDoc(collection(db, "activity"), data);
+  } catch(e) { console.warn("Activity log error:", e); }
+}
+
+function _timeAgo(ms) {
+  if (!ms) return "just now";
+  const diff = Date.now() - ms;
+  const m = Math.floor(diff / 60000);
+  const h = Math.floor(diff / 3600000);
+  const d = Math.floor(diff / 86400000);
+  if (m < 1)  return "just now";
+  if (m < 60) return `${m}m ago`;
+  if (h < 24) return `${h}h ago`;
+  if (d === 1) return "yesterday";
+  if (d < 7)  return `${d} days ago`;
+  return new Date(Date.now() - diff).toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+}
+
+function initActivityFeed() {
+  const lastSeen = parseInt(localStorage.getItem("lastSeenActivity") || "0");
+  localStorage.setItem("lastSeenActivity", Date.now());
+  _unsub("activity");
+  // ✅ FLAT onSnapshot — sort in JS, no composite index needed
+  _unsubs["activity"] = onSnapshot(collection(db, "activity"), snap => {
+    const items = [];
+    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+    items.sort((a, b) => _tsMs(b.createdAt) - _tsMs(a.createdAt));
+    _renderActivityFeed(items.slice(0, 20), lastSeen);
+  });
+}
+
+/* ── Dismiss helpers (localStorage) ─────────────────── */
+function _getDismissed() {
+  try { return new Set(JSON.parse(localStorage.getItem("dismissedActivity") || "[]")); }
+  catch { return new Set(); }
+}
+function _dismissActivity(id, cardEl) {
+  const s = _getDismissed(); s.add(id);
+  localStorage.setItem("dismissedActivity", JSON.stringify([...s]));
+  cardEl.style.transition = "opacity .25s, transform .25s";
+  cardEl.style.opacity = "0"; cardEl.style.transform = "translateX(12px)";
+  setTimeout(() => {
+    cardEl.remove();
+    const feed = document.getElementById("activity-feed");
+    if (feed && !feed.querySelector(".activity-item"))
+      feed.innerHTML = `<div class="activity-empty">
+        <div class="activity-empty-icon">🔔</div>
+        <p>All caught up! <button onclick="navigateTo('activity-archive')"
+          style="background:none;border:none;color:var(--primary);font-weight:600;cursor:pointer;font-family:inherit;font-size:.84rem">View history →</button></p></div>`;
+  }, 260);
+}
+
+function _renderActivityFeed(items, lastSeen) {
+  const el = document.getElementById("activity-feed");
+  if (!el) return;
+  const dismissed = _getDismissed();
+  const visible   = items.filter(i => !dismissed.has(i.id));
+
+  if (!visible.length) {
+    el.innerHTML = `<div class="activity-empty">
+      <div class="activity-empty-icon">🔔</div>
+      <p>All caught up! <button onclick="navigateTo('activity-archive')"
+        style="background:none;border:none;color:var(--primary);font-weight:600;cursor:pointer;font-family:inherit;font-size:.84rem">View history →</button></p></div>`;
+    return;
+  }
+  el.innerHTML = "";
+  visible.forEach(item => {
+    const ts    = _tsMs(item.createdAt);
+    const isNew = ts > lastSeen && lastSeen > 0;
+    const who   = item.who || "Someone";
+    const cls   = who === "Alon" ? "av-alon" : "av-tali";
+    const init  = who[0].toUpperCase();
+    const hasItems = item.items && item.items.length > 0;
+    const div   = document.createElement("div"); div.className = "activity-item";
+    div.innerHTML = `
+      <div class="av ${cls}">${init}</div>
+      <div class="activity-body">
+        ${isNew ? `<span class="badge-new">new</span><br>` : ""}
+        <div class="activity-line"><strong>${who}</strong> ${item.action}</div>
+        <div class="activity-time">${_timeAgo(ts)}</div>
+        ${hasItems ? `
+          <button class="items-toggle">🛒 ${item.items.length} item${item.items.length > 1 ? "s" : ""} purchased ▼</button>
+          <ul class="items-peek">${item.items.map(i => `<li>${i}</li>`).join("")}</ul>` : ""}
+      </div>
+      <span class="activity-emoji" aria-hidden="true">${item.emoji}</span>
+      <button class="btn-dismiss" title="Dismiss">✕</button>`;
+    if (hasItems) {
+      const toggle = div.querySelector(".items-toggle");
+      const peek   = div.querySelector(".items-peek");
+      toggle.addEventListener("click", () => {
+        const open = peek.classList.toggle("open");
+        toggle.textContent = open
+          ? `🛒 ${item.items.length} item${item.items.length > 1 ? "s" : ""} purchased ▲`
+          : `🛒 ${item.items.length} item${item.items.length > 1 ? "s" : ""} purchased ▼`;
+      });
+    }
+    div.querySelector(".btn-dismiss").addEventListener("click", () =>
+      _dismissActivity(item.id, div));
+    el.appendChild(div);
+  });
+  // "View all history" link at the bottom
+  const footer = document.createElement("div"); footer.className = "activity-see-all";
+  footer.innerHTML = `<button onclick="navigateTo('activity-archive')">📋 View all history →</button>`;
+  el.appendChild(footer);
+}
+
+/* ══════════════════════════════════════════════════════════
+   ACTIVITY ARCHIVE
+══════════════════════════════════════════════════════════ */
+async function initActivityArchive() {
+  const el = document.getElementById("archive-list");
+  el.innerHTML = `<div class="empty"><div class="spinner"></div>Loading…</div>`;
+  try {
+    // ✅ FLAT query
+    const snap = await getDocs(collection(db, "activity"));
+    if (snap.empty) {
+      el.innerHTML = `<div class="empty"><div class="empty-icon">📋</div>No activity recorded yet.</div>`; return;
+    }
+    const items = [];
+    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+    items.sort((a, b) => _tsMs(b.createdAt) - _tsMs(a.createdAt));
+    _renderArchiveList(items);
+  } catch(err) {
+    el.innerHTML = `<div class="empty" style="color:var(--danger)">⚠️ ${err.message}</div>`;
+  }
+}
+
+function _renderArchiveList(items) {
+  const el = document.getElementById("archive-list");
+  el.innerHTML = "";
+  let lastDay = "";
+  items.forEach(item => {
+    const ts  = _tsMs(item.createdAt);
+    const day = ts
+      ? new Date(ts).toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"})
+      : "Unknown date";
+    if (day !== lastDay) {
+      lastDay = day;
+      const lbl = document.createElement("div"); lbl.className = "archive-day-label";
+      lbl.textContent = day;
+      el.appendChild(lbl);
+    }
+    const who  = item.who || "Someone";
+    const cls  = who === "Alon" ? "av-alon" : "av-tali";
+    const init = who[0].toUpperCase();
+    const timeStr = ts
+      ? new Date(ts).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})
+      : "";
+    const hasItems = item.items && item.items.length > 0;
+    const div = document.createElement("div"); div.className = "archive-item";
+    div.style.flexWrap = "wrap";
+    div.innerHTML = `
+      <span style="font-size:1.1rem;flex-shrink:0">${item.emoji}</span>
+      <div class="archive-item-body">
+        <div class="archive-item-line"><strong>${who}</strong> ${item.action}</div>
+        <div class="archive-item-time">${timeStr}</div>
+        ${hasItems ? `
+          <button class="items-toggle" style="margin-top:6px">🛒 ${item.items.length} item${item.items.length > 1 ? "s" : ""} ▼</button>
+          <ul class="items-peek" style="width:100%">${item.items.map(i => `<li>${i}</li>`).join("")}</ul>` : ""}
+      </div>
+      <div class="av ${cls}" style="width:28px;height:28px;font-size:.72rem;flex-shrink:0">${init}</div>
+      <button class="btn-trash" title="Delete permanently">🗑️</button>`;
+    if (hasItems) {
+      const toggle = div.querySelector(".items-toggle");
+      const peek   = div.querySelector(".items-peek");
+      toggle.addEventListener("click", () => {
+        const open = peek.classList.toggle("open");
+        toggle.textContent = open
+          ? `🛒 ${item.items.length} item${item.items.length > 1 ? "s" : ""} ▲`
+          : `🛒 ${item.items.length} item${item.items.length > 1 ? "s" : ""} ▼`;
+      });
+    }
+    div.querySelector(".btn-trash").addEventListener("click", () =>
+      _deleteArchiveItem(item.id, div));
+    el.appendChild(div);
+  });
+}
+
+async function _deleteArchiveItem(id, cardEl) {
+  if (!confirm("Permanently delete this activity record?")) return;
+  try {
+    await deleteDoc(doc(db, "activity", id));
+    // Also remove from dismissed list to keep it clean
+    const s = _getDismissed(); s.delete(id);
+    localStorage.setItem("dismissedActivity", JSON.stringify([...s]));
+    cardEl.style.transition = "opacity .2s";
+    cardEl.style.opacity = "0";
+    setTimeout(() => { cardEl.remove(); }, 220);
+    showToast("🗑️ Deleted", "success");
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+}
+
 function confirmPayment() {
   localStorage.setItem("lastPayConfirmed", Date.now());
   document.getElementById("payment-alert").classList.remove("visible");
   document.getElementById("last-confirmed-label").textContent =
     new Date().toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" });
   showToast("✅ Bills confirmed — reminder paused for 30 days", "success");
+  _logActivity("✅", "confirmed all bills as paid");
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -1300,6 +1608,7 @@ window.addPlant = async function() {
     await addDoc(collection(db, "plants"), { name, intervalDays, createdAt: serverTimestamp() });
     nameEl.value = ""; daysEl.value = "3";
     showToast(`🌱 ${name} added!`, "success");
+    _logActivity("🌱", `added ${name} to the garden`);
     initGardening();
   } catch(err) { showToast("Error: " + err.message, "error"); }
 };
@@ -1384,6 +1693,7 @@ async function saveBills() {
       updatedAt:   serverTimestamp()
     });
     showToast("✅ Bills saved!", "success");
+    _logActivity("💳", `saved bills for ${_monthLabel(monthStr)}`);
     await renderBillsHistory();
   } catch(err) { showToast("Error: " + err.message, "error"); }
   finally { btn.disabled = false; btn.textContent = "💾 Save Bills for this Month"; }
@@ -1466,6 +1776,7 @@ async function saveMaintenance() {
     document.getElementById("maint-title-input").value = "";
     document.getElementById("maint-status-input").value = "pending";
     showToast("✅ Issue logged!", "success");
+    _logActivity("🔧", `logged a new issue: ${title}`);
   } catch(err) { showToast("Error: " + err.message, "error"); }
   finally { btn.disabled = false; btn.textContent = "📋 Log Issue"; }
 }
@@ -1521,6 +1832,8 @@ async function deleteMaintenance(id) {
 ══════════════════════════════════════════════════════════ */
 let _modalTarget = null;
 const _itemLists  = { groceries:[], upgrades:[] };
+// Tracks pantry items loaded into the grocery list: { pantryId: { name, checked } }
+let _pantryQueueItems = {};
 
 window.openAddModal = function(type) {
   _modalTarget = type;
@@ -1541,23 +1854,28 @@ window.confirmAddItem = function() {
   const prefix = _modalTarget === "groceries" ? "grocery" : "upgrade";
   const ul     = document.getElementById(`${prefix}-list`);
   _itemLists[_modalTarget].push(name);
-  _appendShopItem(ul, name, _modalTarget, false);
+  _appendShopItem(ul, name, _modalTarget, null);
   document.getElementById("add-modal").classList.remove("open");
 };
 
-function _appendShopItem(ul, name, type, fromPantry) {
+// pantryId: the Firestore doc ID from /grocery_queue (null for manually-added items)
+function _appendShopItem(ul, name, type, pantryId) {
   ul.querySelector(".list-empty")?.remove();
   const li = document.createElement("li"); li.className = "shop-item";
   li.innerHTML = `
     <input type="checkbox" class="item-check">
     <span class="item-label">${name}</span>
-    ${fromPantry ? `<span class="pantry-tag">🧺</span>` : ""}
+    ${pantryId ? `<span class="pantry-tag">🧺</span>` : ""}
     <button class="item-del" title="Remove">✕</button>`;
   li.querySelector(".item-check").addEventListener("change", function() {
     li.classList.toggle("checked", this.checked);
+    // Track checked state for pantry auto-reset
+    if (pantryId && _pantryQueueItems[pantryId])
+      _pantryQueueItems[pantryId].checked = this.checked;
   });
   li.querySelector(".item-del").addEventListener("click", () => {
     _itemLists[type] = _itemLists[type].filter(i => i !== name);
+    if (pantryId) delete _pantryQueueItems[pantryId];
     li.remove();
     const listEl = document.getElementById(type === "groceries" ? "grocery-list" : "upgrade-list");
     if (!listEl.querySelector(".shop-item"))
@@ -1577,12 +1895,14 @@ async function initShopping(type) {
 
   // Pre-load items from pantry grocery_queue (flat getDocs, no index needed)
   if (type === "groceries") {
+    _pantryQueueItems = {};
     const qSnap = await getDocs(collection(db, "grocery_queue"));
     if (!qSnap.empty) {
       qSnap.forEach(d => {
         const name = d.data().name;
+        _pantryQueueItems[d.id] = { name, checked: false }; // track for auto-reset
         _itemLists.groceries.push(name);
-        _appendShopItem(ul, name, "groceries", true);
+        _appendShopItem(ul, name, "groceries", d.id); // pass pantry doc ID
       });
     } else {
       ul.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
@@ -1613,17 +1933,31 @@ function _renderShopHistory(type, rows) {
   container.innerHTML = "";
   rows.forEach(e => {
     const div = document.createElement("div"); div.className = "history-item";
-    const sub = e.items?.length
-      ? e.items.slice(0,3).join(", ") + (e.items.length > 3 ? ` +${e.items.length-3} more` : "")
-      : "";
+    div.style.cssText = "flex-direction:column;align-items:stretch;gap:6px";
+    const hasItems = e.items && e.items.length > 0;
     div.innerHTML = `
-      <div class="history-item-left">
-        <div class="history-date">${_fmtDate(e.date)}</div>
-        ${sub ? `<div class="history-sub">${sub}</div>` : ""}
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="history-item-left" style="flex:1">
+          <div class="history-date">${_fmtDate(e.date)}</div>
+        </div>
+        <span class="history-amount">₪${(e.amount||0).toFixed(2)}</span>
+        <button class="btn-trash" title="Delete">🗑️</button>
       </div>
-      <span class="history-amount">₪${(e.amount||0).toFixed(2)}</span>
-      <button class="btn-trash" title="Delete">🗑️</button>`;
+      ${hasItems ? `
+        <button class="items-toggle" style="align-self:flex-start">🛒 ${e.items.length} item${e.items.length!==1?"s":""} ▼</button>
+        <ul class="items-peek">${e.items.map(i=>`<li>${i}</li>`).join("")}</ul>
+      ` : ""}`;
     div.querySelector(".btn-trash").addEventListener("click", () => deleteExpense(e.id));
+    if (hasItems) {
+      const toggle = div.querySelector(".items-toggle");
+      const peek   = div.querySelector(".items-peek");
+      toggle.addEventListener("click", () => {
+        const open = peek.classList.toggle("open");
+        toggle.textContent = open
+          ? `🛒 ${e.items.length} item${e.items.length!==1?"s":""} ▲`
+          : `🛒 ${e.items.length} item${e.items.length!==1?"s":""} ▼`;
+      });
+    }
     container.appendChild(div);
   });
 }
@@ -1645,16 +1979,57 @@ async function sendEntry(type) {
 
   const btn = document.getElementById(`btn-send-${type}`);
   btn.disabled = true; btn.textContent = "⏳ Sending…";
+  // For groceries: capture only CHECKED items (these are what was actually bought)
+  // For upgrades: capture all items (no checkbox distinction)
+  const purchasedItems = type === "groceries"
+    ? [...document.querySelectorAll("#grocery-list .shop-item.checked .item-label")]
+        .map(el => el.textContent.trim()).filter(Boolean)
+    : [..._itemLists[type]];
+  const entryAmount = parseFloat(amountEl.value) || 0;
   try {
     await addDoc(collection(db, "expenses"), {
       type, date: dateEl.value,
       amount:    parseFloat(amountEl.value),
-      items:     [..._itemLists[type]],
+      items:     purchasedItems,   // only checked items
       createdAt: serverTimestamp()
     });
-    showToast("✅ Entry saved to Monthly Expenses!", "success");
-    _itemLists[type] = [];
-    document.getElementById(`${prefix}-list`).innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
+
+    // ✅ Auto-reset checked pantry items back to "In Stock"
+    if (type === "groceries") {
+      const checkedPantryIds = Object.entries(_pantryQueueItems)
+        .filter(([, v]) => v.checked)
+        .map(([id]) => id);
+      if (checkedPantryIds.length) {
+        await Promise.all(checkedPantryIds.flatMap(id => [
+          setDoc(doc(db, "pantry", id), { status: "stock" }, { merge: true }),
+          deleteDoc(doc(db, "grocery_queue", id))
+        ]));
+        showToast(`✅ Saved! ${checkedPantryIds.length} pantry item(s) back In Stock 🧺`, "success");
+        _logActivity("🛒", `bought ${checkedPantryIds.length} pantry item(s) — back In Stock`);
+      } else {
+        showToast("✅ Entry saved to Monthly Expenses!", "success");
+      }
+      // Log grocery trip with the list of checked/purchased items
+      _logActivity("🛒", `submitted a grocery trip — ₪${entryAmount.toFixed(0)}`, purchasedItems);
+      _pantryQueueItems = {};
+    } else {
+      showToast("✅ Entry saved to Monthly Expenses!", "success");
+      _logActivity("🏠", `logged a house upgrade — ₪${entryAmount.toFixed(0)}`);
+    }
+
+    const listEl = document.getElementById(`${prefix}-list`);
+    if (type === "groceries") {
+      // Remove only CHECKED items; keep unchecked for next trip to the market
+      listEl.querySelectorAll(".shop-item.checked").forEach(li => li.remove());
+      _itemLists["groceries"] = [...listEl.querySelectorAll(".shop-item .item-label")]
+        .map(el => el.textContent.trim());
+      if (!listEl.querySelector(".shop-item"))
+        listEl.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
+    } else {
+      // Upgrades: clear the full list as before
+      _itemLists[type] = [];
+      listEl.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
+    }
     dateEl.value = ""; amountEl.value = "";
   } catch(err) { showToast("Error: " + err.message, "error"); }
   finally { btn.disabled = false; btn.textContent = "📤 Send to Monthly Expenses"; }
@@ -1721,6 +2096,7 @@ async function _toggleStaple(id, name, currentStatus) {
     if (newStatus === "low") {
       await setDoc(doc(db, "grocery_queue", id), { name, addedAt: serverTimestamp() });
       showToast(`🛒 "${name}" added to Groceries list`, "success");
+      _logActivity("🧺", `marked ${name} as running low`);
     } else {
       await deleteDoc(doc(db, "grocery_queue", id)).catch(() => {});
       showToast(`✅ "${name}" back In Stock`, "success");
