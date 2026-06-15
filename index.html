@@ -523,6 +523,40 @@
   /* ═══ Empty state ═════════════════════════════════════════ */
   .empty{text-align:center;padding:36px 16px;color:var(--text-muted);font-size:.85rem}
   .empty-icon{font-size:2.6rem;margin-bottom:10px;opacity:.45}
+
+  /* ═══ Splitwise ══════════════════════════════════════════ */
+  .sw-balance-card{border-radius:var(--radius);padding:22px 20px 18px;margin-bottom:20px;
+    text-align:center;box-shadow:var(--shadow);direction:rtl;position:relative;overflow:hidden}
+  .sw-balance-card::before{content:'';position:absolute;top:-30px;right:-30px;width:110px;
+    height:110px;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none}
+  .sw-balance-card.balanced{background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff}
+  .sw-balance-card.tali-owes{background:linear-gradient(135deg,#9D174D,#EC4899);color:#fff}
+  .sw-balance-card.alon-owes{background:linear-gradient(135deg,#1E40AF,#3B82F6);color:#fff}
+  .sw-balance-label{font-size:.74rem;opacity:.85;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+  .sw-balance-text{font-family:'Poppins',sans-serif;font-size:1.1rem;font-weight:700;line-height:1.35}
+  .sw-balance-amount{font-family:'Poppins',sans-serif;font-size:2.6rem;font-weight:700;
+    line-height:1;margin:8px 0 6px}
+  .sw-balance-sub{font-size:.76rem;opacity:.82}
+  .sw-paidby-toggle{display:flex;background:var(--bg-surface);border:1.5px solid var(--border);
+    border-radius:var(--radius-sm);padding:4px;gap:4px}
+  .sw-pb-btn{flex:1;padding:10px;border:none;background:transparent;border-radius:6px;
+    font-size:.92rem;font-weight:600;cursor:pointer;transition:var(--T);
+    font-family:inherit;color:var(--text-muted)}
+  .sw-pb-btn.active{background:var(--bg-card);color:var(--primary);box-shadow:var(--shadow-sm)}
+  .sw-table-wrap{background:var(--bg-card);border-radius:var(--radius-sm);overflow:hidden;
+    border:1.5px solid var(--border);box-shadow:var(--shadow-sm)}
+  .sw-table{width:100%;border-collapse:collapse}
+  .sw-table thead th{background:var(--bg-surface);padding:9px 13px;font-size:.74rem;
+    font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);
+    text-align:right;direction:rtl}
+  .sw-table thead th:last-child{text-align:center;width:44px}
+  .sw-table tbody tr{border-bottom:1px solid var(--border)}
+  .sw-table tbody tr:last-child{border-bottom:none}
+  .sw-table tbody td{padding:11px 13px;font-size:.84rem;vertical-align:middle;
+    direction:rtl;text-align:right}
+  .sw-table tbody td:last-child{text-align:center}
+  .badge-alon{background:rgba(16,185,129,.15);color:#065F46}
+  .badge-tali{background:rgba(236,72,153,.15);color:#9D174D}
   </style>
 </head>
 <body>
@@ -532,8 +566,8 @@
   <button id="btn-back" aria-label="Go back">&#8592;</button>
   <span id="header-title">🏠 Home Manager</span>
   <div id="who-toggle">
-    <button class="who-btn active" id="who-alon" onclick="setUser('Alon')">Alon</button>
-    <button class="who-btn"        id="who-tali" onclick="setUser('Tali')">Tali</button>
+    <button class="who-btn active" id="who-alon" onclick="setUser('Alon')">אלון</button>
+    <button class="who-btn"        id="who-tali" onclick="setUser('Tali')">טלי</button>
   </div>
 </header>
 
@@ -772,6 +806,14 @@
       <div class="item-text"><div class="item-title">Monthly Reports</div><div class="item-desc">End-of-month summaries with charts</div></div>
       <span class="item-arrow">›</span>
     </div>
+    <div class="submenu-card" onclick="navigateTo('expenses-splitwise')">
+      <div class="icon-wrap" style="--icon-bg:rgba(236,72,153,.12)">🤝</div>
+      <div class="item-text">
+        <div class="item-title">התחשבנות זוגית</div>
+        <div class="item-desc">Splitwise — who owes whom</div>
+      </div>
+      <span class="item-arrow">›</span>
+    </div>
   </div>
 </main>
 
@@ -804,6 +846,42 @@
   </div>
   <div id="report-content">
     <div class="empty"><div class="empty-icon">📊</div>Select a month to view its report.</div>
+  </div>
+</main>
+
+<!-- ═════════════════ SPLITWISE ══════════════════════════ -->
+<main id="view-expenses-splitwise" class="view">
+  <!-- Live balance card (populated by JS) -->
+  <div id="sw-balance-card" class="sw-balance-card balanced">
+    <div class="sw-balance-text">⚖️ אתם מאוזנים לחלוטין!</div>
+    <div class="sw-balance-sub">טוען נתונים…</div>
+  </div>
+
+  <!-- Add expense form -->
+  <p class="section-title">➕ הוסף הוצאה משותפת</p>
+  <div class="form-card" style="margin-bottom:22px">
+    <div class="form-group">
+      <label for="sw-name">שם ההוצאה</label>
+      <input type="text" id="sw-name" placeholder="למשל: סופרמרקט, אמזון…" style="direction:rtl">
+    </div>
+    <div class="form-group">
+      <label for="sw-amount">💰 סכום (₪)</label>
+      <input type="number" id="sw-amount" placeholder="0" min="0" step="0.01">
+    </div>
+    <div class="form-group">
+      <label>מי שילם?</label>
+      <div class="sw-paidby-toggle">
+        <button class="sw-pb-btn active" id="sw-pb-alon" onclick="setSWPaidBy('Alon')">אלון</button>
+        <button class="sw-pb-btn"        id="sw-pb-tali" onclick="setSWPaidBy('Tali')">טלי</button>
+      </div>
+    </div>
+    <button class="btn-send" id="btn-add-sw">➕ הוסף הוצאה</button>
+  </div>
+
+  <!-- Live table -->
+  <p class="section-title">📋 הוצאות משותפות</p>
+  <div id="sw-list">
+    <div class="empty"><div class="spinner"></div>טוען…</div>
   </div>
 </main>
 
@@ -983,6 +1061,7 @@
    /maintenance/{id}         → { title, dateReported, status, createdAt }
    /pantry/{id}              → { name, status:"stock"|"low", createdAt }
    /grocery_queue/{pantryId} → { name, addedAt }
+   /splitwise_expenses/{id}  → { name, amount, paidBy:"Alon"|"Tali", createdAt }
 ══════════════════════════════════════════════════════════ */
 import { initializeApp }    from "firebase/app";
 import { getAnalytics }     from "firebase/analytics";
@@ -1020,6 +1099,7 @@ const VIEW_META = {
   "expenses":            { title:"💰 Expenses",          back:"dashboard" },
   "expenses-status":     { title:"📊 Current Status",    back:"expenses" },
   "expenses-reports":    { title:"📋 Monthly Reports",   back:"expenses" },
+  "expenses-splitwise":  { title:"🤝 התחשבנות זוגית",    back:"expenses" },
   "vault":               { title:"🔐 The Vault",         back:"dashboard" },
   "shopping":            { title:"🛒 Shopping",          back:"dashboard" },
   "shopping-groceries":  { title:"🛒 Groceries",         back:"shopping" },
@@ -1035,12 +1115,13 @@ const _unsubs = {};
 function _unsub(key) { if (_unsubs[key]) { _unsubs[key](); delete _unsubs[key]; } }
 
 function _cleanupLeaving(id) {
-  if (id === "dashboard")          _unsub("activity");
-  if (id === "expenses-status")    _unsub("status");
-  if (id === "shopping-groceries") _unsub("hist-groceries");
-  if (id === "shopping-upgrades")  _unsub("hist-upgrades");
-  if (id === "pantry")             _unsub("pantry");
-  if (id === "chores-maintenance") _unsub("maintenance");
+  if (id === "dashboard")           _unsub("activity");
+  if (id === "expenses-status")     _unsub("status");
+  if (id === "expenses-splitwise")  _unsub("splitwise");
+  if (id === "shopping-groceries")  _unsub("hist-groceries");
+  if (id === "shopping-upgrades")   _unsub("hist-upgrades");
+  if (id === "pantry")              _unsub("pantry");
+  if (id === "chores-maintenance")  _unsub("maintenance");
 }
 
 window.navigateTo = function(viewId) {
@@ -1073,6 +1154,7 @@ function _onEnter(id) {
   if (id === "chores-maintenance") initMaintenance();
   if (id === "expenses-status")    initExpensesStatus();
   if (id === "expenses-reports")   initReportSelector();
+  if (id === "expenses-splitwise") initSplitwise();
   if (id === "shopping-groceries") initShopping("groceries");
   if (id === "shopping-upgrades")  initShopping("upgrades");
   if (id === "pantry")             initPantry();
@@ -1994,6 +2076,14 @@ async function sendEntry(type) {
       createdAt: serverTimestamp()
     });
 
+    // ✅ Auto-sync to Splitwise — mirrors every submitted expense
+    await addDoc(collection(db, "splitwise_expenses"), {
+      name:      type === "groceries" ? "קניות בסופר" : "שדרוג הבית",
+      amount:    entryAmount,
+      paidBy:    _currentUser(),   // whoever is active in the top toggle
+      createdAt: serverTimestamp()
+    });
+
     // ✅ Auto-reset checked pantry items back to "In Stock"
     if (type === "groceries") {
       const checkedPantryIds = Object.entries(_pantryQueueItems)
@@ -2280,6 +2370,185 @@ function _renderReport(container, monthStr, groceries, upgrades, bills) {
     { monthStr, label, total:grand, generatedAt:serverTimestamp() }, { merge:true })
     .catch(e => console.warn("Report save:", e));
 }
+
+/* ══════════════════════════════════════════════════════════
+   SPLITWISE-LITE  (התחשבנות זוגית)
+   Collection: /splitwise_expenses/{id}
+   Schema: { name, amount, paidBy:"Alon"|"Tali", createdAt }
+   ─────────────────────────────────────────────────────────
+   Balance logic (50/50 split):
+     diff = totalAlon − totalTali
+     If diff > 0 → Tali owes Alon  (diff / 2)
+     If diff < 0 → Alon owes Tali  (|diff| / 2)
+     If diff = 0 → Balanced ⚖️
+══════════════════════════════════════════════════════════ */
+let _swPaidBy = "Alon";
+
+window.setSWPaidBy = function(person) {
+  _swPaidBy = person;
+  document.getElementById("sw-pb-alon").classList.toggle("active", person === "Alon");
+  document.getElementById("sw-pb-tali").classList.toggle("active", person === "Tali");
+};
+
+function initSplitwise() {
+  // Default "Paid By" to whoever is currently using the app
+  _swPaidBy = _currentUser();
+  setSWPaidBy(_swPaidBy);
+  document.getElementById("btn-add-sw").onclick = _addSWExpense;
+  _unsub("splitwise");
+  // ✅ FLAT onSnapshot — filter/sort in JS, no composite index needed
+  _unsubs["splitwise"] = onSnapshot(collection(db, "splitwise_expenses"), snap => {
+    const items = [];
+    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+    items.sort((a, b) => _tsMs(b.createdAt) - _tsMs(a.createdAt));
+    _renderSplitwise(items);
+  });
+}
+
+function _renderSplitwise(items) {
+  // ── Balance calculation ──────────────────────────────────
+  let totalAlon = 0, totalTali = 0;
+  items.forEach(e => {
+    if      (e.paidBy === "Alon") totalAlon += e.amount || 0;
+    else if (e.paidBy === "Tali") totalTali += e.amount || 0;
+  });
+  const diff  = totalAlon - totalTali;
+  const owed  = Math.abs(diff) / 2;
+  const card  = document.getElementById("sw-balance-card");
+
+  if (Math.abs(diff) < 0.01) {
+    card.className = "sw-balance-card balanced";
+    card.innerHTML = `
+      <div class="sw-balance-text">⚖️ אתם מאוזנים לחלוטין!</div>
+      <div class="sw-balance-sub">אלון שילם ₪${totalAlon.toFixed(0)} · טלי שילמה ₪${totalTali.toFixed(0)}</div>`;
+  } else if (diff > 0) {
+    // Alon paid more → Tali owes Alon
+    card.className = "sw-balance-card tali-owes";
+    card.innerHTML = `
+      <div class="sw-balance-label">יתרה לתשלום</div>
+      <div class="sw-balance-text">טלי חייבת לאלון</div>
+      <div class="sw-balance-amount">₪${owed.toFixed(0)}</div>
+      <div class="sw-balance-sub">אלון שילם ₪${totalAlon.toFixed(0)} · טלי שילמה ₪${totalTali.toFixed(0)}</div>`;
+  } else {
+    // Tali paid more → Alon owes Tali
+    card.className = "sw-balance-card alon-owes";
+    card.innerHTML = `
+      <div class="sw-balance-label">יתרה לתשלום</div>
+      <div class="sw-balance-text">אלון חייב לטלי</div>
+      <div class="sw-balance-amount">₪${owed.toFixed(0)}</div>
+      <div class="sw-balance-sub">אלון שילם ₪${totalAlon.toFixed(0)} · טלי שילמה ₪${totalTali.toFixed(0)}</div>`;
+  }
+
+  // ── Table ────────────────────────────────────────────────
+  const listEl = document.getElementById("sw-list");
+  if (!items.length) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">🤝</div>לא נרשמו הוצאות משותפות עדיין.</div>`;
+    return;
+  }
+  listEl.innerHTML = "";
+  const wrap = document.createElement("div"); wrap.className = "sw-table-wrap";
+  wrap.innerHTML = `
+    <table class="sw-table">
+      <thead><tr>
+        <th>שם הוצאה</th><th>סכום</th><th>מי שילם</th><th></th>
+      </tr></thead>
+      <tbody id="sw-tbody"></tbody>
+    </table>`;
+  listEl.appendChild(wrap);
+
+  const tbody = document.getElementById("sw-tbody");
+  items.forEach(e => {
+    const isAlon = e.paidBy === "Alon";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td style="font-weight:500">${e.name || "—"}</td>
+      <td style="font-weight:700;color:var(--primary-dark)">₪${(e.amount||0).toFixed(2)}</td>
+      <td><span class="badge ${isAlon ? "badge-alon" : "badge-tali"}">${isAlon ? "אלון" : "טלי"}</span></td>
+      <td><button class="btn-trash" title="Delete">🗑️</button></td>`;
+    tr.querySelector(".btn-trash").addEventListener("click", () => _deleteSWExpense(e.id));
+    tbody.appendChild(tr);
+  });
+}
+
+async function _addSWExpense() {
+  const nameEl = document.getElementById("sw-name");
+  const amtEl  = document.getElementById("sw-amount");
+  const name   = nameEl.value.trim();
+  const amount = parseFloat(amtEl.value) || 0;
+  if (!name)   { nameEl.classList.add("err"); setTimeout(() => nameEl.classList.remove("err"), 1500); return; }
+  if (!amount) { amtEl.classList.add("err");  setTimeout(() => amtEl.classList.remove("err"), 1500);  return; }
+  const btn = document.getElementById("btn-add-sw");
+  btn.disabled = true; btn.textContent = "⏳ מוסיף…";
+  try {
+    await addDoc(collection(db, "splitwise_expenses"), {
+      name, amount, paidBy: _swPaidBy, createdAt: serverTimestamp()
+    });
+    nameEl.value = ""; amtEl.value = "";
+    showToast("✅ הוצאה נוספה!", "success");
+    _logActivity("🤝", `רשם הוצאה משותפת — ${name} ₪${amount.toFixed(0)} (שילם: ${_swPaidBy === "Alon" ? "אלון" : "טלי"})`);
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+  finally { btn.disabled = false; btn.textContent = "➕ הוסף הוצאה"; }
+}
+
+async function _deleteSWExpense(id) {
+  if (!confirm("Delete this shared expense?")) return;
+  try {
+    await deleteDoc(doc(db, "splitwise_expenses", id));
+    showToast("🗑️ נמחק", "success");
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   🍎 SIRI SHORTCUTS — FIRESTORE REST API REFERENCE
+   ──────────────────────────────────────────────────────────
+   Add items to the grocery queue directly from the iOS
+   Shortcuts app ("Hey Siri, add milk to the list").
+
+   PREREQUISITE: Firestore security rules must allow
+   unauthenticated writes to "grocery_queue". In the Firebase
+   Console → Firestore Database → Rules, ensure:
+     match /grocery_queue/{doc} { allow write: if true; }
+
+   ── ADD ITEM TO GROCERY LIST (grocery_queue) ────────────
+   Method:  POST
+   URL:     https://firestore.googleapis.com/v1/projects/home-manager-29a1a/databases/(default)/documents/grocery_queue
+   Headers:
+     Content-Type:    application/json
+     x-goog-api-key: AIzaSyBeHKfDQkeXQwlx_ycE67Q19F1Ta2X6PtE
+   Body (JSON — replace ITEM_NAME):
+   {
+     "fields": {
+       "name":    { "stringValue": "ITEM_NAME" },
+       "addedAt": { "timestampValue": "2025-01-01T00:00:00Z" }
+     }
+   }
+   → The item appears instantly in the Groceries view (🧺 tag).
+
+   ── ADD ITEM TO PANTRY as In Stock ─────────────────────
+   URL:     https://firestore.googleapis.com/v1/projects/home-manager-29a1a/databases/(default)/documents/pantry
+   Body:
+   {
+     "fields": {
+       "name":      { "stringValue": "ITEM_NAME" },
+       "status":    { "stringValue": "stock" },
+       "createdAt": { "timestampValue": "2025-01-01T00:00:00Z" }
+     }
+   }
+
+   ── SHORTCUT SETUP (Apple Shortcuts app) ───────────────
+   1. New Shortcut → Add action: "Ask for Input"
+      · Prompt: "What should I add to the list?"
+      · Save output as variable: ItemName
+   2. Add action: "Get Contents of URL"
+      · URL: (paste grocery_queue endpoint above)
+      · Method: POST
+      · Headers: Content-Type + x-goog-api-key (as above)
+      · Request Body → JSON → paste body template above,
+        replace the "ITEM_NAME" stringValue with [ItemName]
+   3. (Optional) Add "Speak Text": "Added to the list!"
+   4. Tap share icon → "Add to Siri" → record your phrase
+      e.g. "Add to grocery list" or "הוסף לקניות"
+══════════════════════════════════════════════════════════ */
 
 /* ══════════════════════════════════════════════════════════
    VAULT  (static Google Drive card)
