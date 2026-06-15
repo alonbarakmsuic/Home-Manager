@@ -2715,8 +2715,10 @@ window.startLaundry = async function(durationMinutes) {
     showToast(`🧺 הכביסה רצה! ${durationMinutes} דקות`, "success");
     _logActivity("🧺", `${startedBy === "Tali" ? "הפעילה" : "הפעיל"} מכונת כביסה — ${durationMinutes} דקות`);
 
-    // ── iOS Shortcut — triggers "Laundry" shortcut with duration as input ─
-    window.location.href = "shortcuts://run-shortcut?name=Laundry&input=" + durationMinutes;
+    // ── iOS Shortcut — passes exact remaining minutes to "Laundry" shortcut ─
+    const diffInMs         = endTime - Date.now();
+    const remainingMinutes = Math.max(1, Math.round(diffInMs / 60000));
+    window.location.href = "shortcuts://run-shortcut?name=Laundry&input=text&text=" + remainingMinutes;
 
     // ── Make.com Webhook — notifies WhatsApp when cycle finishes ─
     fetch("https://hook.eu1.make.com/24x3i1h6jjnt8ofzxzynevdoh7l1v2tn", {
