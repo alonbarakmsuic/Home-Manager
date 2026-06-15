@@ -557,6 +557,41 @@
   .sw-table tbody td:last-child{text-align:center}
   .badge-alon{background:rgba(16,185,129,.15);color:#065F46}
   .badge-tali{background:rgba(236,72,153,.15);color:#9D174D}
+
+  /* ═══ Laundry Timer ══════════════════════════════════════ */
+  .laundry-widget{border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;
+    display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);color:#fff;
+    background:linear-gradient(135deg,#5B21B6,#7C3AED)}
+  .laundry-widget.done{background:linear-gradient(135deg,#92400E,#D4A017);
+    animation:laundryPulse 1.6s ease-in-out infinite}
+  @keyframes laundryPulse{0%,100%{box-shadow:var(--shadow)}50%{box-shadow:0 0 28px rgba(212,160,23,.65)}}
+  .laundry-spin{font-size:1.8rem;animation:spin 2.2s linear infinite;display:inline-block;flex-shrink:0}
+  .laundry-info{flex:1;min-width:0}
+  .laundry-who{font-size:.74rem;opacity:.88;font-weight:500;direction:rtl}
+  .laundry-countdown{font-family:'Poppins',sans-serif;font-size:1.55rem;font-weight:700;
+    letter-spacing:3px;line-height:1.15;direction:ltr}
+  .laundry-done-title{font-family:'Poppins',sans-serif;font-size:.92rem;font-weight:700;
+    direction:rtl;line-height:1.35}
+  .btn-laundry-clear{background:rgba(255,255,255,.25);border:1.5px solid rgba(255,255,255,.5);
+    color:#fff;padding:8px 13px;border-radius:20px;font-size:.76rem;font-weight:600;
+    cursor:pointer;white-space:nowrap;font-family:inherit;transition:var(--T);flex-shrink:0;direction:rtl}
+  .btn-laundry-clear:active{transform:scale(.95)}
+  .btn-laundry-cancel{background:rgba(239,68,68,.22);border:1.5px solid rgba(239,68,68,.5);
+    color:#fff;padding:7px 11px;border-radius:20px;font-size:.73rem;font-weight:600;
+    cursor:pointer;white-space:nowrap;font-family:inherit;transition:var(--T);
+    flex-shrink:0;direction:rtl}
+  .btn-laundry-cancel:active{background:rgba(239,68,68,.55);transform:scale(.95)}
+  .btn-start-laundry{width:100%;padding:13px;
+    background:linear-gradient(135deg,#5B21B6,#7C3AED);color:#fff;border:none;
+    border-radius:var(--radius);font-size:.93rem;font-weight:600;cursor:pointer;
+    box-shadow:var(--shadow);transition:var(--T);display:flex;align-items:center;
+    justify-content:center;gap:8px;font-family:inherit;direction:rtl;margin-bottom:16px}
+  .btn-start-laundry:active{transform:scale(.99);opacity:.92}
+  .laundry-dur-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+  .laundry-dur-btn{padding:20px 10px;border:2px solid var(--border);border-radius:var(--radius);
+    background:var(--bg-surface);font-family:'Poppins',sans-serif;font-size:1.08rem;
+    font-weight:700;color:var(--text);cursor:pointer;transition:var(--T);direction:rtl}
+  .laundry-dur-btn:active{background:#5B21B6;color:#fff;border-color:#5B21B6;transform:scale(.97)}
   </style>
 </head>
 <body>
@@ -584,6 +619,12 @@
     <h2 id="greeting-text">Good morning! 👋</h2>
     <p id="greeting-date">—</p>
   </div>
+
+  <!-- Laundry widget — hidden when idle, auto-shown when running/done -->
+  <div id="laundry-widget" class="laundry-widget" style="display:none" role="status" aria-live="polite">
+    <!-- Populated dynamically by initLaundryGlobal() -->
+  </div>
+
   <div class="dash-grid">
     <div class="dash-card" data-view="chores"   onclick="navigateTo('chores')">
       <div class="card-emoji">🧹</div>
@@ -649,6 +690,7 @@
 
 <!-- ═════════════════ CLEANING ══════════════════════════ -->
 <main id="view-chores-cleaning" class="view">
+  <button class="btn-start-laundry" onclick="openLaundryModal()">🧺 הפעלת כביסה</button>
   <div class="manage-tasks-bar">
     <button class="manage-tasks-btn" onclick="openManageTasks()">⚙️ Manage Tasks</button>
   </div>
@@ -1046,6 +1088,20 @@
   </div>
 </div>
 
+<!-- ═════════════════ LAUNDRY MODAL ══════════════════════ -->
+<div id="laundry-modal" class="modal-bg" onclick="laundryModalBg(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="direction:rtl">🧺 בחרו משך מחזור כביסה</div>
+    <div class="laundry-dur-grid">
+      <button class="laundry-dur-btn" onclick="startLaundry(30)">30 דק׳</button>
+      <button class="laundry-dur-btn" onclick="startLaundry(60)">60 דק׳</button>
+      <button class="laundry-dur-btn" onclick="startLaundry(90)">90 דק׳</button>
+      <button class="laundry-dur-btn" onclick="startLaundry(120)">120 דק׳</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <!-- ═════════════════ JAVASCRIPT ═════════════════════════ -->
@@ -1062,6 +1118,7 @@
    /pantry/{id}              → { name, status:"stock"|"low", createdAt }
    /grocery_queue/{pantryId} → { name, addedAt }
    /splitwise_expenses/{id}  → { name, amount, paidBy:"Alon"|"Tali", createdAt }
+   /laundry_status/current   → { status:"idle"|"running"|"done", startTime, endTime(ms), durationMinutes, startedBy }
 ══════════════════════════════════════════════════════════ */
 import { initializeApp }    from "firebase/app";
 import { getAnalytics }     from "firebase/analytics";
@@ -2551,6 +2608,154 @@ async function _deleteSWExpense(id) {
 ══════════════════════════════════════════════════════════ */
 
 /* ══════════════════════════════════════════════════════════
+   LAUNDRY TIMER  (טיימר כביסה)
+   Doc:  /laundry_status/current
+   Fields: status, startTime (serverTs), endTime (ms number),
+           durationMinutes, startedBy ("Alon"|"Tali")
+   ─────────────────────────────────────────────────────────
+   endTime is stored as a plain JS millisecond number so the
+   countdown math (endTime − Date.now()) is identical on every
+   device regardless of Firestore Timestamp conversion quirks.
+══════════════════════════════════════════════════════════ */
+let _laundryTick = null;
+const _laundryDoc = () => doc(db, "laundry_status", "current");
+
+// Global listener — started at boot, never torn down
+function initLaundryGlobal() {
+  onSnapshot(_laundryDoc(), snap => {
+    const data = snap.exists() ? snap.data() : null;
+    if (!data || data.status === "idle") {
+      _laundryHide(); return;
+    }
+    if (data.status === "running") _laundryShowRunning(data);
+    else if (data.status === "done") _laundryShowDone();
+  });
+}
+
+function _laundryHide() {
+  clearInterval(_laundryTick);
+  const w = document.getElementById("laundry-widget");
+  if (w) w.style.display = "none";
+}
+
+function _laundryShowRunning(data) {
+  const w = document.getElementById("laundry-widget");
+  if (!w) return;
+  w.style.display = "flex";
+  w.className = "laundry-widget";
+
+  const who    = data.startedBy || "Alon";
+  const whoHeb = who === "Alon" ? "אלון" : "טלי";
+  const verb   = who === "Tali" ? "הפעילה" : "הפעיל";
+  w.innerHTML  = `
+    <span class="laundry-spin">🌀</span>
+    <div class="laundry-info">
+      <div class="laundry-who">${whoHeb} ${verb} מכונה · ${data.durationMinutes} דק׳</div>
+      <div class="laundry-countdown" id="laundry-countdown">--:--:--</div>
+    </div>
+    <button class="btn-laundry-cancel" onclick="cancelLaundry()">ביטול כביסה ✕</button>`;
+
+  // Live countdown — anchored to absolute endTime so stays synced across devices
+  clearInterval(_laundryTick);
+  const endMs = data.endTime; // plain number stored in Firestore
+
+  function tick() {
+    const rem = endMs - Date.now();
+    if (rem <= 0) {
+      clearInterval(_laundryTick);
+      // Trigger "done" state in Firestore (idempotent — safe if both phones fire)
+      setDoc(_laundryDoc(), { status: "done" }, { merge: true }).catch(() => {});
+      return;
+    }
+    const h  = Math.floor(rem / 3_600_000);
+    const m  = Math.floor((rem % 3_600_000) / 60_000);
+    const s  = Math.floor((rem % 60_000) / 1_000);
+    const el = document.getElementById("laundry-countdown");
+    if (el) el.textContent =
+      `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  }
+  tick();
+  _laundryTick = setInterval(tick, 1000);
+}
+
+function _laundryShowDone() {
+  clearInterval(_laundryTick);
+  const w = document.getElementById("laundry-widget");
+  if (!w) return;
+  w.style.display = "flex";
+  w.className = "laundry-widget done";
+  w.innerHTML = `
+    <span style="font-size:1.7rem;flex-shrink:0">🧺</span>
+    <div class="laundry-info">
+      <div class="laundry-done-title">הכביסה מוכנה! מי תולה?</div>
+    </div>
+    <button class="btn-laundry-clear" onclick="clearLaundry()">פיניתי את המכונה ✓</button>`;
+}
+
+window.openLaundryModal = function() {
+  document.getElementById("laundry-modal").classList.add("open");
+};
+window.laundryModalBg = function(e) {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove("open");
+};
+
+window.startLaundry = async function(durationMinutes) {
+  document.getElementById("laundry-modal").classList.remove("open");
+  const now       = Date.now();
+  const endTime   = now + durationMinutes * 60 * 1000;
+  const startedBy = _currentUser();
+  try {
+    await setDoc(_laundryDoc(), {
+      status: "running",
+      startTime: serverTimestamp(),
+      endTime,          // stored as plain ms — easy countdown math, cross-device accurate
+      durationMinutes,
+      startedBy
+    });
+    showToast(`🧺 הכביסה רצה! ${durationMinutes} דקות`, "success");
+    _logActivity("🧺", `${startedBy === "Tali" ? "הפעילה" : "הפעיל"} מכונת כביסה — ${durationMinutes} דקות`);
+
+    // ── Make.com Webhook — notifies WhatsApp when cycle finishes ─
+    fetch("https://hook.eu1.make.com/24x3i1h6jjnt8ofzxzynevdoh7l1v2tn", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action:          "start",
+        startedBy:       startedBy === "Tali" ? "טלי" : "אלון",
+        durationMinutes,
+        endTime:         new Date(endTime).toISOString()
+      })
+    }).catch(err => console.warn("Make.com webhook error:", err));
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+};
+
+window.clearLaundry = async function() {
+  const who = _currentUser();
+  try {
+    await setDoc(_laundryDoc(), { status: "idle" }, { merge: true });
+    showToast("✅ המכונה פונתה!", "success");
+    _logActivity("✅", `${who === "Tali" ? "פינתה" : "פינה"} את מכונת הכביסה`);
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+};
+
+window.cancelLaundry = async function() {
+  const who = _currentUser();
+  try {
+    await setDoc(_laundryDoc(), { status: "idle" }, { merge: true });
+    showToast("❌ הכביסה בוטלה", "success");
+    _logActivity("❌", `${who === "Tali" ? "ביטלה" : "ביטל"} את מכונת הכביסה`);
+    fetch("https://hook.eu1.make.com/24x3i1h6jjnt8ofzxzynevdoh7l1v2tn", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action:     "cancel",
+        canceledBy: who === "Tali" ? "טלי" : "אלון"
+      })
+    }).catch(err => console.warn("Make.com webhook error:", err));
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+};
+
+/* ══════════════════════════════════════════════════════════
    VAULT  (static Google Drive card)
 ══════════════════════════════════════════════════════════ */
 // Nothing to initialize — static HTML card
@@ -2578,6 +2783,7 @@ window.showToast = function(msg, type = "") {
    BOOT
 ══════════════════════════════════════════════════════════ */
 initDashboard();
+initLaundryGlobal(); // global listener — keeps widget in sync on all views
 
 </script>
 </body>
