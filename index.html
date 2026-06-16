@@ -2718,7 +2718,7 @@ window.startLaundry = async function(durationMinutes) {
     // ── iOS Shortcut — passes exact remaining minutes to "Laundry" shortcut ─
     const diffInMs         = endTime - Date.now();
     const remainingMinutes = Math.max(1, Math.round(diffInMs / 60000));
-    window.location.href = "shortcuts://run-shortcut?name=Laundry&input=text&text=" + remainingMinutes;
+    window.location.href = "shortcuts://run-shortcut?name=Laundry&input=" + remainingMinutes;
 
     // ── Make.com Webhook — notifies WhatsApp when cycle finishes ─
     fetch("https://hook.eu1.make.com/24x3i1h6jjnt8ofzxzynevdoh7l1v2tn", {
