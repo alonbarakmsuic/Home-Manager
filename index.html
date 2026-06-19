@@ -592,6 +592,72 @@
     background:var(--bg-surface);font-family:'Poppins',sans-serif;font-size:1.08rem;
     font-weight:700;color:var(--text);cursor:pointer;transition:var(--T);direction:rtl}
   .laundry-dur-btn:active{background:#5B21B6;color:#fff;border-color:#5B21B6;transform:scale(.97)}
+
+  /* ── Cooking Wheel ────────────────────────────────────── */
+  .cooking-tabs{display:flex;gap:8px;margin-bottom:18px}
+  .cooking-tab{flex:1;padding:10px 4px;border:none;border-radius:12px;
+    font-size:.85rem;font-weight:700;background:#f0f0f0;color:#666;
+    cursor:pointer;transition:var(--T);font-family:inherit;direction:rtl}
+  .cooking-tab.active{background:linear-gradient(135deg,#FF6B6B,#ee5a24);color:#fff}
+  .wheel-wrap{position:relative;width:280px;margin:0 auto 4px;text-align:center}
+  .wheel-pointer{font-size:22px;line-height:1;margin-bottom:-6px;color:#FF6B6B;
+    position:relative;z-index:2}
+  #wheel-canvas-wrap{width:280px;height:280px;margin:0 auto;
+    will-change:transform}
+  #wheel-canvas-wrap canvas{display:block}
+  .spin-btn{width:100%;padding:14px;
+    background:linear-gradient(135deg,#FF6B6B,#ee5a24);color:#fff;border:none;
+    border-radius:var(--radius);font-size:1rem;font-weight:700;cursor:pointer;
+    margin:10px 0 16px;font-family:inherit;direction:rtl;box-shadow:var(--shadow);
+    transition:var(--T)}
+  .spin-btn:active{transform:scale(.98);opacity:.9}
+  .dish-result-card{background:linear-gradient(135deg,#ffecd2,#fcb69f);
+    border-radius:16px;padding:16px;margin-bottom:16px}
+  .dish-result-name{font-size:1.1rem;font-weight:800;text-align:center;
+    margin-bottom:12px;direction:rtl;color:#c0392b}
+  .ingr-result-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+  .ingr-result-row{display:flex;justify-content:space-between;align-items:center;
+    padding:8px 10px;background:rgba(255,255,255,.65);border-radius:10px;direction:rtl;
+    gap:8px}
+  .ingr-result-row span{flex:1;font-size:.9rem}
+  .btn-ingr-shop{background:#27ae60;color:#fff;border:none;border-radius:8px;
+    padding:5px 10px;font-size:.75rem;cursor:pointer;white-space:nowrap;
+    font-family:inherit;flex-shrink:0;font-weight:600}
+  .btn-add-all-shop{width:100%;padding:11px;background:#27ae60;color:#fff;border:none;
+    border-radius:12px;font-size:.9rem;font-weight:700;cursor:pointer;
+    font-family:inherit;direction:rtl;margin-top:4px}
+  .btn-add-dish{padding:8px 14px;background:linear-gradient(135deg,#667eea,#764ba2);
+    color:#fff;border:none;border-radius:10px;font-size:.82rem;font-weight:700;
+    cursor:pointer;font-family:inherit;direction:rtl}
+  .dish-form{background:var(--bg-surface);border:1px solid var(--border);
+    border-radius:var(--radius);padding:16px;margin-bottom:14px;direction:rtl}
+  .form-label{font-size:.75rem;font-weight:700;color:#888;margin-bottom:6px;
+    text-transform:uppercase;letter-spacing:.5px}
+  .dish-form input[type=text]{width:100%;padding:10px 12px;border:1.5px solid var(--border);
+    border-radius:10px;font-size:.93rem;margin-bottom:10px;box-sizing:border-box;
+    font-family:inherit;background:var(--bg);color:var(--text);direction:rtl}
+  .dish-form input[type=text]:focus{outline:none;border-color:#667eea}
+  .ingr-input-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+  .ingr-input-row input{flex:1;margin-bottom:0}
+  .btn-del-ingr{background:#e74c3c;color:#fff;border:none;border-radius:8px;
+    padding:0 11px;cursor:pointer;font-size:15px;height:40px;flex-shrink:0}
+  .btn-add-ingr-row{background:#3498db;color:#fff;border:none;border-radius:10px;
+    padding:9px 14px;cursor:pointer;font-size:.82rem;margin-bottom:12px;
+    font-family:inherit;font-weight:600;direction:rtl;display:inline-block}
+  .form-actions{display:flex;gap:8px}
+  .btn-save-dish{flex:1;background:#27ae60;color:#fff;border:none;border-radius:10px;
+    padding:12px;font-weight:700;cursor:pointer;font-family:inherit;font-size:.9rem}
+  .btn-cancel-dish{flex:1;background:#95a5a6;color:#fff;border:none;border-radius:10px;
+    padding:12px;font-weight:700;cursor:pointer;font-family:inherit;font-size:.9rem}
+  .dish-card{background:var(--bg-surface);border-radius:var(--radius);padding:14px;
+    box-shadow:var(--shadow);margin-bottom:10px;direction:rtl}
+  .dish-card-header{display:flex;justify-content:space-between;align-items:center}
+  .dish-name{font-weight:700;font-size:1rem}
+  .dish-actions{display:flex;gap:6px}
+  .btn-edit-dish,.btn-del-dish{background:var(--bg);border:1px solid var(--border);
+    border-radius:8px;font-size:15px;cursor:pointer;padding:5px 9px;transition:var(--T)}
+  .btn-edit-dish:active,.btn-del-dish:active{transform:scale(.9)}
+  .dish-ingr-preview{font-size:.78rem;color:#999;margin-top:6px;line-height:1.5}
   </style>
 </head>
 <body>
@@ -644,6 +710,11 @@
     <div class="dash-card" data-view="shopping" onclick="navigateTo('shopping')">
       <div class="card-emoji">🛒</div>
       <div><div class="card-label">Shopping</div><div class="card-sub">Lists &amp; Pantry</div></div>
+      <span class="card-arrow">›</span>
+    </div>
+    <div class="dash-card" data-view="cooking" onclick="navigateTo('cooking')">
+      <div class="card-emoji">🍽️</div>
+      <div><div class="card-label">ארוחות</div><div class="card-sub">גלגל ארוחות &amp; מתכונים</div></div>
       <span class="card-arrow">›</span>
     </div>
     <div class="dash-card wide" data-view="calendar" onclick="navigateTo('calendar')">
@@ -1038,6 +1109,42 @@
   <p class="calendar-note">📅 לחץ על אירוע לפרטים נוספים • נפתח ב-Google Calendar</p>
 </main>
 
+<!-- ═════════════════ COOKING WHEEL ═════════════════════ -->
+<main id="view-cooking" class="view">
+  <!-- Meal time tabs -->
+  <div class="cooking-tabs">
+    <button class="cooking-tab active" id="tab-morning" onclick="setCookingTab('morning')">🌅 בוקר</button>
+    <button class="cooking-tab"        id="tab-noon"    onclick="setCookingTab('noon')">☀️ צהריים</button>
+    <button class="cooking-tab"        id="tab-evening" onclick="setCookingTab('evening')">🌙 ערב</button>
+  </div>
+
+  <!-- Spinning wheel -->
+  <div class="wheel-wrap">
+    <div class="wheel-pointer">▼</div>
+    <div id="wheel-canvas-wrap">
+      <canvas id="meal-wheel-canvas" width="280" height="280"></canvas>
+    </div>
+  </div>
+
+  <!-- Spin button -->
+  <button class="spin-btn" onclick="spinWheel()">🎲 סובב!</button>
+
+  <!-- Result card (hidden until first spin) -->
+  <div id="dish-result-card" style="display:none"></div>
+
+  <!-- Dish section header -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <p class="section-title" style="margin:0">המנות שלנו</p>
+    <button class="btn-add-dish" onclick="showDishForm()">+ הוסף מנה</button>
+  </div>
+
+  <!-- Dish add/edit form (hidden by default) -->
+  <div id="dish-form-wrap" style="display:none"></div>
+
+  <!-- Dish list -->
+  <div id="dish-list"></div>
+</main>
+
 <!-- ═════════════════ ACTIVITY ARCHIVE ══════════════════ -->
 <main id="view-activity-archive" class="view">
   <div id="archive-list">
@@ -1162,6 +1269,7 @@ const VIEW_META = {
   "shopping-groceries":  { title:"🛒 Groceries",         back:"shopping" },
   "shopping-upgrades":   { title:"🏠 House Upgrades",    back:"shopping" },
   "pantry":              { title:"🧺 Pantry Staples",    back:"shopping" },
+  "cooking":             { title:"🍽️ ארוחות",            back:"dashboard" },
   "calendar":            { title:"🗓️ House Calendar",    back:"dashboard" },
   "activity-archive":    { title:"📋 Activity History",  back:"dashboard" },
 };
@@ -1215,6 +1323,7 @@ function _onEnter(id) {
   if (id === "shopping-groceries") initShopping("groceries");
   if (id === "shopping-upgrades")  initShopping("upgrades");
   if (id === "pantry")             initPantry();
+  if (id === "cooking")            initCooking();
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -2764,6 +2873,343 @@ window.cancelLaundry = async function() {
    VAULT  (static Google Drive card)
 ══════════════════════════════════════════════════════════ */
 // Nothing to initialize — static HTML card
+
+/* ══════════════════════════════════════════════════════════
+   COOKING WHEEL
+   Firestore: meal_wheels/{morning|noon|evening} → { meals:[{id,name,ingredients[]}] }
+══════════════════════════════════════════════════════════ */
+let _cookingTab      = "morning";
+let _cookingData     = { morning: [], noon: [], evening: [] };
+let _wheelTotalAngle = 0;
+let _wheelSpinning   = false;
+let _editingDishId   = null;
+
+function _mealDoc(type) { return doc(db, "meal_wheels", type); }
+
+async function initCooking() {
+  _cookingTab      = "morning";
+  _wheelTotalAngle = 0;
+  _wheelSpinning   = false;
+  _editingDishId   = null;
+
+  ["morning","noon","evening"].forEach(t => {
+    const btn = document.getElementById("tab-" + t);
+    if (btn) btn.classList.toggle("active", t === "morning");
+  });
+
+  await _loadCookingData();
+  _renderCookingWheel();
+  _renderDishList();
+
+  const res = document.getElementById("dish-result-card");
+  if (res) res.style.display = "none";
+  const form = document.getElementById("dish-form-wrap");
+  if (form) { form.style.display = "none"; form.innerHTML = ""; }
+
+  // Reset wheel rotation
+  const wrap = document.getElementById("wheel-canvas-wrap");
+  if (wrap) { wrap.style.transition = "none"; wrap.style.transform = "rotate(0deg)"; }
+}
+
+async function _loadCookingData() {
+  for (const type of ["morning","noon","evening"]) {
+    try {
+      const snap = await getDoc(_mealDoc(type));
+      _cookingData[type] = snap.exists() ? (snap.data().meals || []) : [];
+    } catch { _cookingData[type] = []; }
+  }
+}
+
+async function _saveCookingData(type) {
+  await setDoc(_mealDoc(type), { meals: _cookingData[type] });
+}
+
+window.setCookingTab = function(type) {
+  _cookingTab = type;
+  ["morning","noon","evening"].forEach(t => {
+    const btn = document.getElementById("tab-" + t);
+    if (btn) btn.classList.toggle("active", t === type);
+  });
+  _wheelTotalAngle = 0;
+  _wheelSpinning   = false;
+  const wrap = document.getElementById("wheel-canvas-wrap");
+  if (wrap) { wrap.style.transition = "none"; wrap.style.transform = "rotate(0deg)"; }
+  _renderCookingWheel();
+  _renderDishList();
+  const res = document.getElementById("dish-result-card");
+  if (res) res.style.display = "none";
+  const form = document.getElementById("dish-form-wrap");
+  if (form) { form.style.display = "none"; form.innerHTML = ""; }
+};
+
+// ── Wheel drawing ─────────────────────────────────────────
+function _renderCookingWheel() {
+  const canvas = document.getElementById("meal-wheel-canvas");
+  if (!canvas) return;
+  _drawMealWheel(canvas, _cookingData[_cookingTab]);
+}
+
+function _drawMealWheel(canvas, meals) {
+  const ctx = canvas.getContext("2d");
+  const cx = canvas.width / 2, cy = canvas.height / 2;
+  const r  = cx - 8;
+  const n  = meals.length;
+  const palette = [
+    "#FF6B6B","#4ECDC4","#45B7D1","#96CEB4","#FFEAA7",
+    "#DDA0DD","#98D8C8","#F7DC6F","#BB8FCE","#F1948A",
+    "#82E0AA","#F0B27A","#AED6F1","#F9E79F","#A9CCE3"
+  ];
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (n === 0) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+    ctx.fillStyle = "#f0f0f0";
+    ctx.fill();
+    ctx.fillStyle = "#bbb";
+    ctx.font = "15px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("הוסף מנות", cx, cy);
+    return;
+  }
+
+  const seg = (2 * Math.PI) / n;
+
+  for (let i = 0; i < n; i++) {
+    const s = -Math.PI / 2 + i * seg;
+    const e = s + seg;
+
+    // Segment fill
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, s, e);
+    ctx.closePath();
+    ctx.fillStyle = palette[i % palette.length];
+    ctx.fill();
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label
+    const mid = s + seg / 2;
+    const lr  = r * 0.62;
+    ctx.save();
+    ctx.translate(cx + Math.cos(mid) * lr, cy + Math.sin(mid) * lr);
+    ctx.rotate(mid + Math.PI / 2);
+    ctx.fillStyle = "#fff";
+    ctx.font = `bold ${Math.min(13, Math.max(8, 150 / n))}px sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.shadowColor = "rgba(0,0,0,.4)";
+    ctx.shadowBlur = 3;
+    const label = meals[i].name.length > 8 ? meals[i].name.slice(0, 7) + "…" : meals[i].name;
+    ctx.fillText(label, 0, 0);
+    ctx.restore();
+  }
+
+  // Center cap
+  ctx.beginPath();
+  ctx.arc(cx, cy, 18, 0, 2 * Math.PI);
+  ctx.fillStyle = "#fff";
+  ctx.fill();
+  ctx.strokeStyle = "#e0e0e0";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+// ── Spin logic ────────────────────────────────────────────
+window.spinWheel = function() {
+  const meals = _cookingData[_cookingTab];
+  if (_wheelSpinning) return;
+  if (meals.length === 0) { showToast("הוסף מנות תחילה 🍽️", "error"); return; }
+
+  _wheelSpinning = true;
+  const wrap = document.getElementById("wheel-canvas-wrap");
+  if (!wrap) return;
+
+  const extraRotations = 5 + Math.floor(Math.random() * 4);
+  const extraDeg       = Math.floor(Math.random() * 360);
+  const spinDeg        = extraRotations * 360 + extraDeg;
+  _wheelTotalAngle    += spinDeg;
+
+  wrap.style.transition = "transform 4s cubic-bezier(0.17,0.67,0.12,0.99)";
+  wrap.style.transform  = `rotate(${_wheelTotalAngle}deg)`;
+
+  setTimeout(() => {
+    _wheelSpinning = false;
+    const n       = meals.length;
+    const segSize = 360 / n;
+    const landed  = _wheelTotalAngle % 360;
+    const idx     = Math.floor(landed / segSize) % n;
+    _showDishResult(meals[idx]);
+  }, 4300);
+};
+
+function _showDishResult(dish) {
+  const card = document.getElementById("dish-result-card");
+  if (!card) return;
+  card.style.display = "block";
+
+  const ingredients = dish.ingredients || [];
+  const rows = ingredients.map(ing => `
+    <div class="ingr-result-row">
+      <span>${ing}</span>
+      <button class="btn-ingr-shop" onclick="_addIngrToShop(${JSON.stringify(ing)})">➕ לקניות</button>
+    </div>`).join("");
+
+  card.innerHTML = `
+    <div class="dish-result-card">
+      <div class="dish-result-name">🍽️ ${dish.name}</div>
+      ${rows
+        ? `<div class="ingr-result-list">${rows}</div>`
+        : `<p style="color:#c0392b88;text-align:center;font-size:.85rem;margin-bottom:12px">אין מרכיבים שמורים</p>`}
+      <button class="btn-add-all-shop"
+        onclick="_addAllIngrToShop(${JSON.stringify(ingredients)})">🛒 הוסף הכל לרשימת קניות</button>
+    </div>`;
+
+  card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+window._addIngrToShop = async function(ing) {
+  try {
+    await addDoc(collection(db, "grocery_queue"), {
+      name: ing, checked: false,
+      addedBy: _currentUser(), createdAt: serverTimestamp()
+    });
+    showToast(`✅ "${ing}" נוסף לקניות`, "success");
+  } catch(e) { showToast("שגיאה: " + e.message, "error"); }
+};
+
+window._addAllIngrToShop = async function(ingredients) {
+  if (!ingredients || !ingredients.length) { showToast("אין מרכיבים", "error"); return; }
+  try {
+    for (const ing of ingredients) {
+      await addDoc(collection(db, "grocery_queue"), {
+        name: ing, checked: false,
+        addedBy: _currentUser(), createdAt: serverTimestamp()
+      });
+    }
+    showToast(`✅ ${ingredients.length} מרכיבים נוספו לקניות`, "success");
+  } catch(e) { showToast("שגיאה: " + e.message, "error"); }
+};
+
+// ── Dish form ─────────────────────────────────────────────
+window.showDishForm = function(editId) {
+  _editingDishId = editId || null;
+  const form = document.getElementById("dish-form-wrap");
+  if (!form) return;
+  form.style.display = "block";
+
+  let name = "", ingr = [];
+  if (editId) {
+    const d = _cookingData[_cookingTab].find(x => x.id === editId);
+    if (d) { name = d.name; ingr = d.ingredients || []; }
+  }
+
+  const ingrRows = ingr.map((v, i) => _buildIngrRow(v, i)).join("");
+  form.innerHTML = `
+    <div class="dish-form">
+      <div class="form-label">שם המנה</div>
+      <input type="text" id="dish-name-input" placeholder="למשל: ספגטי בולונז"
+        value="${name.replace(/"/g,'&quot;')}" dir="rtl">
+      <div class="form-label">מרכיבים</div>
+      <div id="ingr-inputs-list">${ingrRows}</div>
+      <button class="btn-add-ingr-row" onclick="_addIngrRow()">+ הוסף מרכיב</button>
+      <div class="form-actions">
+        <button class="btn-save-dish"   onclick="_saveDish()">💾 שמור</button>
+        <button class="btn-cancel-dish" onclick="_cancelDishForm()">ביטול</button>
+      </div>
+    </div>`;
+  form.scrollIntoView({ behavior: "smooth", block: "nearest" });
+};
+
+function _buildIngrRow(value, idx) {
+  return `<div class="ingr-input-row" data-idx="${idx}">
+    <input type="text" class="ingr-text"
+      placeholder="מרכיב..." value="${value.replace(/"/g,'&quot;')}" dir="rtl">
+    <button class="btn-del-ingr" onclick="this.closest('.ingr-input-row').remove()">✕</button>
+  </div>`;
+}
+
+window._addIngrRow = function() {
+  const list = document.getElementById("ingr-inputs-list");
+  if (!list) return;
+  const div = document.createElement("div");
+  div.innerHTML = _buildIngrRow("", list.children.length);
+  list.appendChild(div.firstChild);
+  list.lastElementChild.querySelector("input")?.focus();
+};
+
+window._saveDish = async function() {
+  const nameEl = document.getElementById("dish-name-input");
+  if (!nameEl) return;
+  const name = nameEl.value.trim();
+  if (!name) { showToast("הזן שם מנה", "error"); return; }
+
+  const ingredients = [...document.querySelectorAll("#ingr-inputs-list .ingr-text")]
+    .map(el => el.value.trim()).filter(Boolean);
+
+  const meals = _cookingData[_cookingTab];
+  if (_editingDishId) {
+    const i = meals.findIndex(d => d.id === _editingDishId);
+    if (i !== -1) meals[i] = { ...meals[i], name, ingredients };
+  } else {
+    meals.push({ id: Date.now().toString(), name, ingredients });
+  }
+
+  try {
+    await _saveCookingData(_cookingTab);
+    showToast(_editingDishId ? "✅ המנה עודכנה" : "✅ המנה נוספה", "success");
+    _editingDishId = null;
+    document.getElementById("dish-form-wrap").style.display = "none";
+    _renderCookingWheel();
+    _renderDishList();
+  } catch(e) { showToast("שגיאה: " + e.message, "error"); }
+};
+
+window._cancelDishForm = function() {
+  _editingDishId = null;
+  const form = document.getElementById("dish-form-wrap");
+  if (form) { form.style.display = "none"; form.innerHTML = ""; }
+};
+
+window._deleteDish = async function(id) {
+  _cookingData[_cookingTab] = _cookingData[_cookingTab].filter(d => d.id !== id);
+  try {
+    await _saveCookingData(_cookingTab);
+    showToast("🗑️ המנה נמחקה", "success");
+    _renderCookingWheel();
+    _renderDishList();
+  } catch(e) { showToast("שגיאה: " + e.message, "error"); }
+};
+
+function _renderDishList() {
+  const el = document.getElementById("dish-list");
+  if (!el) return;
+  const meals = _cookingData[_cookingTab];
+  if (!meals.length) {
+    el.innerHTML = `<div class="empty" style="padding:28px 0">
+      <div style="font-size:2rem;margin-bottom:8px">🍽️</div>
+      עוד אין מנות לסוג ארוחה זה
+    </div>`;
+    return;
+  }
+  el.innerHTML = meals.map(d => `
+    <div class="dish-card">
+      <div class="dish-card-header">
+        <span class="dish-name">${d.name}</span>
+        <div class="dish-actions">
+          <button class="btn-edit-dish" onclick="showDishForm('${d.id}')">✏️</button>
+          <button class="btn-del-dish"  onclick="_deleteDish('${d.id}')">🗑️</button>
+        </div>
+      </div>
+      ${(d.ingredients||[]).length
+        ? `<div class="dish-ingr-preview">${d.ingredients.join(" · ")}</div>`
+        : ""}
+    </div>`).join("");
+}
 
 /* ══════════════════════════════════════════════════════════
    HELPERS
