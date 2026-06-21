@@ -658,6 +658,40 @@
     border-radius:8px;font-size:15px;cursor:pointer;padding:5px 9px;transition:var(--T)}
   .btn-edit-dish:active,.btn-del-dish:active{transform:scale(.9)}
   .dish-ingr-preview{font-size:.78rem;color:#999;margin-top:6px;line-height:1.5}
+
+  /* ── Smart House ──────────────────────────────────────── */
+  .smart-device-card{background:var(--bg-surface);border-radius:var(--radius);
+    padding:18px;box-shadow:var(--shadow);margin-bottom:16px;direction:rtl}
+  .smart-device-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+  .smart-device-icon{font-size:1.8rem;line-height:1}
+  .smart-device-title{font-size:1.05rem;font-weight:800;color:var(--text)}
+  .smart-device-sub{font-size:.78rem;color:#888;margin-top:2px}
+  .smart-device-card.disabled{opacity:.5;pointer-events:none}
+  .smart-device-card.disabled::after{content:"בקרוב ⏳";position:absolute;
+    right:14px;top:14px;font-size:.72rem;color:#aaa;font-weight:700}
+  .smart-device-card.disabled{position:relative}
+  /* TV Remote */
+  .tv-remote{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .tv-power-row{display:flex;gap:12px;width:100%}
+  .btn-tv-on{flex:1;padding:14px 8px;background:linear-gradient(135deg,#27ae60,#2ecc71);
+    color:#fff;border:none;border-radius:14px;font-size:.95rem;font-weight:700;
+    cursor:pointer;font-family:inherit;box-shadow:0 3px 10px rgba(39,174,96,.35);
+    transition:var(--T);display:flex;align-items:center;justify-content:center;gap:6px}
+  .btn-tv-off{flex:1;padding:14px 8px;background:linear-gradient(135deg,#e74c3c,#c0392b);
+    color:#fff;border:none;border-radius:14px;font-size:.95rem;font-weight:700;
+    cursor:pointer;font-family:inherit;box-shadow:0 3px 10px rgba(231,76,60,.35);
+    transition:var(--T);display:flex;align-items:center;justify-content:center;gap:6px}
+  .btn-tv-on:active{transform:scale(.96);opacity:.88}
+  .btn-tv-off:active{transform:scale(.96);opacity:.88}
+  .tv-vol-row{display:flex;gap:12px;width:100%;align-items:center}
+  .tv-vol-label{font-size:.8rem;font-weight:700;color:#888;text-align:center;flex-shrink:0}
+  .btn-tv-vol{flex:1;padding:18px 8px;background:var(--bg);border:2px solid var(--border);
+    border-radius:14px;font-size:1.6rem;font-weight:700;cursor:pointer;
+    transition:var(--T);color:var(--text);display:flex;align-items:center;
+    justify-content:center}
+  .btn-tv-vol:active{background:#667eea;border-color:#667eea;color:#fff;transform:scale(.94)}
+  .tv-shortcut-note{font-size:.72rem;color:#bbb;text-align:center;padding-top:4px;
+    line-height:1.5;direction:rtl}
   </style>
 </head>
 <body>
@@ -710,6 +744,11 @@
     <div class="dash-card" data-view="shopping" onclick="navigateTo('shopping')">
       <div class="card-emoji">🛒</div>
       <div><div class="card-label">Shopping</div><div class="card-sub">Lists &amp; Pantry</div></div>
+      <span class="card-arrow">›</span>
+    </div>
+    <div class="dash-card" data-view="smart-house" onclick="navigateTo('smart-house')">
+      <div class="card-emoji">🏡</div>
+      <div><div class="card-label">Smart House</div><div class="card-sub">טלוויזיה, מים, שואב</div></div>
       <span class="card-arrow">›</span>
     </div>
     <div class="dash-card" data-view="cooking" onclick="navigateTo('cooking')">
@@ -1109,6 +1148,61 @@
   <p class="calendar-note">📅 לחץ על אירוע לפרטים נוספים • נפתח ב-Google Calendar</p>
 </main>
 
+<!-- ═════════════════ SMART HOUSE ═══════════════════════ -->
+<main id="view-smart-house" class="view">
+
+  <!-- ── Philips TV Remote ─────────────────────────────── -->
+  <div class="smart-device-card">
+    <div class="smart-device-header">
+      <div class="smart-device-icon">📺</div>
+      <div>
+        <div class="smart-device-title">Philips Smart TV</div>
+        <div class="smart-device-sub">שלט רחוק — דרך iOS Shortcuts</div>
+      </div>
+    </div>
+    <div class="tv-remote">
+      <!-- Power -->
+      <div class="tv-power-row">
+        <button class="btn-tv-on"  onclick="tvCmd('on')">⏻ הדלק</button>
+        <button class="btn-tv-off" onclick="tvCmd('off')">⏻ כבה</button>
+      </div>
+      <!-- Volume -->
+      <div class="tv-vol-row">
+        <button class="btn-tv-vol" onclick="tvCmd('voldown')">🔉</button>
+        <span class="tv-vol-label">עוצמה</span>
+        <button class="btn-tv-vol" onclick="tvCmd('volup')">🔊</button>
+      </div>
+    </div>
+    <div class="tv-shortcut-note">
+      כל כפתור מפעיל iOS Shortcut שמתקשר ישירות לטלוויזיה.<br>
+      שמות הקיצורים: <strong>TV On · TV Off · TV VolUp · TV VolDown</strong>
+    </div>
+  </div>
+
+  <!-- ── Water Heater (placeholder) ───────────────────── -->
+  <div class="smart-device-card disabled">
+    <div class="smart-device-header">
+      <div class="smart-device-icon">🚿</div>
+      <div>
+        <div class="smart-device-title">דוד מים</div>
+        <div class="smart-device-sub">חיבור עתידי</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Vacuum Cleaner (placeholder) ─────────────────── -->
+  <div class="smart-device-card disabled">
+    <div class="smart-device-header">
+      <div class="smart-device-icon">🤖</div>
+      <div>
+        <div class="smart-device-title">שואב אבק</div>
+        <div class="smart-device-sub">חיבור עתידי</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
 <!-- ═════════════════ COOKING WHEEL ═════════════════════ -->
 <main id="view-cooking" class="view">
   <!-- Meal time tabs -->
@@ -1269,6 +1363,7 @@ const VIEW_META = {
   "shopping-groceries":  { title:"🛒 Groceries",         back:"shopping" },
   "shopping-upgrades":   { title:"🏠 House Upgrades",    back:"shopping" },
   "pantry":              { title:"🧺 Pantry Staples",    back:"shopping" },
+  "smart-house":         { title:"🏡 Smart House",        back:"dashboard" },
   "cooking":             { title:"🍽️ ארוחות",            back:"dashboard" },
   "calendar":            { title:"🗓️ House Calendar",    back:"dashboard" },
   "activity-archive":    { title:"📋 Activity History",  back:"dashboard" },
@@ -2873,6 +2968,34 @@ window.cancelLaundry = async function() {
    VAULT  (static Google Drive card)
 ══════════════════════════════════════════════════════════ */
 // Nothing to initialize — static HTML card
+
+/* ══════════════════════════════════════════════════════════
+   SMART HOUSE — TV Remote (Philips via iOS Shortcuts)
+   Each button fires a Shortcuts URL. The Shortcut makes
+   the local HTTP call to the Philips JointSpace API:
+     POST http://<TV_IP>:1925/1/input/key
+     Body: {"key":"Standby"} | {"key":"VolumeUp"} | {"key":"VolumeDown"}
+   Shortcut names must match exactly:
+     "TV On"  |  "TV Off"  |  "TV VolUp"  |  "TV VolDown"
+══════════════════════════════════════════════════════════ */
+const _TV_SHORTCUT = {
+  on:      "TV On",
+  off:     "TV Off",
+  volup:   "TV VolUp",
+  voldown: "TV VolDown"
+};
+
+window.tvCmd = function(cmd) {
+  const name = _TV_SHORTCUT[cmd];
+  if (!name) return;
+  showToast(_tvCmdLabel(cmd), "success");
+  window.location.href = "shortcuts://run-shortcut?name=" + encodeURIComponent(name);
+};
+
+function _tvCmdLabel(cmd) {
+  return { on:"📺 מדליק טלוויזיה…", off:"📺 כובה טלוויזיה…",
+           volup:"🔊 מעלה עוצמה…",  voldown:"🔉 מוריד עוצמה…" }[cmd] || "";
+}
 
 /* ══════════════════════════════════════════════════════════
    COOKING WHEEL
