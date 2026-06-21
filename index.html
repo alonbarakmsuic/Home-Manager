@@ -3680,7 +3680,7 @@ window._plannerAddAllToShopping = async function() {
   );
   if (!all.length) { showToast("אין מרכיבים לייצוא", "error"); return; }
   try {
-    const col = collection(db, "shopping_lists", "groceries", "items");
+    const col = collection(db, "grocery_queue");
     const who = localStorage.getItem("currentUser") || "Alon";
     await Promise.all(all.map(name =>
       addDoc(col, { name, checked: false, addedBy: who, createdAt: serverTimestamp() })
