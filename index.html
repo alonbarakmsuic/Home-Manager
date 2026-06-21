@@ -595,10 +595,11 @@
 
   /* ── Cooking Wheel ────────────────────────────────────── */
   .cooking-tabs{display:flex;gap:8px;margin-bottom:18px}
-  .cooking-tab{flex:1;padding:10px 4px;border:none;border-radius:12px;
-    font-size:.85rem;font-weight:700;background:#f0f0f0;color:#666;
+  .cooking-tab{flex:1;padding:10px 2px;border:none;border-radius:12px;
+    font-size:.78rem;font-weight:700;background:#f0f0f0;color:#666;
     cursor:pointer;transition:var(--T);font-family:inherit;direction:rtl}
   .cooking-tab.active{background:linear-gradient(135deg,#FF6B6B,#ee5a24);color:#fff}
+  #tab-planner.active{background:linear-gradient(135deg,#667eea,#764ba2)}
   .wheel-wrap{position:relative;width:280px;margin:0 auto 4px;text-align:center}
   .wheel-pointer{font-size:22px;line-height:1;margin-bottom:-6px;color:#FF6B6B;
     position:relative;z-index:2}
@@ -676,6 +677,56 @@
     white-space:nowrap;flex-shrink:0;font-family:inherit;font-weight:700;
     transition:var(--T)}
   .btn-ingr-add-sm:active{background:#27ae60;color:#fff;transform:scale(.93)}
+  /* Dish-type chips in dish form */
+  .dish-type-chips{display:flex;gap:8px;margin-bottom:14px}
+  .dish-type-chip{flex:1;padding:9px 4px;border:2px solid var(--border);border-radius:10px;
+    font-size:.78rem;font-weight:700;background:var(--bg);color:#aaa;
+    cursor:pointer;transition:var(--T);font-family:inherit;text-align:center}
+  .dish-type-chip.selected{color:#fff}
+  .dish-type-chip.chip-meat.selected   {border-color:#e74c3c;background:#e74c3c}
+  .dish-type-chip.chip-carbs.selected  {border-color:#d68910;background:#d68910}
+  .dish-type-chip.chip-veggies.selected{border-color:#27ae60;background:#27ae60}
+  .badge-type-meat   {background:#fdecea;color:#922b21;border:1px solid #e74c3c}
+  .badge-type-carbs  {background:#fef9e7;color:#7d6608;border:1px solid #d68910}
+  .badge-type-veggies{background:#d5f5e3;color:#1e8449;border:1px solid #27ae60}
+
+  /* Weekly Meal Planner */
+  .planner-intro{font-size:.84rem;color:#888;direction:rtl;margin-bottom:18px;
+    background:var(--bg-surface);border-radius:var(--radius);padding:12px 14px;
+    border-right:3px solid #27ae60;line-height:1.6}
+  .planner-section{background:var(--bg-surface);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:16px;margin-bottom:14px;direction:rtl}
+  .planner-type-label{font-size:1rem;font-weight:800;direction:rtl;display:block;
+    margin-bottom:12px}
+  .planner-dish-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;
+    min-height:4px}
+  .planner-dish-chip{display:flex;align-items:center;justify-content:space-between;
+    background:var(--bg);border-radius:10px;padding:9px 12px;direction:rtl;gap:8px}
+  .planner-dish-chip span{font-size:.9rem;font-weight:600;flex:1}
+  .btn-plan-remove{background:none;border:none;color:#e74c3c;font-size:1rem;
+    cursor:pointer;padding:0 4px;line-height:1;flex-shrink:0}
+  .planner-empty{font-size:.8rem;color:#bbb;text-align:center;padding:6px 0;direction:rtl}
+  .planner-add-row{display:flex;gap:8px;align-items:center}
+  .planner-select{flex:1;padding:10px 12px;border:1.5px solid var(--border);
+    border-radius:10px;font-size:.88rem;background:var(--bg);color:var(--text);
+    font-family:inherit;direction:rtl;cursor:pointer}
+  .planner-select:focus{outline:none;border-color:#27ae60}
+  .btn-plan-add{padding:10px 16px;background:linear-gradient(135deg,#27ae60,#2ecc71);
+    color:#fff;border:none;border-radius:10px;font-size:.88rem;font-weight:700;
+    cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;
+    transition:var(--T)}
+  .btn-plan-add:active{transform:scale(.96)}
+  .btn-plan-shop{width:100%;padding:15px;background:linear-gradient(135deg,#27ae60,#2ecc71);
+    color:#fff;border:none;border-radius:var(--radius);font-size:1rem;font-weight:700;
+    cursor:pointer;font-family:inherit;direction:rtl;box-shadow:var(--shadow);
+    margin-bottom:10px;transition:var(--T)}
+  .btn-plan-shop:active{transform:scale(.98);opacity:.9}
+  .btn-plan-clear{width:100%;padding:11px;background:transparent;
+    color:#e74c3c;border:1.5px solid #e74c3c;border-radius:var(--radius);
+    font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit;direction:rtl;
+    transition:var(--T)}
+  .btn-plan-clear:active{background:#fdecea}
+
   /* Meal-time chips in dish form */
   .meal-time-chips{display:flex;gap:8px;margin-bottom:14px}
   .meal-time-chip{flex:1;padding:9px 4px;border:2px solid var(--border);border-radius:10px;
@@ -691,58 +742,6 @@
   .badge-morning{background:#fff8e1;color:#856404;border:1px solid #f39c12}
   .badge-noon   {background:#fdecea;color:#922b21;border:1px solid #e74c3c}
   .badge-evening{background:#ebf5fb;color:#1a5276;border:1px solid #2980b9}
-
-  /* ── Siri Shortcuts Guide ─────────────────────────────── */
-  .siri-intro{font-size:.85rem;color:#888;direction:rtl;margin-bottom:18px;
-    line-height:1.6;background:var(--bg-surface);border-radius:var(--radius);
-    padding:12px 14px;border-right:3px solid #667eea}
-  .siri-card{background:var(--bg-surface);border-radius:var(--radius);
-    box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
-  .siri-card-header{display:flex;align-items:center;justify-content:space-between;
-    padding:15px 16px;cursor:pointer;gap:12px;direction:rtl;
-    user-select:none;-webkit-user-select:none}
-  .siri-card-left{display:flex;align-items:center;gap:12px;flex:1}
-  .siri-emoji{font-size:1.5rem;line-height:1;flex-shrink:0}
-  .siri-name{font-weight:700;font-size:.97rem;direction:rtl}
-  .siri-trigger{font-size:.72rem;color:#888;margin-top:3px;
-    font-style:italic;direction:ltr}
-  .siri-chevron{font-size:1.1rem;color:#ccc;transition:transform .25s;flex-shrink:0}
-  .siri-card.open .siri-chevron{transform:rotate(90deg)}
-  .siri-card-body{display:none;padding:0 16px 16px;border-top:1px solid var(--border)}
-  .siri-steps{margin:14px 0 10px;display:flex;flex-direction:column;gap:10px}
-  .siri-step{display:flex;gap:10px;direction:rtl;align-items:flex-start}
-  .siri-step-num{min-width:22px;height:22px;border-radius:50%;
-    background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;
-    display:flex;align-items:center;justify-content:center;
-    font-size:.68rem;font-weight:800;flex-shrink:0;margin-top:2px}
-  .siri-step-text{font-size:.84rem;color:var(--text);line-height:1.55;direction:rtl}
-  .siri-step-text strong{color:#667eea;font-weight:700}
-  .siri-step-text code{background:#f0f0f0;border-radius:4px;padding:1px 5px;
-    font-size:.78rem;direction:ltr;display:inline-block}
-  .siri-http{background:var(--bg);border:1.5px solid var(--border);
-    border-radius:10px;padding:12px;margin-top:10px}
-  .siri-http-row{display:flex;justify-content:space-between;align-items:center;
-    margin-bottom:8px;gap:8px;flex-wrap:wrap}
-  .siri-http-label{font-size:.68rem;font-weight:800;color:#888;
-    text-transform:uppercase;letter-spacing:.6px;flex-shrink:0}
-  .siri-http-val{font-size:.7rem;color:#667eea;word-break:break-all;
-    text-align:right;direction:ltr;font-family:monospace;flex:1}
-  .siri-copy-btn{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;
-    border:none;border-radius:7px;padding:5px 11px;font-size:.7rem;cursor:pointer;
-    white-space:nowrap;font-family:inherit;font-weight:600;flex-shrink:0}
-  .siri-json-wrap{position:relative;margin-top:8px}
-  .siri-json-block{background:#1e1e2e;border-radius:8px;padding:12px 10px 10px;
-    overflow-x:auto}
-  .siri-json-block pre{color:#cdd6f4;font-size:.68rem;margin:0;
-    white-space:pre;line-height:1.55;direction:ltr;text-align:left;
-    font-family:monospace}
-  .siri-copy-json{position:absolute;top:6px;right:6px;
-    background:rgba(255,255,255,.18);border:none;color:#fff;
-    border-radius:6px;padding:3px 9px;font-size:.65rem;cursor:pointer;
-    font-family:inherit;font-weight:600}
-  .siri-note{font-size:.76rem;color:#856404;background:#fff8e1;
-    border-radius:8px;padding:9px 11px;margin-top:10px;direction:rtl;
-    line-height:1.55;border-right:3px solid #f0ad4e}
 
   /* ── Smart House ──────────────────────────────────────── */
   .smart-device-card{background:var(--bg-surface);border-radius:var(--radius);
@@ -839,11 +838,6 @@
     <div class="dash-card" data-view="cooking" onclick="navigateTo('cooking')">
       <div class="card-emoji">🍽️</div>
       <div><div class="card-label">ארוחות</div><div class="card-sub">גלגל ארוחות &amp; מתכונים</div></div>
-      <span class="card-arrow">›</span>
-    </div>
-    <div class="dash-card wide" data-view="siri-shortcuts" onclick="navigateTo('siri-shortcuts')">
-      <div class="card-emoji">🎙️</div>
-      <div><div class="card-label">Siri Shortcuts</div><div class="card-sub">פקודות קוליות לאפליקציה</div></div>
       <span class="card-arrow">›</span>
     </div>
     <div class="dash-card wide" data-view="calendar" onclick="navigateTo('calendar')">
@@ -1238,348 +1232,6 @@
   <p class="calendar-note">📅 לחץ על אירוע לפרטים נוספים • נפתח ב-Google Calendar</p>
 </main>
 
-<!-- ═════════════════ SIRI SHORTCUTS ════════════════════ -->
-<main id="view-siri-shortcuts" class="view">
-
-  <div class="siri-intro">
-    אמרו <strong>"Hey Siri, [שם הקיצור]"</strong> להפעלה קולית.<br>
-    לחצו על כל קיצור לצפייה בהגדרות המלאות — כולל ה-URL וה-JSON המדויק להעתקה.
-  </div>
-
-  <!-- ── 1. הוסף לרשימת קניות ───────────────────────── -->
-  <div class="siri-card" id="sc-1">
-    <div class="siri-card-header" onclick="toggleSiriCard('sc-1')">
-      <div class="siri-card-left">
-        <span class="siri-emoji">🛒</span>
-        <div>
-          <div class="siri-name">הוסף לרשימת קניות</div>
-          <div class="siri-trigger">"Hey Siri, הוסף קניה"</div>
-        </div>
-      </div>
-      <span class="siri-chevron">›</span>
-    </div>
-    <div class="siri-card-body">
-      <div class="siri-steps">
-        <div class="siri-step"><div class="siri-step-num">1</div>
-          <div class="siri-step-text">Shortcuts → <strong>＋</strong> → שם הקיצור: <code>הוסף קניה</code></div></div>
-        <div class="siri-step"><div class="siri-step-num">2</div>
-          <div class="siri-step-text">הוסף פעולה: <strong>Ask for Input</strong><br>
-            Prompt: <code>מה להוסיף לרשימת הקניות?</code> · Input Type: Text</div></div>
-        <div class="siri-step"><div class="siri-step-num">3</div>
-          <div class="siri-step-text">הוסף פעולה: <strong>Text</strong> — הכנס את ה-JSON למטה.<br>
-            במקום <code>ITEM</code> הכנס את המשתנה <strong>Provided Input</strong> (לחץ על ITEM ← מחק ← הוסף ← Provided Input).<br>
-            במקום <code>NOW_ISO</code> הכנס <strong>Current Date</strong> מפורמט <code>yyyy-MM-dd'T'HH:mm:ss'Z'</code></div></div>
-        <div class="siri-step"><div class="siri-step-num">4</div>
-          <div class="siri-step-text">הוסף פעולה: <strong>Get Contents of URL</strong><br>
-            Method: <code>POST</code> · Body: <code>File</code> · File = Text מהשלב הקודם<br>
-            Header: <code>Content-Type: application/json</code></div></div>
-        <div class="siri-step"><div class="siri-step-num">5</div>
-          <div class="siri-step-text">הוסף פעולה: <strong>Show Notification</strong><br>
-            Body: <code>✅ [Provided Input] נוסף לרשימה!</code></div></div>
-      </div>
-      <div class="siri-http">
-        <div class="siri-http-row">
-          <span class="siri-http-label">URL (POST)</span>
-          <span class="siri-copy-btn" onclick="copySiriText('sc1-url')">העתק</span>
-        </div>
-        <div class="siri-http-val" id="sc1-url">https://firestore.googleapis.com/v1/projects/home-manager-29a1a/databases/(default)/documents/grocery_queue?key=AIzaSyBeHKfDQkeXQwlx_ycE67Q19F1Ta2X6PtE</div>
-        <div style="margin-top:10px" class="siri-http-row">
-          <span class="siri-http-label">JSON Body</span>
-        </div>
-        <div class="siri-json-wrap">
-          <button class="siri-copy-json" onclick="copySiriText('sc1-json')">העתק</button>
-          <div class="siri-json-block"><pre id="sc1-json">{
-  "fields": {
-    "name":      { "stringValue": "ITEM" },
-    "checked":   { "booleanValue": false },
-    "addedBy":   { "stringValue": "אלון" },
-    "createdAt": { "timestampValue": "NOW_ISO" }
-  }
-}</pre></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── 2. כמה הוצאנו החודש? ───────────────────────── -->
-  <div class="siri-card" id="sc-2">
-    <div class="siri-card-header" onclick="toggleSiriCard('sc-2')">
-      <div class="siri-card-left">
-        <span class="siri-emoji">💰</span>
-        <div>
-          <div class="siri-name">כמה הוצאנו החודש?</div>
-          <div class="siri-trigger">"Hey Siri, הוצאות החודש"</div>
-        </div>
-      </div>
-      <span class="siri-chevron">›</span>
-    </div>
-    <div class="siri-card-body">
-      <div class="siri-steps">
-        <div class="siri-step"><div class="siri-step-num">1</div>
-          <div class="siri-step-text">Shortcuts → <strong>＋</strong> → שם: <code>הוצאות החודש</code></div></div>
-        <div class="siri-step"><div class="siri-step-num">2</div>
-          <div class="siri-step-text">הוסף פעולה: <strong>Format Date</strong><br>
-            Date: Current Date · Format: Custom · <code>yyyy-MM-01</code><br>
-            → שמור כ- <strong>StartDate</strong></div></div>
-        <div class="siri-step"><div class="siri-step-num">3</div>
-          <div class="siri-step-text">הוסף פעולה: <strong>Adjust Date</strong><br>
-            Date: Current Date · Add <code>1</code> Month<br>
-            → Format: Custom <code>yyyy-MM-01</code> → שמור כ- <strong>EndDate</strong></div></div>
-        <div class="siri-step"><div class="siri-step-num">4</div>
-          <div class="siri-step-text">הוסף פעולה: <strong>Text</strong> — הכנס את ה-JSON למטה.<br>
-            החלף <code>START</code> ← <strong>StartDate</strong> ו-<code>END</code> ← <strong>EndDate</strong></div></div>
-        <div class="siri-step"><div class="siri-step-num">5</div>
-          <div class="siri-step-text">הוסף פעולה: <strong>Get Contents of URL</strong><br>
-            Method: <code>POST</code> · File = Text מהשלב הקודם · Header: Content-Type: application/json</div></div>
-        <div class="siri-step"><div class="siri-step-num">6</div>
-          <div class="siri-step-text">הוסף: <strong>Set Variable</strong> → <code>Total</code> = <code>0</code></div></div>
-        <div class="siri-step"><div class="siri-step-num">7</div>
-          <div class="siri-step-text">הוסף: <strong>Repeat with Each</strong> (Item in Contents of URL)<br>
-            → בתוך הלולאה: <strong>Get Dictionary Value</strong> מ-Current Item → key: <code>document</code><br>
-            → Get Dictionary Value → key: <code>fields</code><br>
-            → Get Dictionary Value → key: <code>amount</code><br>
-            → Get Dictionary Value → key: <code>doubleValue</code><br>
-            → <strong>Calculate</strong>: Total + Value → Set Variable <code>Total</code></div></div>
-        <div class="siri-step"><div class="siri-step-num">8</div>
-          <div class="siri-step-text">הוסף: <strong>Speak Text</strong><br>
-            <code>הוצאתם [Total] שקל החודש</code></div></div>
-      </div>
-      <div class="siri-http">
-        <div class="siri-http-row">
-          <span class="siri-http-label">URL (POST)</span>
-          <span class="siri-copy-btn" onclick="copySiriText('sc2-url')">העתק</span>
-        </div>
-        <div class="siri-http-val" id="sc2-url">https://firestore.googleapis.com/v1/projects/home-manager-29a1a/databases/(default)/documents:runQuery?key=AIzaSyBeHKfDQkeXQwlx_ycE67Q19F1Ta2X6PtE</div>
-        <div style="margin-top:10px" class="siri-http-row">
-          <span class="siri-http-label">JSON Body</span>
-        </div>
-        <div class="siri-json-wrap">
-          <button class="siri-copy-json" onclick="copySiriText('sc2-json')">העתק</button>
-          <div class="siri-json-block"><pre id="sc2-json">{
-  "structuredQuery": {
-    "from": [{ "collectionId": "expenses" }],
-    "where": {
-      "compositeFilter": {
-        "op": "AND",
-        "filters": [
-          {
-            "fieldFilter": {
-              "field":  { "fieldPath": "date" },
-              "op":     "GREATER_THAN_OR_EQUAL",
-              "value":  { "stringValue": "START" }
-            }
-          },
-          {
-            "fieldFilter": {
-              "field":  { "fieldPath": "date" },
-              "op":     "LESS_THAN",
-              "value":  { "stringValue": "END" }
-            }
-          }
-        ]
-      }
-    }
-  }
-}</pre></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── 3. הוסף הוצאה ──────────────────────────────── -->
-  <div class="siri-card" id="sc-3">
-    <div class="siri-card-header" onclick="toggleSiriCard('sc-3')">
-      <div class="siri-card-left">
-        <span class="siri-emoji">➕</span>
-        <div>
-          <div class="siri-name">הוסף הוצאה</div>
-          <div class="siri-trigger">"Hey Siri, הוסף הוצאה"</div>
-        </div>
-      </div>
-      <span class="siri-chevron">›</span>
-    </div>
-    <div class="siri-card-body">
-      <div class="siri-steps">
-        <div class="siri-step"><div class="siri-step-num">1</div>
-          <div class="siri-step-text">Shortcuts → <strong>＋</strong> → שם: <code>הוסף הוצאה</code></div></div>
-        <div class="siri-step"><div class="siri-step-num">2</div>
-          <div class="siri-step-text">הוסף: <strong>Ask for Input</strong><br>
-            Prompt: <code>כמה שקלים?</code> · Input Type: <strong>Number</strong><br>
-            → שמור כ- <strong>Amount</strong></div></div>
-        <div class="siri-step"><div class="siri-step-num">3</div>
-          <div class="siri-step-text">הוסף: <strong>Format Date</strong> (Current Date)<br>
-            Format: Custom · <code>yyyy-MM-dd</code> → שמור כ- <strong>DateStr</strong></div></div>
-        <div class="siri-step"><div class="siri-step-num">4</div>
-          <div class="siri-step-text">הוסף: <strong>Text</strong> → JSON Body 1 למטה.<br>
-            החלף <code>AMOUNT</code> ← <strong>Amount</strong> · <code>DATE</code> ← <strong>DateStr</strong><br>
-            <strong>Get Contents of URL</strong> → POST לכתובת Expenses למטה</div></div>
-        <div class="siri-step"><div class="siri-step-num">5</div>
-          <div class="siri-step-text">הוסף: <strong>Text</strong> → JSON Body 2 למטה.<br>
-            החלף <code>AMOUNT</code> ← <strong>Amount</strong><br>
-            <strong>Get Contents of URL</strong> → POST לכתובת Splitwise למטה</div></div>
-        <div class="siri-step"><div class="siri-step-num">6</div>
-          <div class="siri-step-text">הוסף: <strong>Show Notification</strong><br>
-            <code>✅ הוצאה של [Amount] ₪ נוספה!</code></div></div>
-      </div>
-      <div class="siri-http">
-        <div class="siri-http-row">
-          <span class="siri-http-label">URL הוצאות (POST)</span>
-          <span class="siri-copy-btn" onclick="copySiriText('sc3-url1')">העתק</span>
-        </div>
-        <div class="siri-http-val" id="sc3-url1">https://firestore.googleapis.com/v1/projects/home-manager-29a1a/databases/(default)/documents/expenses?key=AIzaSyBeHKfDQkeXQwlx_ycE67Q19F1Ta2X6PtE</div>
-        <div style="margin-top:8px" class="siri-http-row">
-          <span class="siri-http-label">JSON Body 1 — expenses</span>
-        </div>
-        <div class="siri-json-wrap">
-          <button class="siri-copy-json" onclick="copySiriText('sc3-json1')">העתק</button>
-          <div class="siri-json-block"><pre id="sc3-json1">{
-  "fields": {
-    "type":      { "stringValue": "manual" },
-    "amount":    { "doubleValue": AMOUNT },
-    "date":      { "stringValue": "DATE" },
-    "items":     { "arrayValue": { "values": [] } },
-    "createdAt": { "timestampValue": "NOW_ISO" }
-  }
-}</pre></div>
-        </div>
-        <div style="margin-top:10px" class="siri-http-row">
-          <span class="siri-http-label">URL Splitwise (POST)</span>
-          <span class="siri-copy-btn" onclick="copySiriText('sc3-url2')">העתק</span>
-        </div>
-        <div class="siri-http-val" id="sc3-url2">https://firestore.googleapis.com/v1/projects/home-manager-29a1a/databases/(default)/documents/splitwise_expenses?key=AIzaSyBeHKfDQkeXQwlx_ycE67Q19F1Ta2X6PtE</div>
-        <div style="margin-top:8px" class="siri-http-row">
-          <span class="siri-http-label">JSON Body 2 — splitwise</span>
-        </div>
-        <div class="siri-json-wrap">
-          <button class="siri-copy-json" onclick="copySiriText('sc3-json2')">העתק</button>
-          <div class="siri-json-block"><pre id="sc3-json2">{
-  "fields": {
-    "name":      { "stringValue": "הוצאה כללית" },
-    "amount":    { "doubleValue": AMOUNT },
-    "paidBy":    { "stringValue": "אלון" },
-    "createdAt": { "timestampValue": "NOW_ISO" }
-  }
-}</pre></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── 4. כבה טלוויזיה ────────────────────────────── -->
-  <div class="siri-card" id="sc-4">
-    <div class="siri-card-header" onclick="toggleSiriCard('sc-4')">
-      <div class="siri-card-left">
-        <span class="siri-emoji">📺</span>
-        <div>
-          <div class="siri-name">כבה טלוויזיה</div>
-          <div class="siri-trigger">"Hey Siri, כבה טלוויזיה"</div>
-        </div>
-      </div>
-      <span class="siri-chevron">›</span>
-    </div>
-    <div class="siri-card-body">
-      <div class="siri-steps">
-        <div class="siri-step"><div class="siri-step-num">1</div>
-          <div class="siri-step-text">Shortcuts → <strong>＋</strong> → שם: <code>כבה טלוויזיה</code></div></div>
-        <div class="siri-step"><div class="siri-step-num">2</div>
-          <div class="siri-step-text">הוסף: <strong>Get Contents of URL</strong><br>
-            Method: <code>POST</code> · URL: כתובת הטלוויזיה למטה<br>
-            Body: <code>JSON</code> · הוסף שדה: <code>key</code> = <code>Standby</code></div></div>
-        <div class="siri-step"><div class="siri-step-num">3</div>
-          <div class="siri-step-text">הוסף: <strong>Show Notification</strong> → <code>📺 הטלוויזיה כובה</code></div></div>
-      </div>
-      <div class="siri-http">
-        <div class="siri-http-row">
-          <span class="siri-http-label">URL (POST) — WiFi בית בלבד</span>
-          <span class="siri-copy-btn" onclick="copySiriText('sc4-url')">העתק</span>
-        </div>
-        <div class="siri-http-val" id="sc4-url">http://TV_IP:1925/1/input/key</div>
-        <div class="siri-json-wrap" style="margin-top:8px">
-          <button class="siri-copy-json" onclick="copySiriText('sc4-json')">העתק</button>
-          <div class="siri-json-block"><pre id="sc4-json">{ "key": "Standby" }</pre></div>
-        </div>
-        <div class="siri-note">החלף <strong>TV_IP</strong> בכתובת ה-IP של הטלוויזיה (מצא בהגדרות → רשת בטלוויזיה). הטלפון חייב להיות על אותה רשת WiFi.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── 5. הפעל כביסה ──────────────────────────────── -->
-  <div class="siri-card" id="sc-5">
-    <div class="siri-card-header" onclick="toggleSiriCard('sc-5')">
-      <div class="siri-card-left">
-        <span class="siri-emoji">🧺</span>
-        <div>
-          <div class="siri-name">הפעל כביסה</div>
-          <div class="siri-trigger">"Hey Siri, הפעל כביסה"</div>
-        </div>
-      </div>
-      <span class="siri-chevron">›</span>
-    </div>
-    <div class="siri-card-body">
-      <div class="siri-steps">
-        <div class="siri-step"><div class="siri-step-num">1</div>
-          <div class="siri-step-text">Shortcuts → <strong>＋</strong> → שם: <code>הפעל כביסה</code></div></div>
-        <div class="siri-step"><div class="siri-step-num">2</div>
-          <div class="siri-step-text">הוסף: <strong>Choose from List</strong><br>
-            Items: <code>30</code>, <code>60</code>, <code>90</code>, <code>120</code><br>
-            Prompt: <code>כמה דקות?</code> → שמור כ- <strong>Duration</strong></div></div>
-        <div class="siri-step"><div class="siri-step-num">3</div>
-          <div class="siri-step-text">הוסף: <strong>Calculate</strong><br>
-            <code>Current Date.unixTime × 1000 + Duration × 60000</code><br>
-            → שמור כ- <strong>EndTimeMs</strong></div></div>
-        <div class="siri-step"><div class="siri-step-num">4</div>
-          <div class="siri-step-text">הוסף: <strong>Text</strong> → JSON Firestore למטה (שלב 1)<br>
-            החלף <code>DURATION</code> ← <strong>Duration</strong> · <code>END_MS</code> ← <strong>EndTimeMs</strong><br>
-            <strong>Get Contents of URL</strong> → PATCH לכתובת Firestore למטה</div></div>
-        <div class="siri-step"><div class="siri-step-num">5</div>
-          <div class="siri-step-text">הוסף: <strong>Text</strong> → JSON Make.com למטה (שלב 2)<br>
-            החלף <code>DURATION</code> ← <strong>Duration</strong><br>
-            <strong>Get Contents of URL</strong> → POST לכתובת Make.com</div></div>
-        <div class="siri-step"><div class="siri-step-num">6</div>
-          <div class="siri-step-text">הוסף: <strong>Show Notification</strong> → <code>🧺 הכביסה רצה! [Duration] דקות</code></div></div>
-      </div>
-      <div class="siri-http">
-        <div class="siri-http-row">
-          <span class="siri-http-label">URL Firestore (PATCH)</span>
-          <span class="siri-copy-btn" onclick="copySiriText('sc5-url1')">העתק</span>
-        </div>
-        <div class="siri-http-val" id="sc5-url1">https://firestore.googleapis.com/v1/projects/home-manager-29a1a/databases/(default)/documents/laundry_status/current?key=AIzaSyBeHKfDQkeXQwlx_ycE67Q19F1Ta2X6PtE</div>
-        <div style="margin-top:8px" class="siri-http-row">
-          <span class="siri-http-label">JSON Body 1 — Firestore</span>
-        </div>
-        <div class="siri-json-wrap">
-          <button class="siri-copy-json" onclick="copySiriText('sc5-json1')">העתק</button>
-          <div class="siri-json-block"><pre id="sc5-json1">{
-  "fields": {
-    "status":          { "stringValue": "running" },
-    "startedBy":       { "stringValue": "אלון" },
-    "durationMinutes": { "integerValue": DURATION },
-    "endTime":         { "integerValue": END_MS }
-  }
-}</pre></div>
-        </div>
-        <div style="margin-top:10px" class="siri-http-row">
-          <span class="siri-http-label">URL Make.com (POST)</span>
-          <span class="siri-copy-btn" onclick="copySiriText('sc5-url2')">העתק</span>
-        </div>
-        <div class="siri-http-val" id="sc5-url2">https://hook.eu1.make.com/24x3i1h6jjnt8ofzxzynevdoh7l1v2tn</div>
-        <div style="margin-top:8px" class="siri-http-row">
-          <span class="siri-http-label">JSON Body 2 — Make.com</span>
-        </div>
-        <div class="siri-json-wrap">
-          <button class="siri-copy-json" onclick="copySiriText('sc5-json2')">העתק</button>
-          <div class="siri-json-block"><pre id="sc5-json2">{
-  "action":          "start",
-  "startedBy":       "אלון",
-  "durationMinutes": DURATION
-}</pre></div>
-        </div>
-        <div class="siri-note">בשלב 3: ב-Shortcuts, <strong>unixTime</strong> נמצא תחת "Format Date" עם פורמט <code>x</code> (milliseconds) — השתמש בו ישירות כ-EndTimeMs.</div>
-      </div>
-    </div>
-  </div>
-
-</main>
 
 <!-- ═════════════════ SMART HOUSE ═══════════════════════ -->
 <main id="view-smart-house" class="view">
@@ -1638,38 +1290,83 @@
 
 <!-- ═════════════════ COOKING WHEEL ═════════════════════ -->
 <main id="view-cooking" class="view">
-  <!-- Meal time tabs -->
+  <!-- Tabs row -->
   <div class="cooking-tabs">
     <button class="cooking-tab active" id="tab-morning" onclick="setCookingTab('morning')">🌅 בוקר</button>
     <button class="cooking-tab"        id="tab-noon"    onclick="setCookingTab('noon')">☀️ צהריים</button>
     <button class="cooking-tab"        id="tab-evening" onclick="setCookingTab('evening')">🌙 ערב</button>
+    <button class="cooking-tab"        id="tab-planner" onclick="setCookingTab('planner')">📅 שבועי</button>
   </div>
 
-  <!-- Spinning wheel -->
-  <div class="wheel-wrap">
-    <div class="wheel-pointer">▼</div>
-    <div id="wheel-canvas-wrap">
-      <canvas id="meal-wheel-canvas" width="280" height="280"></canvas>
+  <!-- ── Wheel + Dish section (hidden when planner tab active) ── -->
+  <div id="cooking-wheel-section">
+    <!-- Spinning wheel -->
+    <div class="wheel-wrap">
+      <div class="wheel-pointer">▼</div>
+      <div id="wheel-canvas-wrap">
+        <canvas id="meal-wheel-canvas" width="280" height="280"></canvas>
+      </div>
     </div>
+
+    <!-- Spin button -->
+    <button class="spin-btn" onclick="spinWheel()">🎲 סובב!</button>
+
+    <!-- Result card (hidden until first spin) -->
+    <div id="dish-result-card" style="display:none"></div>
+
+    <!-- Dish section header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <p class="section-title" style="margin:0">המנות שלנו</p>
+      <button class="btn-add-dish" onclick="showDishForm()">+ הוסף מנה</button>
+    </div>
+
+    <!-- Dish add/edit form (hidden by default) -->
+    <div id="dish-form-wrap" style="display:none"></div>
+
+    <!-- Dish list -->
+    <div id="dish-list"></div>
   </div>
 
-  <!-- Spin button -->
-  <button class="spin-btn" onclick="spinWheel()">🎲 סובב!</button>
+  <!-- ── Weekly planner section (shown only on planner tab) ── -->
+  <div id="cooking-planner-section" style="display:none">
+    <div class="planner-intro">
+      בחרו את המנות שתכינו השבוע לפי סוג.<br>
+      לחצו <strong>הוסף הכל לקניות</strong> לייצוא אוטומטי של כל המרכיבים.
+    </div>
 
-  <!-- Result card (hidden until first spin) -->
-  <div id="dish-result-card" style="display:none"></div>
+    <!-- בשר -->
+    <div class="planner-section">
+      <span class="planner-type-label">🥩 בשר</span>
+      <div class="planner-dish-list" id="plan-list-meat"></div>
+      <div class="planner-add-row">
+        <select class="planner-select" id="plan-select-meat"><option value="">— בחר מנה —</option></select>
+        <button class="btn-plan-add" onclick="_plannerAddDish('meat')">+ הוסף</button>
+      </div>
+    </div>
 
-  <!-- Dish section header -->
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <p class="section-title" style="margin:0">המנות שלנו</p>
-    <button class="btn-add-dish" onclick="showDishForm()">+ הוסף מנה</button>
+    <!-- פחמימה -->
+    <div class="planner-section">
+      <span class="planner-type-label">🍞 פחמימה</span>
+      <div class="planner-dish-list" id="plan-list-carbs"></div>
+      <div class="planner-add-row">
+        <select class="planner-select" id="plan-select-carbs"><option value="">— בחר מנה —</option></select>
+        <button class="btn-plan-add" onclick="_plannerAddDish('carbs')">+ הוסף</button>
+      </div>
+    </div>
+
+    <!-- ירקות -->
+    <div class="planner-section">
+      <span class="planner-type-label">🥦 ירקות</span>
+      <div class="planner-dish-list" id="plan-list-veggies"></div>
+      <div class="planner-add-row">
+        <select class="planner-select" id="plan-select-veggies"><option value="">— בחר מנה —</option></select>
+        <button class="btn-plan-add" onclick="_plannerAddDish('veggies')">+ הוסף</button>
+      </div>
+    </div>
+
+    <button class="btn-plan-shop"  onclick="_plannerAddAllToShopping()">🛒 הוסף הכל לרשימת קניות</button>
+    <button class="btn-plan-clear" onclick="_plannerClear()">🗑️ נקה שבוע</button>
   </div>
-
-  <!-- Dish add/edit form (hidden by default) -->
-  <div id="dish-form-wrap" style="display:none"></div>
-
-  <!-- Dish list -->
-  <div id="dish-list"></div>
 </main>
 
 <!-- ═════════════════ ACTIVITY ARCHIVE ══════════════════ -->
@@ -1796,7 +1493,6 @@ const VIEW_META = {
   "shopping-groceries":  { title:"🛒 Groceries",         back:"shopping" },
   "shopping-upgrades":   { title:"🏠 House Upgrades",    back:"shopping" },
   "pantry":              { title:"🧺 Pantry Staples",    back:"shopping" },
-  "siri-shortcuts":      { title:"🎙️ Siri Shortcuts",      back:"dashboard" },
   "smart-house":         { title:"🏡 Smart House",        back:"dashboard" },
   "cooking":             { title:"🍽️ ארוחות",            back:"dashboard" },
   "calendar":            { title:"🗓️ House Calendar",    back:"dashboard" },
@@ -3404,33 +3100,6 @@ window.cancelLaundry = async function() {
 // Nothing to initialize — static HTML card
 
 /* ══════════════════════════════════════════════════════════
-   SIRI SHORTCUTS GUIDE — interactive expand + copy
-══════════════════════════════════════════════════════════ */
-window.toggleSiriCard = function(id) {
-  const card = document.getElementById(id);
-  if (!card) return;
-  const body = card.querySelector(".siri-card-body");
-  const isOpen = card.classList.toggle("open");
-  body.style.display = isOpen ? "block" : "none";
-};
-
-window.copySiriText = function(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  navigator.clipboard.writeText(el.textContent.trim())
-    .then(() => showToast("📋 הועתק!", "success"))
-    .catch(() => {
-      // Fallback for older iOS
-      const ta = document.createElement("textarea");
-      ta.value = el.textContent.trim();
-      document.body.appendChild(ta);
-      ta.select(); document.execCommand("copy");
-      document.body.removeChild(ta);
-      showToast("📋 הועתק!", "success");
-    });
-};
-
-/* ══════════════════════════════════════════════════════════
    SMART HOUSE — TV Remote (Philips via iOS Shortcuts)
    Each button fires a Shortcuts URL. The Shortcut makes
    the local HTTP call to the Philips JointSpace API:
@@ -3473,6 +3142,7 @@ let _editingDishId   = null;
 let _pantryMap       = {};  // { "מלח": "stock"|"low"|"out" } — loaded on enter
 
 const _MEAL_LABELS = { morning:"🌅 בוקר", noon:"☀️ צהריים", evening:"🌙 ערב" };
+const _DISH_TYPE_LABELS = { meat:"🥩 בשר", carbs:"🍞 פחמימה", veggies:"🥦 ירקות" };
 
 function _mealDoc(type) { return doc(db, "meal_wheels", type); }
 
@@ -3579,10 +3249,22 @@ async function _saveCookingData() {
 
 window.setCookingTab = function(type) {
   _cookingTab = type;
-  ["morning","noon","evening"].forEach(t => {
+  ["morning","noon","evening","planner"].forEach(t => {
     const btn = document.getElementById("tab-" + t);
     if (btn) btn.classList.toggle("active", t === type);
   });
+
+  const isPlanner = type === "planner";
+  const wheelSec  = document.getElementById("cooking-wheel-section");
+  const planSec   = document.getElementById("cooking-planner-section");
+  if (wheelSec) wheelSec.style.display = isPlanner ? "none" : "";
+  if (planSec)  planSec.style.display  = isPlanner ? "" : "none";
+
+  if (isPlanner) {
+    initWeeklyPlanner();
+    return;
+  }
+
   _wheelTotalAngle = 0;
   _wheelSpinning   = false;
   const wrap = document.getElementById("wheel-canvas-wrap");
