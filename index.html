@@ -3686,7 +3686,7 @@ window._plannerAddAllToShopping = async function() {
       addDoc(col, { name, checked: false, addedBy: who, createdAt: serverTimestamp() })
     ));
     showToast(`✅ ${all.length} מרכיבים נוספו לרשימת הקניות`, "success");
-    await logActivity(`📅 תכנון שבועי: ${all.length} מרכיבים נוספו לרשימת קניות`, who);
+    await _logActivity("📅", `תכנון שבועי: ${all.length} מרכיבים נוספו לרשימת קניות`);
   } catch(e) { showToast("שגיאה: " + e.message, "error"); }
 };
 
