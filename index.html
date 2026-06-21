@@ -3438,20 +3438,30 @@ window.showDishForm = function(editId) {
   if (!form) return;
   form.style.display = "block";
 
-  let name = "", ingr = [], mealTimes = [_cookingTab]; // default: current tab
+  let name = "", ingr = [], mealTimes = [_cookingTab], dishTypes = []; // default: current tab
   if (editId) {
     const d = _allDishes.find(x => x.id === editId);
-    if (d) { name = d.name; ingr = d.ingredients || []; mealTimes = d.mealTimes || [_cookingTab]; }
+    if (d) { name = d.name; ingr = d.ingredients || []; mealTimes = d.mealTimes || [_cookingTab]; dishTypes = d.dishTypes || []; }
   }
 
   const ingrRows = ingr.map((v, i) => _buildIngrRow(v, i)).join("");
 
-  const chipSel = t => mealTimes.includes(t) ? "selected" : "";
+  const chipSel  = t => mealTimes.includes(t)  ? "selected" : "";
+  const typeSel  = t => dishTypes.includes(t)   ? "selected" : "";
   form.innerHTML = `
     <div class="dish-form">
       <div class="form-label">שם המנה</div>
       <input type="text" id="dish-name-input" placeholder="למשל: ספגטי בולונז"
         value="${name.replace(/"/g,'&quot;')}" dir="rtl">
+      <div class="form-label">סוג המנה</div>
+      <div class="dish-type-chips">
+        <button class="dish-type-chip chip-meat ${typeSel('meat')}"
+          data-type="meat" onclick="toggleDishTypeChip(this)">🥩 בשר</button>
+        <button class="dish-type-chip chip-carbs ${typeSel('carbs')}"
+          data-type="carbs" onclick="toggleDishTypeChip(this)">🍞 פחמימה</button>
+        <button class="dish-type-chip chip-veggies ${typeSel('veggies')}"
+          data-type="veggies" onclick="toggleDishTypeChip(this)">🥦 ירקות</button>
+      </div>
       <div class="form-label">מתאים ל</div>
       <div class="meal-time-chips">
         <button class="meal-time-chip chip-morning ${chipSel('morning')}"
@@ -3472,7 +3482,8 @@ window.showDishForm = function(editId) {
   form.scrollIntoView({ behavior: "smooth", block: "nearest" });
 };
 
-window.toggleMealChip = function(btn) { btn.classList.toggle("selected"); };
+window.toggleMealChip     = function(btn) { btn.classList.toggle("selected"); };
+window.toggleDishTypeChip = function(btn) { btn.classList.toggle("selected"); };
 
 function _buildIngrRow(value, idx) {
   return `<div class="ingr-input-row" data-idx="${idx}">
@@ -3504,11 +3515,14 @@ window._saveDish = async function() {
     .map(el => el.dataset.type);
   if (!mealTimes.length) { showToast("בחר לפחות ארוחה אחת", "error"); return; }
 
+  const dishTypes = [...document.querySelectorAll(".dish-type-chip.selected")]
+    .map(el => el.dataset.type);
+
   if (_editingDishId) {
     const i = _allDishes.findIndex(d => d.id === _editingDishId);
-    if (i !== -1) _allDishes[i] = { ..._allDishes[i], name, ingredients, mealTimes };
+    if (i !== -1) _allDishes[i] = { ..._allDishes[i], name, ingredients, mealTimes, dishTypes };
   } else {
-    _allDishes.push({ id: Date.now().toString(), name, ingredients, mealTimes });
+    _allDishes.push({ id: Date.now().toString(), name, ingredients, mealTimes, dishTypes });
   }
 
   try {
@@ -3552,6 +3566,9 @@ function _renderDishList() {
     const badges = (d.mealTimes || [])
       .map(t => `<span class="dish-meal-badge badge-${t}">${_MEAL_LABELS[t] || t}</span>`)
       .join("");
+    const typeBadges = (d.dishTypes || [])
+      .map(t => `<span class="dish-meal-badge badge-type-${t}">${_DISH_TYPE_LABELS[t] || t}</span>`)
+      .join("");
     const ingr = d.ingredients || [];
     const ingrRows = ingr.map(ing => `
       <div class="dish-ingr-item">
@@ -3573,10 +3590,122 @@ function _renderDishList() {
           <button class="btn-del-dish"  onclick="_deleteDish('${d.id}')">🗑️</button>
         </div>
       </div>
-      ${badges ? `<div class="dish-meal-badges">${badges}</div>` : ""}
+      ${(badges || typeBadges) ? `<div class="dish-meal-badges">${typeBadges}${badges}</div>` : ""}
       ${ingrToggle}
     </div>`;
   }).join("");
+}
+
+/* ══════════════════════════════════════════════════════════
+   WEEKLY MEAL PLANNER
+   Stored in Firestore: weekly_plan/current
+   Structure: { meat: [{id, name, ingredients}], carbs: [...], veggies: [...] }
+══════════════════════════════════════════════════════════ */
+let _weeklyPlan = { meat: [], carbs: [], veggies: [] };
+
+function _plannerDoc() { return doc(db, "weekly_plan", "current"); }
+
+async function initWeeklyPlanner() {
+  // Populate dropdowns with dishes that have matching dishTypes
+  ["meat","carbs","veggies"].forEach(type => {
+    const sel = document.getElementById("plan-select-" + type);
+    if (!sel) return;
+    const matching = _allDishes.filter(d => (d.dishTypes || []).includes(type));
+    sel.innerHTML = `<option value="">— בחר מנה —</option>` +
+      matching.map(d => `<option value="${d.id}">${d.name}</option>`).join("");
+  });
+
+  // Load current plan from Firestore
+  try {
+    const snap = await getDoc(_plannerDoc());
+    if (snap.exists()) {
+      const data = snap.data();
+      _weeklyPlan = {
+        meat:   (data.meat   || []),
+        carbs:  (data.carbs  || []),
+        veggies:(data.veggies|| [])
+      };
+    } else {
+      _weeklyPlan = { meat: [], carbs: [], veggies: [] };
+    }
+  } catch(e) {
+    _weeklyPlan = { meat: [], carbs: [], veggies: [] };
+  }
+  _renderPlanner();
+}
+
+function _renderPlanner() {
+  ["meat","carbs","veggies"].forEach(type => {
+    const el = document.getElementById("plan-list-" + type);
+    if (!el) return;
+    const items = _weeklyPlan[type] || [];
+    if (!items.length) {
+      el.innerHTML = `<div class="planner-empty">עוד לא נבחרו מנות</div>`;
+      return;
+    }
+    el.innerHTML = items.map((item, idx) => `
+      <div class="planner-dish-chip">
+        <span>${item.name}</span>
+        <button class="btn-plan-remove" onclick="_plannerRemoveDish('${type}',${idx})">✕</button>
+      </div>`).join("");
+  });
+}
+
+window._plannerAddDish = async function(type) {
+  const sel = document.getElementById("plan-select-" + type);
+  if (!sel || !sel.value) { showToast("בחר מנה תחילה", "error"); return; }
+  const dish = _allDishes.find(d => d.id === sel.value);
+  if (!dish) return;
+  if (!_weeklyPlan[type]) _weeklyPlan[type] = [];
+  _weeklyPlan[type].push({ id: dish.id, name: dish.name, ingredients: dish.ingredients || [] });
+  sel.value = "";
+  await _savePlan();
+  _renderPlanner();
+};
+
+window._plannerRemoveDish = async function(type, idx) {
+  if (!_weeklyPlan[type]) return;
+  _weeklyPlan[type].splice(idx, 1);
+  await _savePlan();
+  _renderPlanner();
+};
+
+window._plannerAddAllToShopping = async function() {
+  // Collect all unique ingredients across all planned dishes
+  const all = [];
+  Object.values(_weeklyPlan).forEach(items =>
+    items.forEach(item => (item.ingredients || []).forEach(ing => {
+      if (ing && !all.includes(ing)) all.push(ing);
+    }))
+  );
+  if (!all.length) { showToast("אין מרכיבים לייצוא", "error"); return; }
+  try {
+    const col = collection(db, "shopping_lists", "groceries", "items");
+    const who = localStorage.getItem("currentUser") || "Alon";
+    await Promise.all(all.map(name =>
+      addDoc(col, { name, checked: false, addedBy: who, createdAt: serverTimestamp() })
+    ));
+    showToast(`✅ ${all.length} מרכיבים נוספו לרשימת הקניות`, "success");
+    await logActivity(`📅 תכנון שבועי: ${all.length} מרכיבים נוספו לרשימת קניות`, who);
+  } catch(e) { showToast("שגיאה: " + e.message, "error"); }
+};
+
+window._plannerClear = async function() {
+  _weeklyPlan = { meat: [], carbs: [], veggies: [] };
+  await _savePlan();
+  _renderPlanner();
+  showToast("🗑️ התכנון נוקה", "success");
+};
+
+async function _savePlan() {
+  try {
+    await setDoc(_plannerDoc(), {
+      meat:    _weeklyPlan.meat,
+      carbs:   _weeklyPlan.carbs,
+      veggies: _weeklyPlan.veggies,
+      updatedAt: serverTimestamp()
+    });
+  } catch(e) { showToast("שגיאה בשמירה: " + e.message, "error"); }
 }
 
 /* ══════════════════════════════════════════════════════════
