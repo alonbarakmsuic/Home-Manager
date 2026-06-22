@@ -2398,7 +2398,10 @@ function _appendShopItem(ul, name, type, pantryId) {
   });
   li.querySelector(".item-del").addEventListener("click", () => {
     _itemLists[type] = _itemLists[type].filter(i => i !== name);
-    if (pantryId) delete _pantryQueueItems[pantryId];
+    if (pantryId) {
+      delete _pantryQueueItems[pantryId];
+      deleteDoc(doc(db, "grocery_queue", pantryId)).catch(() => {});
+    }
     li.remove();
     const listEl = document.getElementById(type === "groceries" ? "grocery-list" : "upgrade-list");
     if (!listEl.querySelector(".shop-item"))
