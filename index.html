@@ -500,6 +500,24 @@
     cursor:pointer;display:flex;align-items:center;justify-content:center;
     color:var(--text-muted);transition:var(--T);z-index:1;font-family:inherit}
   .staple-del:active{background:rgba(230,57,70,.25);color:var(--danger)}
+  .staple-menu-btn{position:absolute;top:6px;left:6px;width:20px;height:20px;
+    background:rgba(0,0,0,.08);border:none;border-radius:50%;font-size:.8rem;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    color:var(--text-muted);transition:var(--T);z-index:2;font-family:inherit;
+    line-height:1;letter-spacing:-.5px}
+  .staple-menu-btn:active{background:rgba(0,0,0,.18)}
+  .staple-dropdown{position:absolute;top:28px;left:4px;
+    background:var(--bg-card);border:1.5px solid var(--border);
+    border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);
+    z-index:200;min-width:170px;overflow:hidden;display:none}
+  .staple-dropdown.open{display:block}
+  .staple-dd-item{padding:10px 14px;font-size:.82rem;cursor:pointer;
+    transition:background .15s;display:flex;align-items:center;
+    justify-content:space-between;direction:rtl;
+    border-bottom:1px solid var(--border)}
+  .staple-dd-item:last-child{border-bottom:none}
+  .staple-dd-item:hover{background:var(--bg-surface)}
+  .staple-dd-item.cur{color:var(--primary);font-weight:700}
   .pantry-empty{grid-column:1/-1;text-align:center;padding:36px 16px;
     color:var(--text-muted);font-size:.85rem}
 
@@ -2553,6 +2571,36 @@ async function sendEntry(type) {
 let _pantryCategory = "all";   // currently selected category tab
 let _pantryAllItems = [];       // full list cached for instant re-filter
 
+const _PANTRY_CAT_LIST = [
+  { id:"fridge",   label:"🧊 מקרר ומוצרי חלב" },
+  { id:"pantry",   label:"🫙 מזווה ויבשים"     },
+  { id:"produce",  label:"🥦 פירות וירקות"      },
+  { id:"freezer",  label:"❄️ מקפיא"            },
+  { id:"cleaning", label:"🧴 פארם וניקיון"      },
+];
+
+window._openStapleMenu = function(id) {
+  const target = document.getElementById("staple-menu-" + id);
+  if (!target) return;
+  const wasOpen = target.classList.contains("open");
+  // Close all open dropdowns first
+  document.querySelectorAll(".staple-dropdown.open").forEach(d => d.classList.remove("open"));
+  if (!wasOpen) target.classList.add("open");
+};
+
+window._setStapleCategory = async function(id, cat) {
+  document.querySelectorAll(".staple-dropdown.open").forEach(d => d.classList.remove("open"));
+  try {
+    await setDoc(doc(db, "pantry", id), { category: cat }, { merge: true });
+    // onSnapshot re-renders automatically — no manual update needed
+  } catch(e) { showToast("שגיאה: " + e.message, "error"); }
+};
+
+// Close any open staple dropdown when clicking outside
+document.addEventListener("click", () => {
+  document.querySelectorAll(".staple-dropdown.open").forEach(d => d.classList.remove("open"));
+});
+
 function initPantry() {
   _pantryCategory = "all";
   // Reset tab UI to "הכל"
@@ -2597,13 +2645,22 @@ function _renderPantryGrid(items) {
   }
   grid.innerHTML = "";
   filtered.forEach(item => {
-    const isLow = item.status === "low";
+    const isLow    = item.status === "low";
+    const curCat   = item.category || "pantry";
+    const ddItems  = _PANTRY_CAT_LIST.map(c => `
+      <div class="staple-dd-item ${c.id === curCat ? "cur" : ""}"
+           onclick="event.stopPropagation();_setStapleCategory('${item.id}','${c.id}')">
+        <span>${c.label}</span>${c.id === curCat ? "<span>✓</span>" : ""}
+      </div>`).join("");
     const wrap  = document.createElement("div"); wrap.className = "staple-wrap";
     wrap.innerHTML = `
       <button class="staple-btn ${isLow ? "low" : "stock"}">
         <span class="staple-name">${item.name}</span>
         <span class="staple-status-label">${isLow ? "🔴 Running Low" : "✅ In Stock"}</span>
       </button>
+      <button class="staple-menu-btn" title="שנה קטגוריה"
+        onclick="event.stopPropagation();_openStapleMenu('${item.id}')">⋮</button>
+      <div class="staple-dropdown" id="staple-menu-${item.id}">${ddItems}</div>
       <button class="staple-del" title="Remove">✕</button>`;
     wrap.querySelector(".staple-btn").addEventListener("click", () =>
       _toggleStaple(item.id, item.name, item.status));
