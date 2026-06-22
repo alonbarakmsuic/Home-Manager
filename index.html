@@ -495,6 +495,7 @@
   .staple-status-label{font-size:.74rem;font-weight:700}
   .staple-btn.stock .staple-status-label{color:var(--primary)}
   .staple-btn.low  .staple-status-label{color:var(--danger)}
+  .staple-cat-emoji{font-size:.95rem;opacity:.45;line-height:1;margin-top:2px}
   .staple-del{position:absolute;top:6px;right:6px;width:20px;height:20px;
     background:rgba(0,0,0,.1);border:none;border-radius:50%;font-size:.66rem;
     cursor:pointer;display:flex;align-items:center;justify-content:center;
@@ -2578,6 +2579,7 @@ const _PANTRY_CAT_LIST = [
   { id:"freezer",  label:"❄️ מקפיא"            },
   { id:"cleaning", label:"🧴 פארם וניקיון"      },
 ];
+const _CAT_EMOJI = { fridge:"🧊", pantry:"🫙", produce:"🥦", freezer:"❄️", cleaning:"🧴" };
 
 window._openStapleMenu = function(id) {
   const target = document.getElementById("staple-menu-" + id);
@@ -2657,6 +2659,7 @@ function _renderPantryGrid(items) {
       <button class="staple-btn ${isLow ? "low" : "stock"}">
         <span class="staple-name">${item.name}</span>
         <span class="staple-status-label">${isLow ? "🔴 Running Low" : "✅ In Stock"}</span>
+        <span class="staple-cat-emoji">${_CAT_EMOJI[curCat] || "🫙"}</span>
       </button>
       <button class="staple-menu-btn" title="שנה קטגוריה"
         onclick="event.stopPropagation();_openStapleMenu('${item.id}')">⋮</button>
