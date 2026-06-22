@@ -457,7 +457,20 @@
     margin-right:4px;white-space:nowrap}
 
   /* ═══ Pantry ══════════════════════════════════════════════ */
-  .pantry-add-bar{display:flex;gap:10px;align-items:center;margin-bottom:20px}
+  /* ── Pantry Category Tabs ────────────────────────────── */
+  .pantry-cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .pantry-cats::-webkit-scrollbar{display:none}
+  .pantry-cat-btn{flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);
+    background:var(--bg-card);color:var(--text-muted);font-size:.8rem;font-weight:600;
+    cursor:pointer;white-space:nowrap;transition:var(--T);font-family:inherit}
+  .pantry-cat-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}
+  .pantry-cat-btn:active{transform:scale(.95)}
+  .pantry-cat-sel{flex-shrink:0;padding:10px 8px;border:1.5px solid var(--border);
+    border-radius:var(--radius-sm);font-size:.78rem;background:var(--bg-card);
+    color:var(--text);font-family:inherit;max-width:130px;cursor:pointer}
+  /* ── Pantry Add Bar ──────────────────────────────────── */
+  .pantry-add-bar{display:flex;gap:8px;align-items:center;margin-bottom:16px}
   .pantry-add-bar input{flex:1;padding:11px 13px;border:1.5px solid var(--border);
     border-radius:var(--radius-sm);font-size:.88rem;background:var(--bg-card);
     color:var(--text);font-family:inherit;transition:var(--T)}
@@ -1206,12 +1219,30 @@
 
 <!-- ═════════════════ PANTRY ═════════════════════════════ -->
 <main id="view-pantry" class="view">
+  <!-- Add bar with category select -->
   <div class="pantry-add-bar">
-    <input type="text" id="pantry-input" placeholder="Add staple (e.g. Oat Milk, Rice…)"
-           onkeydown="if(event.key==='Enter') addStaple()">
+    <input type="text" id="pantry-input" placeholder="הוסף מצרך…"
+           dir="rtl" onkeydown="if(event.key==='Enter') addStaple()">
+    <select class="pantry-cat-sel" id="pantry-cat-sel" dir="rtl">
+      <option value="fridge">🧊 מקרר</option>
+      <option value="pantry" selected>🫙 מזווה</option>
+      <option value="produce">🥦 ירקות</option>
+      <option value="freezer">❄️ מקפיא</option>
+      <option value="cleaning">🧴 פארם</option>
+    </select>
     <button class="btn-add-staple" onclick="addStaple()">＋</button>
   </div>
-  <p class="section-title">🧺 Your Staples</p>
+
+  <!-- Category filter tabs -->
+  <div class="pantry-cats">
+    <button class="pantry-cat-btn active" data-cat="all"      onclick="setPantryCategory('all')">הכל</button>
+    <button class="pantry-cat-btn"        data-cat="fridge"   onclick="setPantryCategory('fridge')">🧊 מקרר ומוצרי חלב</button>
+    <button class="pantry-cat-btn"        data-cat="pantry"   onclick="setPantryCategory('pantry')">🫙 מזווה ויבשים</button>
+    <button class="pantry-cat-btn"        data-cat="produce"  onclick="setPantryCategory('produce')">🥦 פירות וירקות</button>
+    <button class="pantry-cat-btn"        data-cat="freezer"  onclick="setPantryCategory('freezer')">❄️ מקפיא</button>
+    <button class="pantry-cat-btn"        data-cat="cleaning" onclick="setPantryCategory('cleaning')">🧴 פארם וניקיון</button>
+  </div>
+
   <div class="pantry-grid" id="pantry-grid">
     <div class="pantry-empty">
       <div class="empty-icon">🧺</div>
@@ -2519,27 +2550,53 @@ async function sendEntry(type) {
 /* ══════════════════════════════════════════════════════════
    PANTRY STAPLES  (מלאי קריטי)
 ══════════════════════════════════════════════════════════ */
+let _pantryCategory = "all";   // currently selected category tab
+let _pantryAllItems = [];       // full list cached for instant re-filter
+
 function initPantry() {
+  _pantryCategory = "all";
+  // Reset tab UI to "הכל"
+  document.querySelectorAll(".pantry-cat-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.cat === "all"));
   _unsub("pantry");
   // ✅ FLAT onSnapshot — sort in JS
   _unsubs["pantry"] = onSnapshot(collection(db, "pantry"), snap => {
     const items = [];
     snap.forEach(d => items.push({ id: d.id, ...d.data() }));
     items.sort((a, b) => _tsMs(a.createdAt) - _tsMs(b.createdAt));
+    _pantryAllItems = items;
     _renderPantryGrid(items);
   });
 }
 
+window.setPantryCategory = function(cat) {
+  _pantryCategory = cat;
+  document.querySelectorAll(".pantry-cat-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.cat === cat));
+  // Also update the add-bar select to match (UX nicety)
+  const sel = document.getElementById("pantry-cat-sel");
+  if (sel && cat !== "all") sel.value = cat;
+  _renderPantryGrid(_pantryAllItems);
+};
+
 function _renderPantryGrid(items) {
+  // Filter by active category (items with no category default to "pantry")
+  const filtered = _pantryCategory === "all"
+    ? items
+    : items.filter(i => (i.category || "pantry") === _pantryCategory);
+
   const grid = document.getElementById("pantry-grid");
-  if (!items.length) {
+  if (!filtered.length) {
+    const msg = _pantryCategory === "all"
+      ? "No staples yet — add one above!"
+      : "אין פריטים בקטגוריה זו עדיין";
     grid.innerHTML = `<div class="pantry-empty">
       <div class="empty-icon">🧺</div>
-      <p>No staples yet — add one above!</p></div>`;
+      <p>${msg}</p></div>`;
     return;
   }
   grid.innerHTML = "";
-  items.forEach(item => {
+  filtered.forEach(item => {
     const isLow = item.status === "low";
     const wrap  = document.createElement("div"); wrap.className = "staple-wrap";
     wrap.innerHTML = `
@@ -2563,10 +2620,11 @@ window.addStaple = async function() {
   const name  = input.value.trim();
   if (!name) { input.classList.add("err"); return; }
   input.classList.remove("err");
+  const category = document.getElementById("pantry-cat-sel")?.value || "pantry";
   try {
-    await addDoc(collection(db, "pantry"), { name, status:"stock", createdAt:serverTimestamp() });
+    await addDoc(collection(db, "pantry"), { name, status:"stock", category, createdAt:serverTimestamp() });
     input.value = "";
-    showToast(`✅ ${name} added to pantry`, "success");
+    showToast(`✅ ${name} נוסף למלאי`, "success");
   } catch(err) { showToast("Error: " + err.message, "error"); }
 };
 
