@@ -4645,6 +4645,653 @@ window._shakeInput = function(el) {
   setTimeout(() => el.classList.remove('input-shake'), 400);
 };
 
+// ── AI Chatbot — Firebase helpers (module-scoped access) ─
+window._chatAddGroceries = async function(items) {
+  for (const name of items) {
+    await addDoc(collection(db, "grocery_queue"), {
+      name, checked: false,
+      addedBy: _currentUser(), createdAt: serverTimestamp()
+    });
+  }
+  _logActivity("🤖", `AI added ${items.length} item${items.length!==1?"s":""} to shopping list`);
+  return { success: true, count: items.length };
+};
+
+window._chatGetActivity = async function() {
+  const snap = await getDocs(collection(db, "activity"));
+  const items = [];
+  snap.forEach(d => items.push({ ...d.data() }));
+  items.sort((a, b) => _tsMs(b.createdAt) - _tsMs(a.createdAt));
+  return items.slice(0, 10).map(x => ({
+    emoji: x.emoji || "📌",
+    action: x.action || "",
+    user: x.user || "",
+    time: new Date(_tsMs(x.createdAt)).toLocaleString("en-GB", {
+      month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+    })
+  }));
+};
+
+window._chatLogExpense = async function(amount, type, note) {
+  await addDoc(collection(db, "expenses"), {
+    type, date: new Date().toISOString().split("T")[0],
+    amount: parseFloat(amount),
+    items: note ? [note] : [],
+    createdAt: serverTimestamp()
+  });
+  await addDoc(collection(db, "splitwise_expenses"), {
+    name: type === "groceries" ? "קניות בסופר" : (note || "הוצאה"),
+    amount: parseFloat(amount),
+    paidBy: _currentUser(),
+    createdAt: serverTimestamp()
+  });
+  _logActivity("💰", `AI logged ₪${parseFloat(amount).toFixed(0)} ${type} expense`);
+  return { success: true };
+};
+
+window._chatSetPantryStatus = async function(name, status) {
+  const snap = await getDocs(collection(db, "pantry"));
+  let found = false;
+  for (const d of snap.docs) {
+    if (d.data().name?.toLowerCase() === name.toLowerCase()) {
+      await setDoc(d.ref, { status }, { merge: true });
+      found = true;
+    }
+  }
+  if (found) _logActivity(status==="low"?"⚠️":"✅", `AI marked ${name} as ${status==="low"?"running low":"in stock"}`);
+  return { success: found, message: found ? `Updated ${name} to ${status}` : `"${name}" not found in pantry` };
+};
+
 </script>
+<!-- ═══════════════════════════════════════════════════════
+     AI CHATBOT
+════════════════════════════════════════════════════════ -->
+<style>
+/* ── AI Chat FAB ──────────────────────────────────────── */
+#chat-fab{
+  position:fixed;bottom:82px;right:12px;
+  width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,#082318 0%,#1a6b3c 100%);
+  border:1.5px solid rgba(52,199,123,.45);
+  box-shadow:0 4px 20px rgba(0,0,0,.32),0 0 0 7px rgba(52,199,123,.07);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:145;
+  transition:transform .28s cubic-bezier(0.34,1.56,0.64,1),
+             background .2s ease,box-shadow .2s ease;
+  animation:fab-pop .45s cubic-bezier(0.34,1.56,0.64,1) .5s both;
+  -webkit-tap-highlight-color:transparent;outline:none;
+}
+@keyframes fab-pop{from{transform:scale(0) rotate(-90deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+@media(min-width:481px){#chat-fab{right:calc((100vw - 480px)/2 + 12px)}}
+#chat-fab:active{transform:scale(.86)}
+#chat-fab.chat-open{
+  background:linear-gradient(135deg,#c0392b,#ff4444);
+  border-color:rgba(255,59,48,.45);
+  box-shadow:0 4px 20px rgba(255,59,48,.32),0 0 0 7px rgba(255,59,48,.07);
+  transform:rotate(45deg) scale(1)
+}
+#chat-fab svg{display:block;flex-shrink:0}
+
+/* ── Overlay ──────────────────────────────────────────── */
+#chat-overlay{
+  display:none;position:fixed;inset:0;z-index:148;
+  background:rgba(0,0,0,.45);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+#chat-overlay.visible{display:block;animation:ov-in .22s ease}
+@keyframes ov-in{from{opacity:0}to{opacity:1}}
+
+/* ── Chat Sheet ───────────────────────────────────────── */
+#chat-sheet{
+  position:fixed;bottom:0;left:0;right:0;
+  max-width:480px;margin:0 auto;
+  z-index:149;
+  background:var(--bg-card);
+  border-radius:24px 24px 0 0;
+  box-shadow:0 -8px 48px rgba(0,0,0,.2),0 -1px 0 rgba(255,255,255,.04);
+  display:flex;flex-direction:column;
+  height:76vh;max-height:680px;
+  transform:translateY(100%);
+  transition:transform .38s cubic-bezier(0.16,1,0.3,1);
+  overflow:hidden;
+}
+#chat-sheet.open{transform:translateY(0)}
+@media(min-width:481px){
+  #chat-sheet{left:50%;transform:translateX(-50%) translateY(100%);right:auto;width:480px}
+  #chat-sheet.open{transform:translateX(-50%) translateY(0)}
+}
+
+.chat-drag-bar{
+  width:36px;height:4px;border-radius:2px;
+  background:rgba(0,0,0,.11);margin:10px auto 0;flex-shrink:0
+}
+
+/* ── Chat Header ──────────────────────────────────────── */
+.chat-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px 12px;flex-shrink:0;
+  background:linear-gradient(135deg,#082318 0%,#0f4a28 100%);
+}
+.chat-hdr-left{display:flex;align-items:center;gap:10px}
+.chat-hdr-avatar{
+  width:36px;height:36px;border-radius:10px;
+  background:rgba(52,199,123,.2);border:1px solid rgba(52,199,123,.35);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0
+}
+.chat-hdr-name{font-size:.9rem;font-weight:700;color:#fff;letter-spacing:-.01em}
+#chat-hdr-status{font-size:.72rem;color:rgba(255,255,255,.55);margin-top:1px;transition:color .2s}
+#chat-hdr-status.is-typing{color:#34C77B}
+.chat-hdr-right{display:flex;gap:6px}
+.chat-hdr-btn{
+  width:32px;height:32px;border-radius:8px;
+  background:rgba(255,255,255,.1);border:none;cursor:pointer;
+  color:rgba(255,255,255,.8);font-size:.82rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s;-webkit-tap-highlight-color:transparent
+}
+.chat-hdr-btn:hover{background:rgba(255,255,255,.18)}
+.chat-hdr-btn:active{background:rgba(255,255,255,.25);transform:scale(.9)}
+
+/* ── API Key Setup Banner ─────────────────────────────── */
+#chat-key-setup{
+  margin:12px 14px 0;
+  background:linear-gradient(135deg,rgba(0,122,255,.05),rgba(52,199,123,.05));
+  border:1px solid rgba(52,199,123,.22);
+  border-radius:14px;padding:14px;flex-shrink:0;
+  display:none;
+}
+#chat-key-setup p{font-size:.82rem;color:var(--text-muted);margin-bottom:10px;line-height:1.45}
+#chat-key-setup strong{color:var(--text)}
+.chat-key-row{display:flex;gap:8px;margin-bottom:8px}
+#chat-key-input{
+  flex:1;padding:9px 12px;border-radius:10px;
+  border:1.5px solid var(--border);font-size:.85rem;
+  background:var(--bg);font-family:inherit;outline:none;
+  transition:border-color .15s
+}
+#chat-key-input:focus{border-color:var(--border-focus)}
+.chat-key-save{
+  padding:9px 16px;border-radius:10px;
+  background:var(--primary);color:#fff;
+  border:none;font-weight:600;font-size:.85rem;cursor:pointer;
+  white-space:nowrap;transition:opacity .15s
+}
+.chat-key-save:active{opacity:.8}
+.chat-key-note{font-size:.72rem;color:var(--text-light)}
+.chat-key-note a{color:var(--primary);text-decoration:none}
+
+/* ── Messages Area ────────────────────────────────────── */
+#chat-messages{
+  flex:1;overflow-y:auto;padding:14px 14px 8px;
+  display:flex;flex-direction:column;gap:10px;
+  -webkit-overflow-scrolling:touch;
+  scroll-behavior:smooth;
+}
+#chat-messages::-webkit-scrollbar{display:none}
+
+/* Empty state */
+.chat-empty{
+  display:flex;flex-direction:column;align-items:center;
+  padding:18px 0 8px;gap:12px;
+}
+.chat-empty-icon{font-size:2.4rem;animation:bob 2.5s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.chat-empty-title{font-size:.92rem;font-weight:700;color:var(--text)}
+.chat-empty-sub{font-size:.78rem;color:var(--text-muted);text-align:center;line-height:1.45;max-width:240px}
+.chat-suggestions{display:flex;flex-direction:column;gap:7px;width:100%;margin-top:4px}
+.chat-suggestion{
+  padding:10px 14px;border-radius:12px;
+  background:var(--bg);border:1px solid var(--border);
+  font-size:.82rem;color:var(--text);cursor:pointer;
+  text-align:left;transition:all .15s;width:100%;
+  font-family:inherit;display:flex;align-items:center;gap:9px;
+}
+.chat-suggestion:active{background:rgba(52,199,123,.08);border-color:rgba(52,199,123,.3);transform:scale(.98)}
+
+/* Message bubbles */
+.chat-msg{
+  display:flex;gap:8px;align-items:flex-end;
+  animation:msg-pop .28s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes msg-pop{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+.chat-msg.user{flex-direction:row-reverse}
+
+.chat-bubble{
+  max-width:83%;padding:10px 14px;
+  border-radius:18px;font-size:.875rem;line-height:1.48;
+  word-break:break-word;
+}
+.chat-msg.ai .chat-bubble{
+  background:var(--bg);border:.5px solid var(--border);
+  border-bottom-left-radius:5px;color:var(--text);
+}
+.chat-msg.user .chat-bubble{
+  background:linear-gradient(135deg,#082318,#1A7A4A);
+  color:#fff;border-bottom-right-radius:5px;
+}
+.chat-msg.error .chat-bubble{
+  background:rgba(255,59,48,.07);border:.5px solid rgba(255,59,48,.2);
+  color:var(--danger);
+}
+
+/* Action pill */
+.chat-tool-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(52,199,123,.1);border:1px solid rgba(52,199,123,.25);
+  border-radius:20px;padding:3px 10px;
+  font-size:.7rem;color:var(--primary);font-weight:600;
+  margin-top:6px;
+}
+
+/* ── Typing indicator ─────────────────────────────────── */
+#chat-typing{
+  display:flex;align-items:center;gap:4px;
+  padding:4px 14px 8px;flex-shrink:0;
+}
+#chat-typing.hidden{display:none}
+.ct-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--text-light);
+  animation:ct-bounce 1.2s ease-in-out infinite;
+}
+.ct-dot:nth-child(2){animation-delay:.15s}
+.ct-dot:nth-child(3){animation-delay:.3s}
+@keyframes ct-bounce{
+  0%,60%,100%{transform:translateY(0);opacity:.4}
+  30%{transform:translateY(-6px);opacity:1}
+}
+
+/* ── Input bar ────────────────────────────────────────── */
+.chat-input-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 12px max(12px, env(safe-area-inset-bottom));
+  border-top:.5px solid var(--border);flex-shrink:0;
+  background:var(--bg-card);
+}
+#chat-input{
+  flex:1;padding:11px 14px;border-radius:22px;
+  border:1.5px solid var(--border);font-size:.9rem;
+  font-family:inherit;background:var(--bg);
+  outline:none;transition:border-color .15s;
+  -webkit-appearance:none;
+}
+#chat-input:focus{border-color:var(--border-focus)}
+#chat-send-btn{
+  width:40px;height:40px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#082318,#1A7A4A);
+  border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .15s,opacity .15s;
+  box-shadow:0 2px 10px rgba(26,122,74,.32);
+  -webkit-tap-highlight-color:transparent;
+}
+#chat-send-btn:active{transform:scale(.86)}
+#chat-send-btn:disabled{opacity:.38;cursor:default}
+</style>
+
+<!-- AI Chat FAB -->
+<button id="chat-fab" aria-label="Open home assistant" onclick="toggleChat()">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path d="M12 2L13.8 8.2L20 10L13.8 11.8L12 18L10.2 11.8L4 10L10.2 8.2L12 2Z" fill="rgba(52,199,123,.95)"/>
+    <path d="M19.5 3L20.2 5.2L22.5 6L20.2 6.8L19.5 9L18.8 6.8L16.5 6L18.8 5.2L19.5 3Z" fill="rgba(255,255,255,.7)"/>
+    <path d="M5 15L5.5 16.7L7 17.2L5.5 17.7L5 19.5L4.5 17.7L3 17.2L4.5 16.7L5 15Z" fill="rgba(255,255,255,.5)"/>
+  </svg>
+</button>
+
+<!-- Overlay -->
+<div id="chat-overlay" onclick="toggleChat()"></div>
+
+<!-- Chat Sheet -->
+<div id="chat-sheet">
+  <div class="chat-drag-bar"></div>
+
+  <!-- Header -->
+  <div class="chat-hdr">
+    <div class="chat-hdr-left">
+      <div class="chat-hdr-avatar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L13.8 8.2L20 10L13.8 11.8L12 18L10.2 11.8L4 10L10.2 8.2L12 2Z" fill="rgba(52,199,123,1)"/>
+        </svg>
+      </div>
+      <div>
+        <div class="chat-hdr-name">Home Assistant</div>
+        <div id="chat-hdr-status">Ready to help ✨</div>
+      </div>
+    </div>
+    <div class="chat-hdr-right">
+      <button class="chat-hdr-btn" onclick="clearChat()" title="Clear chat" aria-label="Clear chat">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="chat-hdr-btn" onclick="clearChatKey()" title="Change API key" aria-label="API key settings">🔑</button>
+      <button class="chat-hdr-btn" onclick="toggleChat()" aria-label="Close chat">✕</button>
+    </div>
+  </div>
+
+  <!-- API key setup -->
+  <div id="chat-key-setup">
+    <p>🔑 Enter your <strong>Anthropic API key</strong> to power the AI assistant.</p>
+    <div class="chat-key-row">
+      <input type="password" id="chat-key-input" placeholder="sk-ant-api03-…" autocomplete="off" />
+      <button class="chat-key-save" onclick="saveChatKey()">Save</button>
+    </div>
+    <p class="chat-key-note">Stored only on this device. <a href="https://console.anthropic.com/settings/keys" target="_blank">Get a key →</a></p>
+  </div>
+
+  <!-- Messages -->
+  <div id="chat-messages"></div>
+
+  <!-- Typing dots -->
+  <div id="chat-typing" class="hidden">
+    <div class="ct-dot"></div><div class="ct-dot"></div><div class="ct-dot"></div>
+  </div>
+
+  <!-- Input bar -->
+  <div class="chat-input-bar">
+    <input type="text" id="chat-input" placeholder="Ask me anything…"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage()}"
+      maxlength="500" autocomplete="off" />
+    <button id="chat-send-btn" onclick="sendChatMessage()" aria-label="Send">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M22 2L11 13" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+/* ═══ AI Chatbot Logic ════════════════════════════════════ */
+(function(){
+  const CLAUDE_URL = 'https://api.anthropic.com/v1/messages';
+  const MODEL      = 'claude-haiku-4-5-20251001';
+  const KEY_LS     = 'home_mgr_ak';
+
+  let _hist  = [];   // chat history [{role,content}]
+  let _open  = false;
+  let _busy  = false;
+
+  /* ── API key ──────────────────────────────────────────── */
+  function _key(){ return localStorage.getItem(KEY_LS)||''; }
+
+  window.saveChatKey = function(){
+    const v = (document.getElementById('chat-key-input').value||'').trim();
+    if (!v.startsWith('sk-ant-')){ window.showToast('Invalid key — must start with sk-ant-','error'); return; }
+    localStorage.setItem(KEY_LS, v);
+    document.getElementById('chat-key-setup').style.display = 'none';
+    window.showToast('API key saved ✓','success');
+    _appendAI("Hi! I'm your Home Assistant 🏠 I can add groceries, start laundry, log expenses, and more. What do you need?");
+  };
+
+  window.clearChatKey = function(){
+    localStorage.removeItem(KEY_LS);
+    document.getElementById('chat-key-setup').style.display = 'block';
+    document.getElementById('chat-key-input').value = '';
+    window.showToast('API key cleared','success');
+  };
+
+  /* ── Toggle open/close ────────────────────────────────── */
+  window.toggleChat = function(){
+    _open = !_open;
+    document.getElementById('chat-fab').classList.toggle('chat-open',_open);
+    document.getElementById('chat-sheet').classList.toggle('open',_open);
+    document.getElementById('chat-overlay').classList.toggle('visible',_open);
+    if (_open){
+      if (!_key()) document.getElementById('chat-key-setup').style.display = 'block';
+      if (_hist.length===0) _renderEmpty();
+      setTimeout(()=>{ const i=document.getElementById('chat-input'); if(i)i.focus(); },380);
+    }
+  };
+
+  /* ── Clear ────────────────────────────────────────────── */
+  window.clearChat = function(){
+    _hist = [];
+    document.getElementById('chat-messages').innerHTML = '';
+    _renderEmpty();
+  };
+
+  /* ── Empty state ──────────────────────────────────────── */
+  function _renderEmpty(){
+    const name = localStorage.getItem('currentUser')||'there';
+    const msgs = document.getElementById('chat-messages');
+    msgs.innerHTML = `
+      <div class="chat-empty">
+        <div class="chat-empty-icon">✨</div>
+        <div class="chat-empty-title">Hi ${_esc(name)}!</div>
+        <div class="chat-empty-sub">I can control your home. Try one of these:</div>
+        <div class="chat-suggestions">
+          <button class="chat-suggestion" onclick="_chatQuick('Add milk, eggs, and bread to the grocery list')">🛒 Add milk, eggs &amp; bread</button>
+          <button class="chat-suggestion" onclick="_chatQuick('Start the laundry for 60 minutes')">🧺 Start laundry 60 min</button>
+          <button class="chat-suggestion" onclick="_chatQuick('What happened at home recently?')">📋 Recent home activity</button>
+          <button class="chat-suggestion" onclick="_chatQuick('Take me to the expenses section')">💰 Open expenses</button>
+        </div>
+      </div>`;
+  }
+
+  window._chatQuick = function(text){
+    const i = document.getElementById('chat-input');
+    if(i){ i.value=text; }
+    sendChatMessage();
+  };
+
+  /* ── Append messages ──────────────────────────────────── */
+  function _esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function _md(s){
+    return _esc(s)
+      .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g,'<em>$1</em>')
+      .replace(/`(.*?)`/g,'<code style="background:rgba(0,0,0,.07);padding:1px 5px;border-radius:4px;font-size:.82em">$1</code>')
+      .replace(/\n/g,'<br>');
+  }
+
+  function _killEmpty(){ document.querySelector('.chat-empty')?.remove(); }
+
+  function _appendUser(text){
+    _killEmpty();
+    const msgs = document.getElementById('chat-messages');
+    const d = document.createElement('div');
+    d.className = 'chat-msg user';
+    d.innerHTML = `<div class="chat-bubble">${_esc(text)}</div>`;
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function _appendAI(text, toolsUsed){
+    _killEmpty();
+    const msgs = document.getElementById('chat-messages');
+    const d = document.createElement('div');
+    d.className = 'chat-msg ai';
+    let pills = '';
+    if(toolsUsed && toolsUsed.length){
+      const labels={
+        add_to_grocery:'Added to grocery list',navigate_to:'Navigated',
+        start_laundry:'Laundry started',log_expense:'Expense logged',
+        get_recent_activity:'Fetched activity',set_pantry_status:'Pantry updated'
+      };
+      pills = toolsUsed.map(t=>`<div class="chat-tool-pill">✅ ${labels[t]||t}</div>`).join('');
+    }
+    d.innerHTML = `<div class="chat-bubble">${_md(text)}${pills?'<br>'+pills:''}</div>`;
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+    return d;
+  }
+
+  function _appendError(text){
+    _killEmpty();
+    const msgs = document.getElementById('chat-messages');
+    const d = document.createElement('div');
+    d.className = 'chat-msg error';
+    d.innerHTML = `<div class="chat-bubble">⚠️ ${_esc(text)}</div>`;
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  /* ── Typing / busy state ─────────────────────────────── */
+  function _setBusy(on){
+    _busy = on;
+    document.getElementById('chat-typing').classList.toggle('hidden',!on);
+    const btn = document.getElementById('chat-send-btn');
+    if(btn) btn.disabled = on;
+    const st = document.getElementById('chat-hdr-status');
+    if(st){ st.textContent = on ? 'Thinking…' : 'Ready to help ✨'; st.className = on ? 'is-typing' : ''; }
+    if(on){ const m=document.getElementById('chat-messages'); m.scrollTop=m.scrollHeight; }
+  }
+
+  /* ── Tools for Claude ─────────────────────────────────── */
+  const TOOLS = [
+    { name:'add_to_grocery',
+      description:'Add one or more items to the family grocery shopping list',
+      input_schema:{ type:'object', properties:{
+        items:{ type:'array', items:{type:'string'}, description:'Grocery items to add, e.g. ["milk","eggs"]' }
+      }, required:['items'] }
+    },
+    { name:'navigate_to',
+      description:'Navigate to a section of the home manager app',
+      input_schema:{ type:'object', properties:{
+        section:{ type:'string',
+          enum:['dashboard','chores','shopping','shopping-groceries','cooking','expenses','pantry','smart-house'],
+          description:'Which section to open' }
+      }, required:['section'] }
+    },
+    { name:'start_laundry',
+      description:'Start the laundry machine timer',
+      input_schema:{ type:'object', properties:{
+        duration_minutes:{ type:'number', enum:[30,60,90,120], description:'Duration in minutes' }
+      }, required:['duration_minutes'] }
+    },
+    { name:'log_expense',
+      description:'Log a shopping or household expense in Israeli Shekel',
+      input_schema:{ type:'object', properties:{
+        amount:{ type:'number', description:'Amount in ₪' },
+        type:{ type:'string', enum:['groceries','upgrades'] },
+        note:{ type:'string', description:'Optional description' }
+      }, required:['amount','type'] }
+    },
+    { name:'get_recent_activity',
+      description:'Get the last 10 household activity log entries — what has been done at home',
+      input_schema:{ type:'object', properties:{} }
+    },
+    { name:'set_pantry_status',
+      description:'Update the stock status of a pantry item to in-stock or running low',
+      input_schema:{ type:'object', properties:{
+        name:{ type:'string', description:'Exact name of the pantry item' },
+        status:{ type:'string', enum:['stock','low'], description:'"stock"=in stock, "low"=running low' }
+      }, required:['name','status'] }
+    }
+  ];
+
+  /* ── Execute a single tool call ───────────────────────── */
+  async function _exec(name, input){
+    try {
+      switch(name){
+        case 'add_to_grocery':
+          if(window._chatAddGroceries){ return await window._chatAddGroceries(input.items); }
+          return {error:'Not available'};
+        case 'navigate_to':
+          if(window.navigateTo){ window.navigateTo(input.section); window.toggleChat(); }
+          return {success:true, navigated_to:input.section};
+        case 'start_laundry':
+          { const d=[30,60,90,120].includes(input.duration_minutes)?input.duration_minutes:60;
+            if(window.startLaundry) window.startLaundry(d);
+            return {success:true, duration_minutes:d}; }
+        case 'log_expense':
+          if(window._chatLogExpense){ return await window._chatLogExpense(input.amount,input.type,input.note); }
+          return {error:'Not available'};
+        case 'get_recent_activity':
+          if(window._chatGetActivity){ return {activities: await window._chatGetActivity()}; }
+          return {error:'Not available'};
+        case 'set_pantry_status':
+          if(window._chatSetPantryStatus){ return await window._chatSetPantryStatus(input.name,input.status); }
+          return {error:'Not available'};
+        default:
+          return {error:`Unknown tool: ${name}`};
+      }
+    } catch(e){ return {error:e.message}; }
+  }
+
+  /* ── Call Anthropic API ───────────────────────────────── */
+  async function _callAPI(messages){
+    const k = _key();
+    if(!k) throw new Error('No API key set. Tap 🔑 to add one.');
+    const user = localStorage.getItem('currentUser')||'Alon';
+    const sys = `You are a smart home assistant for ${user}'s household management app (used by Alon and Tali in Israel). Help manage groceries, laundry, expenses, pantry, chores, and cooking.
+
+Current active user: ${user}
+Current time: ${new Date().toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
+
+Use your tools to perform real actions. Keep replies SHORT (1-3 sentences). Confirm actions concisely. Match the language the user writes in (Hebrew or English). Use ₪ for currency.`;
+
+    const res = await fetch(CLAUDE_URL, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': k,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({ model:MODEL, max_tokens:512, system:sys, tools:TOOLS, messages })
+    });
+
+    if(!res.ok){
+      let msg = `API error ${res.status}`;
+      try{ const j=await res.json(); msg=j.error?.message||msg; }catch(e){}
+      if(res.status===401) msg='Invalid API key. Tap 🔑 to update it.';
+      throw new Error(msg);
+    }
+    return res.json();
+  }
+
+  /* ── Main send ────────────────────────────────────────── */
+  window.sendChatMessage = async function(){
+    if(_busy) return;
+    const inp = document.getElementById('chat-input');
+    const text = (inp?.value||'').trim();
+    if(!text) return;
+    if(!_key()){ document.getElementById('chat-key-setup').style.display='block'; inp?.focus(); return; }
+
+    inp.value = '';
+    _appendUser(text);
+    _hist.push({ role:'user', content:text });
+    _setBusy(true);
+
+    try {
+      // Keep last 20 turns in context
+      let messages = _hist.slice(-20);
+      let resp = await _callAPI(messages);
+      const toolsUsed = [];
+
+      // Agentic loop — handle tool calls
+      while(resp.stop_reason === 'tool_use'){
+        const tuBlocks = resp.content.filter(b=>b.type==='tool_use');
+        // Add assistant turn
+        _hist.push({ role:'assistant', content: resp.content });
+        // Execute tools & collect results
+        const results = [];
+        for(const tu of tuBlocks){
+          toolsUsed.push(tu.name);
+          const r = await _exec(tu.name, tu.input);
+          results.push({ type:'tool_result', tool_use_id:tu.id, content:JSON.stringify(r) });
+        }
+        _hist.push({ role:'user', content: results });
+        messages = _hist.slice(-20);
+        resp = await _callAPI(messages);
+      }
+
+      // Extract final text
+      const finalText = (resp.content||[])
+        .filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
+
+      _hist.push({ role:'assistant', content: resp.content });
+      _setBusy(false);
+      _appendAI(finalText || '✅ Done!', toolsUsed);
+
+    } catch(err){
+      _setBusy(false);
+      _appendError(err.message);
+    }
+  };
+
+})();
+</script>
+
 </body>
 </html>
