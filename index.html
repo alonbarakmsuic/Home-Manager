@@ -43,19 +43,75 @@
   @media(min-width:481px){body{box-shadow:0 0 80px rgba(0,0,0,.15)}}
 
   /* ═══ Header ══════════════════════════════════════════ */
-  #app-header{position:sticky;top:0;z-index:100;height:var(--hh);
-    background:rgba(13,61,38,.88);
-    backdrop-filter:blur(24px) saturate(180%);
-    -webkit-backdrop-filter:blur(24px) saturate(180%);
-    display:flex;align-items:center;padding:0 16px;gap:12px;
-    border-bottom:.5px solid rgba(255,255,255,.12)}
-  #btn-back{display:none;background:rgba(255,255,255,.14);border:none;color:#fff;
-    width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1.1rem;
-    align-items:center;justify-content:center;transition:var(--T);flex-shrink:0}
+  #app-header{
+    position:sticky;top:0;z-index:100;
+    height:60px;
+    background:linear-gradient(135deg,#082318 0%,#0f4a28 50%,#1a6b3c 100%);
+    backdrop-filter:blur(20px) saturate(180%);
+    -webkit-backdrop-filter:blur(20px) saturate(180%);
+    display:flex;align-items:center;padding:0 14px;gap:10px;
+    border-bottom:1px solid rgba(52,199,123,.18);
+    box-shadow:0 2px 24px rgba(0,0,0,.28),0 1px 0 rgba(255,255,255,.04) inset;
+    overflow:hidden}
+  /* Subtle shimmer line across the top */
+  #app-header::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(52,199,123,.5) 40%,rgba(52,199,123,.5) 60%,transparent);
+    pointer-events:none}
+
+  /* Left slot — back button OR logo mark */
+  .hdr-left{width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+  #btn-back{display:none;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);
+    color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;
+    align-items:center;justify-content:center;transition:var(--T);flex-shrink:0;
+    backdrop-filter:blur(10px)}
   #btn-back.visible{display:flex}
-  #btn-back:active{transform:scale(.88);background:rgba(255,255,255,.24)}
-  #header-title{font-family:-apple-system,'SF Pro Display','Poppins',sans-serif;
-    font-size:1.05rem;font-weight:700;color:#fff;flex:1;letter-spacing:-.2px}
+  #btn-back:active{transform:scale(.86);background:rgba(255,255,255,.2)}
+  #btn-back svg{display:block}
+
+  /* Logo mark — house icon in a glassy pill */
+  #hdr-logo{
+    width:34px;height:34px;border-radius:10px;
+    background:rgba(52,199,123,.18);
+    border:1px solid rgba(52,199,123,.3);
+    display:flex;align-items:center;justify-content:center;
+    backdrop-filter:blur(10px);flex-shrink:0;
+    box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 1px rgba(255,255,255,.05) inset}
+  #app-header.has-back #hdr-logo{display:none}
+  #app-header:not(.has-back) #btn-back{display:none!important}
+
+  /* Center — title + subtitle on dashboard */
+  .hdr-center{flex:1;display:flex;flex-direction:column;align-items:center;min-width:0}
+  #header-title{
+    font-family:-apple-system,'SF Pro Display',sans-serif;
+    font-size:.96rem;font-weight:700;color:#fff;
+    letter-spacing:-.2px;line-height:1.2;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis}
+  #header-subtitle{
+    font-size:.62rem;font-weight:500;
+    color:rgba(52,199,123,.8);letter-spacing:.6px;
+    text-transform:uppercase;line-height:1}
+  #app-header.has-back #header-subtitle{display:none}
+
+  /* Right — user avatar bubbles */
+  #who-toggle{
+    display:flex;gap:5px;flex-shrink:0;margin-left:0}
+  .who-btn{
+    width:32px;height:32px;border-radius:50%;
+    border:1.5px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.08);
+    color:rgba(255,255,255,.45);
+    font-size:.72rem;font-weight:800;
+    cursor:pointer;transition:all .22s cubic-bezier(0.34,1.56,0.64,1);
+    font-family:inherit;display:flex;align-items:center;justify-content:center;
+    letter-spacing:0}
+  .who-btn.active{
+    background:#fff;
+    color:#0D3D26;
+    border-color:transparent;
+    transform:scale(1.08);
+    box-shadow:0 3px 12px rgba(0,0,0,.25)}
 
   /* ═══ Payment Alert ═══════════════════════════════════ */
   #payment-alert{display:none;
@@ -913,12 +969,16 @@
   .dash-hero::after{content:'';position:absolute;bottom:-30px;left:-20px;
     width:120px;height:120px;border-radius:50%;
     background:rgba(255,255,255,.04);pointer-events:none}
-  .dash-hero-greeting{font-size:.75rem;font-weight:600;color:rgba(255,255,255,.7);
-    text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+  .dash-hero-phrase{font-size:.72rem;font-weight:600;color:rgba(255,255,255,.65);
+    text-transform:uppercase;letter-spacing:.9px;margin-bottom:6px}
   .dash-hero-name{font-family:-apple-system,'SF Pro Display',sans-serif;
-    font-size:2rem;font-weight:800;color:#fff;letter-spacing:-.5px;line-height:1.15;
-    margin-bottom:2px}
-  .dash-hero-date{font-size:.8rem;color:rgba(255,255,255,.65);margin-top:6px}
+    font-size:2.6rem;font-weight:800;color:#fff;letter-spacing:-1px;line-height:1.05;
+    margin-bottom:5px;transition:opacity .3s ease,transform .3s cubic-bezier(0.34,1.56,0.64,1)}
+  .dash-hero-name.switching{opacity:0;transform:translateY(6px) scale(.97)}
+  .dash-hero-sub{font-size:.84rem;color:rgba(255,255,255,.62);margin-bottom:4px;
+    font-weight:400;letter-spacing:-.1px}
+  .dash-hero-date{font-size:.75rem;color:rgba(255,255,255,.45);margin-top:8px;
+    letter-spacing:.1px}
   .dash-hero-badge{display:inline-flex;align-items:center;gap:6px;margin-top:14px;
     background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
     border-radius:20px;padding:7px 14px}
@@ -978,10 +1038,6 @@
   .item-title{font-size:.96rem;font-weight:700;letter-spacing:-.1px}
   .item-desc{font-size:.77rem;color:var(--text-muted);margin-top:3px}
   .item-arrow{color:var(--text-light);font-size:1rem;font-weight:600}
-
-  /* Header — sleeker */
-  #app-header{height:56px;padding:0 16px}
-  #header-title{font-size:1rem;font-weight:700}
 
   /* Toast above nav */
   #toast{bottom:96px}
@@ -1102,6 +1158,149 @@
   .rise-stagger > *:nth-child(5){ animation-delay:.19s }
   .rise-stagger > *:nth-child(n+6){ animation-delay:.22s }
 
+  /* ══ SECTION ACCENT COLORS ══════════════════════════════ */
+  #view-chores,#view-chores-cleaning,#view-chores-gardening,
+  #view-chores-payments,#view-chores-maintenance { --sa:#34C77B; --sa-dim:rgba(52,199,123,.12); }
+  #view-expenses,#view-expenses-status,#view-expenses-reports,
+  #view-expenses-splitwise                        { --sa:#F5A623; --sa-dim:rgba(245,166,35,.12); }
+  #view-shopping,#view-shopping-groceries,
+  #view-shopping-upgrades,#view-pantry            { --sa:#FF3B30; --sa-dim:rgba(255,59,48,.1); }
+  #view-cooking                                   { --sa:#FF6B35; --sa-dim:rgba(255,107,53,.12); }
+  #view-smart-house                               { --sa:#00C6F8; --sa-dim:rgba(0,198,248,.12); }
+  #view-calendar                                  { --sa:#007AFF; --sa-dim:rgba(0,122,255,.1); }
+  #view-vault                                     { --sa:#7C79F0; --sa-dim:rgba(124,121,240,.1); }
+
+  /* Colored top strip on every non-dashboard section */
+  .view:not(#view-dashboard)::before {
+    content:''; display:block; height:3px;
+    background:var(--sa,var(--primary));
+    border-radius:0 0 3px 3px;
+    margin:-24px -16px 20px;
+    opacity:.9;
+  }
+  /* Accent bleeds into section's primary buttons and icon wraps */
+  .view:not(#view-dashboard) .btn-send,
+  .view:not(#view-dashboard) .btn-confirm {
+    background:linear-gradient(135deg,color-mix(in srgb,var(--sa,var(--primary)) 80%,#000),var(--sa,var(--primary))) !important;
+    box-shadow:0 4px 16px color-mix(in srgb,var(--sa,var(--primary)) 40%,transparent) !important;
+  }
+  .view:not(#view-dashboard) .icon-wrap {
+    background:var(--sa-dim,rgba(52,199,123,.12)) !important;
+  }
+  .view:not(#view-dashboard) .section-title {
+    color:var(--sa,var(--text-muted));
+  }
+
+  /* ══ SKELETON LOADING ════════════════════════════════════ */
+  @keyframes shimmer {
+    from { background-position:-600px 0 }
+    to   { background-position: 600px 0 }
+  }
+  .skeleton-wrap { display:flex;flex-direction:column;gap:12px;padding:4px 0 }
+  .sk {
+    border-radius:12px;
+    background:linear-gradient(90deg,#e8e8e8 25%,#f5f5f5 50%,#e8e8e8 75%);
+    background-size:600px 100%;
+    animation:shimmer 1.4s ease-in-out infinite;
+  }
+  .sk-card  { height:72px; }
+  .sk-line  { height:16px; border-radius:8px; }
+  .sk-line.short { width:55%; }
+  .sk-line.mid   { width:75%; }
+  .sk-row   { display:flex;align-items:center;gap:12px;padding:10px 16px;
+    background:var(--bg-card);border-radius:var(--radius-sm);
+    border:.5px solid var(--border);box-shadow:var(--shadow-sm) }
+  .sk-circle{ width:36px;height:36px;border-radius:50%;flex-shrink:0 }
+  .sk-lines { flex:1;display:flex;flex-direction:column;gap:7px }
+
+  /* ══ ACTIVITY TIMELINE ═══════════════════════════════════ */
+  .timeline { display:flex;flex-direction:column;position:relative;padding-left:42px }
+  .timeline::before {
+    content:'';position:absolute;left:17px;top:8px;bottom:8px;
+    width:2px;
+    background:linear-gradient(to bottom,var(--primary-light),rgba(52,199,123,.15));
+    border-radius:2px;
+  }
+  .tl-item { position:relative;margin-bottom:20px }
+  .tl-item:last-child { margin-bottom:0 }
+  .tl-dot {
+    position:absolute;left:-31px;top:4px;
+    width:24px;height:24px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:.72rem;font-weight:800;
+    border:2.5px solid var(--bg);
+    box-shadow:0 0 0 1.5px var(--border);
+    flex-shrink:0;z-index:1;
+  }
+  .tl-dot-alon { background:#D1FAE5;color:#065F46 }
+  .tl-dot-tali { background:#DBEAFE;color:#1E40AF }
+  .tl-body { background:var(--bg-card);border-radius:14px;
+    border:.5px solid var(--border);padding:12px 14px;
+    box-shadow:var(--shadow-sm) }
+  .tl-emoji { font-size:1.1rem;margin-bottom:5px;line-height:1 }
+  .tl-text  { font-size:.84rem;color:var(--text);line-height:1.45;font-weight:500 }
+  .tl-meta  { display:flex;align-items:center;gap:6px;margin-top:5px }
+  .tl-who   { font-size:.69rem;font-weight:700;color:var(--text-muted) }
+  .tl-time  { font-size:.69rem;color:var(--text-light) }
+  .tl-dot-sep { width:3px;height:3px;border-radius:50%;background:var(--text-light) }
+
+  /* ══ SWIPE TO DELETE ═════════════════════════════════════ */
+  .shop-item { position:relative; overflow:hidden; touch-action:pan-y }
+  .swipe-delete-bg {
+    position:absolute;right:0;top:0;bottom:0;width:90px;
+    background:var(--danger);
+    display:flex;align-items:center;justify-content:center;
+    font-size:.78rem;font-weight:700;color:#fff;gap:6px;
+    pointer-events:none;
+    border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  }
+  .swipe-delete-bg::before { content:'🗑️'; font-size:1.1rem }
+  .shop-item-inner {
+    display:flex;align-items:center;padding:12px 16px;gap:12px;
+    background:var(--bg-card);
+    transition:transform .22s cubic-bezier(0.22,1,0.36,1);
+    position:relative;z-index:1;
+    border-bottom:.5px solid var(--border);
+  }
+  .shop-item:last-child .shop-item-inner { border-bottom:none }
+  .shop-item.swiped .shop-item-inner { transform:translateX(-90px) }
+
+  /* ══ PANTRY iOS WIDGET STYLE ═════════════════════════════ */
+  .pantry-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px }
+  .staple-btn {
+    width:100%;border-radius:20px;border:none;cursor:pointer;
+    transition:transform .18s cubic-bezier(0.34,1.56,0.64,1),box-shadow .18s ease;
+    display:flex;flex-direction:column;align-items:flex-start;gap:0;
+    text-align:left;font-family:inherit;padding:16px 14px 14px;
+    position:relative;overflow:hidden;min-height:110px;
+    justify-content:space-between;
+  }
+  .staple-btn.stock {
+    background:linear-gradient(145deg,#f0fdf6,#dcfce8);
+    box-shadow:0 2px 12px rgba(52,199,123,.18),0 0 0 1px rgba(52,199,123,.2);
+  }
+  .staple-btn.low {
+    background:linear-gradient(145deg,#fff5f5,#fee2e2);
+    box-shadow:0 2px 12px rgba(255,59,48,.14),0 0 0 1px rgba(255,59,48,.18);
+  }
+  .staple-btn:active { transform:scale(.93) }
+  .staple-emoji-big { font-size:2rem;line-height:1;margin-bottom:6px }
+  .staple-name {
+    font-size:.84rem;font-weight:700;color:var(--text);
+    word-break:break-word;line-height:1.25;letter-spacing:-.1px
+  }
+  .staple-status-pill {
+    font-size:.65rem;font-weight:800;padding:3px 9px;border-radius:20px;
+    margin-top:6px;display:inline-block;letter-spacing:.2px;
+  }
+  .staple-btn.stock .staple-status-pill { background:rgba(52,199,123,.18);color:#0D6E35 }
+  .staple-btn.low  .staple-status-pill  { background:rgba(255,59,48,.14); color:#C0392B }
+  .staple-stock-bar {
+    position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 20px 20px;
+  }
+  .staple-btn.stock .staple-stock-bar { background:linear-gradient(90deg,#34C77B,#2ecc71) }
+  .staple-btn.low  .staple-stock-bar  { background:linear-gradient(90deg,#FF3B30,#ff6b6b) }
+
   /* ══ ERROR SHAKE ════════════════════════════════════════ */
   @keyframes shake {
     0%,100% { transform:translateX(0); }
@@ -1119,11 +1318,31 @@
 
 <!-- ═════════════════ HEADER ════════════════════════════ -->
 <header id="app-header">
-  <button id="btn-back" aria-label="Go back">&#8592;</button>
-  <span id="header-title">🏠 Home Manager</span>
+  <!-- Left: back chevron or logo mark -->
+  <div class="hdr-left">
+    <button id="btn-back" aria-label="Go back">
+      <svg width="9" height="16" viewBox="0 0 9 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 1L1.5 8L8 15" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div id="hdr-logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 10.5L12 3L21 10.5V21C21 21.55 20.55 22 20 22H15.5V16H8.5V22H4C3.45 22 3 21.55 3 21V10.5Z" fill="rgba(52,199,123,0.9)"/>
+        <path d="M3 10.5L12 3L21 10.5" stroke="rgba(52,199,123,1)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Center: title + brand subtitle -->
+  <div class="hdr-center">
+    <span id="header-title">Home Manager</span>
+    <span id="header-subtitle">Your Family Hub</span>
+  </div>
+
+  <!-- Right: user avatar toggle -->
   <div id="who-toggle">
-    <button class="who-btn active" id="who-alon" onclick="setUser('Alon')">אלון</button>
-    <button class="who-btn"        id="who-tali" onclick="setUser('Tali')">טלי</button>
+    <button class="who-btn active" id="who-alon" onclick="setUser('Alon')">א</button>
+    <button class="who-btn"        id="who-tali" onclick="setUser('Tali')">ט</button>
   </div>
 </header>
 
@@ -1157,8 +1376,9 @@
 <!-- ═════════════════ DASHBOARD ═════════════════════════ -->
 <main id="view-dashboard" class="view active">
   <div class="dash-hero">
-    <div class="dash-hero-greeting">Welcome back</div>
-    <div class="dash-hero-name" id="greeting-text">Good morning! 👋</div>
+    <div class="dash-hero-phrase" id="greeting-phrase">Good morning ☀️</div>
+    <div class="dash-hero-name" id="greeting-name">Alon</div>
+    <div class="dash-hero-sub" id="greeting-sub">Have a great day ahead</div>
     <div class="dash-hero-date" id="greeting-date">—</div>
     <div class="dash-hero-badge">
       <span>🏠 Home Manager</span>
@@ -1266,7 +1486,11 @@
     <table class="checklist-table">
       <thead><tr><th style="width:34px"></th><th>Task</th><th>Area</th></tr></thead>
       <tbody id="weekly-tbody">
-        <tr><td colspan="3"><div class="empty"><div class="empty-icon">⏳</div>Loading…</div></td></tr>
+        <tr><td colspan="3" style="padding:16px"><div class="skeleton-wrap">
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+</div></td></tr>
       </tbody>
     </table>
   </div>
@@ -1283,7 +1507,11 @@
     <table class="checklist-table">
       <thead><tr><th style="width:34px"></th><th>Task</th><th>Area</th></tr></thead>
       <tbody id="monthly-tbody">
-        <tr><td colspan="3"><div class="empty"><div class="empty-icon">⏳</div>Loading…</div></td></tr>
+        <tr><td colspan="3" style="padding:16px"><div class="skeleton-wrap">
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+</div></td></tr>
       </tbody>
     </table>
   </div>
@@ -1304,7 +1532,11 @@
     <table class="water-table">
       <thead><tr><th>Plant</th><th>Last Watered</th><th>Status</th><th></th><th style="width:34px"></th></tr></thead>
       <tbody id="plants-tbody">
-        <tr><td colspan="5"><div class="empty"><div class="empty-icon">⏳</div>Loading…</div></td></tr>
+        <tr><td colspan="5" style="padding:16px"><div class="skeleton-wrap">
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+</div></td></tr>
       </tbody>
     </table>
   </div>
@@ -1478,7 +1710,11 @@
   <!-- Live table -->
   <p class="section-title">📋 הוצאות משותפות</p>
   <div id="sw-list">
-    <div class="empty"><div class="spinner"></div>טוען…</div>
+    <div class="skeleton-wrap">
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+</div>
   </div>
 </main>
 
@@ -1751,7 +1987,11 @@
 <!-- ═════════════════ ACTIVITY ARCHIVE ══════════════════ -->
 <main id="view-activity-archive" class="view">
   <div id="archive-list">
-    <div class="empty"><div class="spinner"></div>Loading…</div>
+    <div class="skeleton-wrap">
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+</div>
   </div>
 </main>
 
@@ -1793,7 +2033,11 @@
     <button class="btn-send" id="btn-add-cleaning-task" onclick="addCleaningTask()" style="margin-bottom:24px">＋ Add Task</button>
     <p class="section-title">All Tasks</p>
     <div id="templates-list">
-      <div class="empty"><div class="spinner"></div>Loading…</div>
+      <div class="skeleton-wrap">
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+</div>
     </div>
   </div>
 </div>
@@ -1902,13 +2146,21 @@ function _swapView(viewId) {
   _cur = viewId;
 
   const meta = VIEW_META[viewId] || {};
-  document.getElementById("header-title").textContent = meta.title || viewId;
+  const isRoot = meta.back === null;
+  const hdr = document.getElementById("app-header");
   const backBtn = document.getElementById("btn-back");
-  if (meta.back !== null) {
+
+  // Header title: strip emoji on sub-pages for cleaner look
+  const rawTitle = meta.title || viewId;
+  document.getElementById("header-title").textContent = isRoot ? "Home Manager" : rawTitle.replace(/^[\p{Emoji}\s]+/u, '').trim() || rawTitle;
+
+  if (isRoot) {
+    backBtn.classList.remove("visible");
+    hdr.classList.remove("has-back");
+  } else {
     backBtn.classList.add("visible");
     backBtn.onclick = () => navigateTo(meta.back);
-  } else {
-    backBtn.classList.remove("visible");
+    hdr.classList.add("has-back");
   }
   window.scrollTo({ top: 0, behavior: "instant" });
   _updateBottomNav(viewId);
@@ -1978,12 +2230,39 @@ function _onEnter(id) {
 /* ══════════════════════════════════════════════════════════
    DASHBOARD
 ══════════════════════════════════════════════════════════ */
+function _updateGreeting(animate = false) {
+  const name = _currentUser();
+  const h    = new Date().getHours();
+  let phrase, emoji, sub;
+  if      (h >= 5  && h < 12) { phrase = "Good morning";   emoji = "☀️";  sub = "Have a great day ahead"; }
+  else if (h >= 12 && h < 17) { phrase = "Good afternoon"; emoji = "🌤️"; sub = "Hope your day is going well"; }
+  else if (h >= 17 && h < 21) { phrase = "Good evening";   emoji = "🌆";  sub = "How was your day?"; }
+  else                          { phrase = "Good night";    emoji = "🌙";  sub = "Time to rest up"; }
+
+  const elName = document.getElementById("greeting-name");
+
+  if (animate && elName) {
+    // Spring: name fades + drops, then snaps back with new value
+    elName.classList.add("switching");
+    setTimeout(() => {
+      elName.textContent = name;
+      elName.classList.remove("switching");
+    }, 200);
+  } else if (elName) {
+    elName.textContent = name;
+  }
+
+  const elPhrase = document.getElementById("greeting-phrase");
+  const elSub    = document.getElementById("greeting-sub");
+  const elDate   = document.getElementById("greeting-date");
+  if (elPhrase) elPhrase.textContent = `${phrase} ${emoji}`;
+  if (elSub)    elSub.textContent    = sub;
+  if (elDate)   elDate.textContent   = new Date().toLocaleDateString("en-GB",
+    { weekday:"long", month:"long", day:"numeric" });
+}
+
 function initDashboard() {
-  const h = new Date().getHours();
-  const g = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
-  document.getElementById("greeting-text").textContent = `${g}! 👋`;
-  document.getElementById("greeting-date").textContent =
-    new Date().toLocaleDateString("en-GB", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+  _updateGreeting();
   _checkPaymentAlert();
   _initWhoUI();
   initActivityFeed();
@@ -2014,7 +2293,8 @@ window.setUser = function(name) {
   localStorage.setItem("currentUser", name);
   document.getElementById("who-alon").classList.toggle("active", name === "Alon");
   document.getElementById("who-tali").classList.toggle("active", name === "Tali");
-  showToast(`👋 Switched to ${name}`, "success");
+  _updateGreeting(true); // animate the name swap
+  showToast(`Switched to ${name}`, "success");
 };
 
 /* ══════════════════════════════════════════════════════════
@@ -2090,44 +2370,58 @@ function _renderActivityFeed(items, lastSeen) {
         style="background:none;border:none;color:var(--primary);font-weight:600;cursor:pointer;font-family:inherit;font-size:.84rem">View history →</button></p></div>`;
     return;
   }
+
+  // ── Timeline layout ──────────────────────────────────────
   el.innerHTML = "";
+  const timeline = document.createElement("div");
+  timeline.className = "timeline";
+
   visible.forEach(item => {
-    const ts    = _tsMs(item.createdAt);
-    const isNew = ts > lastSeen && lastSeen > 0;
-    const who   = item.who || "Someone";
-    const cls   = who === "Alon" ? "av-alon" : "av-tali";
-    const init  = who[0].toUpperCase();
+    const ts       = _tsMs(item.createdAt);
+    const isNew    = ts > lastSeen && lastSeen > 0;
+    const who      = item.who || "Someone";
+    const dotCls   = who === "Alon" ? "tl-dot-alon" : "tl-dot-tali";
+    const init     = who[0].toUpperCase();
     const hasItems = item.items && item.items.length > 0;
-    const div   = document.createElement("div"); div.className = "activity-item";
-    div.innerHTML = `
-      <div class="av ${cls}">${init}</div>
-      <div class="activity-body">
-        ${isNew ? `<span class="badge-new">new</span><br>` : ""}
-        <div class="activity-line"><strong>${who}</strong> ${item.action}</div>
-        <div class="activity-time">${_timeAgo(ts)}</div>
+
+    const tlItem = document.createElement("div");
+    tlItem.className = "tl-item";
+    tlItem.innerHTML = `
+      <div class="tl-dot ${dotCls}">${init}</div>
+      <div class="tl-body">
+        ${isNew ? `<span class="badge-new" style="margin-bottom:5px;display:inline-block">new</span>` : ""}
+        <div class="tl-emoji">${item.emoji}</div>
+        <div class="tl-text">${item.action}</div>
         ${hasItems ? `
-          <button class="items-toggle">🛒 ${item.items.length} item${item.items.length > 1 ? "s" : ""} purchased ▼</button>
+          <button class="items-toggle" style="margin-top:7px">🛒 ${item.items.length} item${item.items.length > 1 ? "s" : ""} ▼</button>
           <ul class="items-peek">${item.items.map(i => `<li>${i}</li>`).join("")}</ul>` : ""}
-      </div>
-      <span class="activity-emoji" aria-hidden="true">${item.emoji}</span>
-      <button class="btn-dismiss" title="Dismiss">✕</button>`;
+        <div class="tl-meta">
+          <span class="tl-who">${who}</span>
+          <span class="tl-dot-sep"></span>
+          <span class="tl-time">${_timeAgo(ts)}</span>
+          <button class="btn-dismiss" title="Dismiss" style="margin-left:auto">✕</button>
+        </div>
+      </div>`;
+
     if (hasItems) {
-      const toggle = div.querySelector(".items-toggle");
-      const peek   = div.querySelector(".items-peek");
+      const toggle = tlItem.querySelector(".items-toggle");
+      const peek   = tlItem.querySelector(".items-peek");
       toggle.addEventListener("click", () => {
         const open = peek.classList.toggle("open");
         toggle.textContent = open
-          ? `🛒 ${item.items.length} item${item.items.length > 1 ? "s" : ""} purchased ▲`
-          : `🛒 ${item.items.length} item${item.items.length > 1 ? "s" : ""} purchased ▼`;
+          ? `🛒 ${item.items.length} item${item.items.length > 1 ? "s" : ""} ▲`
+          : `🛒 ${item.items.length} item${item.items.length > 1 ? "s" : ""} ▼`;
       });
     }
-    div.querySelector(".btn-dismiss").addEventListener("click", () =>
-      _dismissActivity(item.id, div));
-    el.appendChild(div);
+    tlItem.querySelector(".btn-dismiss").addEventListener("click", () =>
+      _dismissActivity(item.id, tlItem));
+
+    timeline.appendChild(tlItem);
   });
-  // "View all history" link at the bottom
+
+  el.appendChild(timeline);
   const footer = document.createElement("div"); footer.className = "activity-see-all";
-  footer.innerHTML = `<button onclick="navigateTo('activity-archive')">📋 View all history →</button>`;
+  footer.innerHTML = `<button onclick="navigateTo('activity-archive')" style="margin-top:8px">View all history →</button>`;
   el.appendChild(footer);
 }
 
@@ -2136,7 +2430,11 @@ function _renderActivityFeed(items, lastSeen) {
 ══════════════════════════════════════════════════════════ */
 async function initActivityArchive() {
   const el = document.getElementById("archive-list");
-  el.innerHTML = `<div class="empty"><div class="spinner"></div>Loading…</div>`;
+  el.innerHTML = `<div class="skeleton-wrap">
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+</div>`;
   try {
     // ✅ FLAT query
     const snap = await getDocs(collection(db, "activity"));
@@ -2269,7 +2567,11 @@ async function initCleaning() {
   // Show loading spinners
   ["weekly","monthly"].forEach(t => {
     document.getElementById(`${t}-tbody`).innerHTML =
-      `<tr><td colspan="3"><div class="empty"><div class="spinner"></div>Loading…</div></td></tr>`;
+      `<tr><td colspan="3"><div class="skeleton-wrap">
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+</div></td></tr>`;
   });
 
   const weekRef  = doc(db, "checklists", _weekKey());
@@ -2361,7 +2663,11 @@ window.manageBgClick = function(e) {
 
 async function _renderTemplatesList() {
   const el = document.getElementById("templates-list");
-  el.innerHTML = `<div class="empty"><div class="spinner"></div>Loading…</div>`;
+  el.innerHTML = `<div class="skeleton-wrap">
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+</div>`;
   try {
     // ✅ FLAT query
     const snap = await getDocs(collection(db, "cleaning_templates"));
@@ -2442,7 +2748,11 @@ async function _deleteCleaningTask(id) {
 ══════════════════════════════════════════════════════════ */
 async function initGardening() {
   const tbody = document.getElementById("plants-tbody");
-  tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="spinner"></div>Loading…</div></td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="5"><div class="skeleton-wrap">
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+</div></td></tr>`;
   try {
     // ✅ FLAT queries — no composite indexes needed
     const [plantsSnap, waterSnap] = await Promise.all([
@@ -2759,28 +3069,71 @@ window.confirmAddItem = function() {
 function _appendShopItem(ul, name, type, pantryId) {
   ul.querySelector(".list-empty")?.remove();
   const li = document.createElement("li"); li.className = "shop-item";
+
+  // Wrap content in inner div for swipe transform
   li.innerHTML = `
-    <input type="checkbox" class="item-check">
-    <span class="item-label">${name}</span>
-    ${pantryId ? `<span class="pantry-tag">🧺</span>` : ""}
-    <button class="item-del" title="Remove">✕</button>`;
-  li.querySelector(".item-check").addEventListener("change", function() {
-    li.classList.toggle("checked", this.checked);
-    // Track checked state for pantry auto-reset
-    if (pantryId && _pantryQueueItems[pantryId])
-      _pantryQueueItems[pantryId].checked = this.checked;
-  });
-  li.querySelector(".item-del").addEventListener("click", () => {
+    <div class="swipe-delete-bg"></div>
+    <div class="shop-item-inner">
+      <input type="checkbox" class="item-check">
+      <span class="item-label">${name}</span>
+      ${pantryId ? `<span class="pantry-tag">🧺</span>` : ""}
+      <button class="item-del" title="Remove">✕</button>
+    </div>`;
+
+  const doDelete = () => {
     _itemLists[type] = _itemLists[type].filter(i => i !== name);
     if (pantryId) {
       delete _pantryQueueItems[pantryId];
       deleteDoc(doc(db, "grocery_queue", pantryId)).catch(() => {});
     }
-    li.remove();
-    const listEl = document.getElementById(type === "groceries" ? "grocery-list" : "upgrade-list");
-    if (!listEl.querySelector(".shop-item"))
-      listEl.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
+    li.style.transition = "opacity .2s, max-height .25s, margin .25s";
+    li.style.opacity = "0"; li.style.maxHeight = "0"; li.style.marginBottom = "0";
+    setTimeout(() => {
+      li.remove();
+      const listEl = document.getElementById(type === "groceries" ? "grocery-list" : "upgrade-list");
+      if (!listEl.querySelector(".shop-item"))
+        listEl.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
+    }, 260);
+  };
+
+  li.querySelector(".item-check").addEventListener("change", function() {
+    li.classList.toggle("checked", this.checked);
+    if (pantryId && _pantryQueueItems[pantryId])
+      _pantryQueueItems[pantryId].checked = this.checked;
   });
+  li.querySelector(".item-del").addEventListener("click", doDelete);
+
+  // ── Swipe-to-delete (touch + pointer) ─────────────────
+  let startX = 0, startY = 0, dx = 0, swiping = false;
+  const inner = li.querySelector(".shop-item-inner");
+
+  li.addEventListener("pointerdown", e => {
+    startX = e.clientX; startY = e.clientY; dx = 0; swiping = false;
+    inner.style.transition = "none";
+  }, { passive: true });
+
+  li.addEventListener("pointermove", e => {
+    dx = e.clientX - startX;
+    const dy = Math.abs(e.clientY - startY);
+    if (Math.abs(dx) < 8 && !swiping) return; // ignore tiny movements
+    if (dy > Math.abs(dx) && !swiping) return; // vertical scroll wins
+    swiping = true;
+    if (dx < 0) inner.style.transform = `translateX(${Math.max(dx, -90)}px)`;
+  }, { passive: true });
+
+  li.addEventListener("pointerup", () => {
+    inner.style.transition = "";
+    if (dx < -55) {
+      // crossed threshold — confirm delete
+      li.classList.add("swiped");
+      setTimeout(doDelete, 280);
+    } else {
+      inner.style.transform = "";
+      li.classList.remove("swiped");
+    }
+    swiping = false;
+  });
+
   ul.appendChild(li);
 }
 
@@ -3032,11 +3385,15 @@ function _renderPantryGrid(items) {
         <span>${c.label}</span>${c.id === curCat ? "<span>✓</span>" : ""}
       </div>`).join("");
     const wrap  = document.createElement("div"); wrap.className = "staple-wrap";
+    const catEmoji = _CAT_EMOJI[curCat] || "🫙";
     wrap.innerHTML = `
       <button class="staple-btn ${isLow ? "low" : "stock"}">
-        <span class="staple-name">${item.name}</span>
-        <span class="staple-status-label">${isLow ? "🔴 Running Low" : "✅ In Stock"}</span>
-        <span class="staple-cat-emoji">${_CAT_EMOJI[curCat] || "🫙"}</span>
+        <div class="staple-emoji-big">${catEmoji}</div>
+        <div>
+          <div class="staple-name">${item.name}</div>
+          <div class="staple-status-pill">${isLow ? "Running Low" : "In Stock"}</div>
+        </div>
+        <div class="staple-stock-bar"></div>
       </button>
       <button class="staple-menu-btn" title="שנה קטגוריה"
         onclick="event.stopPropagation();_openStapleMenu('${item.id}')">⋮</button>
@@ -3168,7 +3525,11 @@ function initReportSelector() {
 window.loadReport = async function(monthStr) {
   if (!monthStr) return;
   const container = document.getElementById("report-content");
-  container.innerHTML = `<div class="empty"><div class="spinner"></div>Loading…</div>`;
+  container.innerHTML = `<div class="skeleton-wrap">
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line"></div><div class="sk sk-line short"></div></div></div>
+  <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
+</div>`;
   if (_pieChart) { _pieChart.destroy(); _pieChart = null; }
   try {
     const dateFrom = monthStr + "-01";
