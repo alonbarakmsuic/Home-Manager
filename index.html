@@ -985,6 +985,133 @@
 
   /* Toast above nav */
   #toast{bottom:96px}
+
+  /* ══ VIEW TRANSITIONS API — most modern page morphing ══ */
+  /* Freeze header & nav in place; only content cross-fades */
+  #app-header  { view-transition-name: app-header; }
+  #bottom-nav  { view-transition-name: bottom-nav; }
+  #payment-alert { view-transition-name: pay-alert; }
+  ::view-transition-group(app-header),
+  ::view-transition-group(bottom-nav),
+  ::view-transition-group(pay-alert) { animation-duration: 0ms; }
+
+  /* Forward: old scales back & blurs; new rises up crisply */
+  @keyframes vtOldFwd {
+    to { opacity:0; transform:scale(.96) translateY(6px); filter:blur(6px); }
+  }
+  @keyframes vtNewFwd {
+    from { opacity:0; transform:scale(1.03) translateY(-8px); filter:blur(6px); }
+  }
+  /* Back: reverse — old rises, new comes from below */
+  @keyframes vtOldBack {
+    to { opacity:0; transform:scale(1.04) translateY(-6px); filter:blur(6px); }
+  }
+  @keyframes vtNewBack {
+    from { opacity:0; transform:scale(.96) translateY(8px); filter:blur(6px); }
+  }
+
+  ::view-transition-old(root) {
+    animation: 200ms cubic-bezier(0.4,0,1,1) vtOldFwd both;
+  }
+  ::view-transition-new(root) {
+    animation: 340ms cubic-bezier(0.22,1,0.36,1) vtNewFwd both;
+  }
+  html[data-nav-back]::view-transition-old(root) {
+    animation: 200ms cubic-bezier(0.4,0,1,1) vtOldBack both;
+  }
+  html[data-nav-back]::view-transition-new(root) {
+    animation: 340ms cubic-bezier(0.22,1,0.36,1) vtNewBack both;
+  }
+
+  /* Fallback for browsers without View Transitions */
+  @keyframes vtFallbackIn {
+    from { opacity:0; transform:translateY(10px); }
+  }
+  .vt-fallback { animation: vtFallbackIn 280ms cubic-bezier(0.22,1,0.36,1) both; }
+
+  /* ══ NAV INDICATOR (sliding pill) ═══════════════════════ */
+  #nav-indicator {
+    position:absolute; top:6px; height:3px; border-radius:2px;
+    background:var(--primary);
+    transition:left .38s cubic-bezier(0.34,1.56,0.64,1),
+               width .38s cubic-bezier(0.34,1.56,0.64,1);
+    pointer-events:none;
+  }
+  .nav-btn .nav-icon { display:inline-block; transition:transform .32s cubic-bezier(0.34,1.56,0.64,1); }
+  .nav-btn.active .nav-icon { transform:scale(1.18) translateY(-2px); }
+  .nav-label { transition:color .2s ease; }
+  .nav-btn.active .nav-label { color:var(--primary); }
+
+  /* ══ BUTTON PRESS — refined scale only, no ripple ═══════ */
+  .btn-confirm, .btn-send, .btn-plan-shop,
+  .btn-water, .btn-start-laundry, .btn-laundry-clear,
+  .laundry-dur-btn, .btn-add-plant, .btn-add-staple,
+  .dash-card, .submenu-card, .btn-plan-add {
+    transition: transform .15s cubic-bezier(0.34,1.56,0.64,1),
+                box-shadow .15s ease, opacity .15s ease !important;
+  }
+
+  /* ══ BUTTON SUCCESS MORPH ═══════════════════════════════ */
+  .btn-success {
+    background: linear-gradient(135deg,#1A7A4A,#34C77B) !important;
+    transform: scale(1.02) !important;
+  }
+  .btn-success::after {
+    content: ' ✓';
+  }
+
+  /* ══ WATER ROW FLASH ════════════════════════════════════ */
+  @keyframes waterRowFlash {
+    0%   { background: transparent; }
+    30%  { background: rgba(0,196,255,.14); }
+    100% { background: transparent; }
+  }
+  .water-row-flash { animation: waterRowFlash .7s ease; }
+
+  /* ══ LAUNDRY WIDGET ENTRANCE ════════════════════════════ */
+  @keyframes widgetDrop {
+    from { opacity:0; transform:translateY(-14px) scale(.96); }
+    to   { opacity:1; transform:translateY(0)     scale(1); }
+  }
+  #laundry-widget[style*="display: flex"],
+  #laundry-widget[style*="display:flex"] {
+    animation: widgetDrop 420ms cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  /* ══ CHECKBOX FILL ANIMATION ═══════════════════════════ */
+  @keyframes checkFill {
+    0%   { transform:scale(1); }
+    35%  { transform:scale(1.38); }
+    65%  { transform:scale(.9); }
+    100% { transform:scale(1); }
+  }
+  .task-check:checked { animation: checkFill .32s cubic-bezier(0.34,1.56,0.64,1); }
+
+  /* ══ STAGGERED PAGE CONTENT ════════════════════════════ */
+  @keyframes riseIn {
+    from { opacity:0; transform:translateY(12px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  .rise-stagger > * {
+    animation: riseIn .28s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .rise-stagger > *:nth-child(1){ animation-delay:.03s }
+  .rise-stagger > *:nth-child(2){ animation-delay:.07s }
+  .rise-stagger > *:nth-child(3){ animation-delay:.11s }
+  .rise-stagger > *:nth-child(4){ animation-delay:.15s }
+  .rise-stagger > *:nth-child(5){ animation-delay:.19s }
+  .rise-stagger > *:nth-child(n+6){ animation-delay:.22s }
+
+  /* ══ ERROR SHAKE ════════════════════════════════════════ */
+  @keyframes shake {
+    0%,100% { transform:translateX(0); }
+    20%,60% { transform:translateX(-5px); }
+    40%,80% { transform:translateX(5px); }
+  }
+  .input-shake { animation:shake .36s ease; }
+
+  /* ══ TOAST — snappier entrance ══════════════════════════ */
+  #toast { transition:opacity .18s ease, transform .22s cubic-bezier(0.34,1.56,0.64,1); }
   </style>
 
 </head>
@@ -1002,6 +1129,7 @@
 
 <!-- ═════════════════ BOTTOM NAV ═════════════════════════ -->
 <nav id="bottom-nav">
+  <div id="nav-indicator"></div>
   <button class="nav-btn active" data-nav="dashboard" onclick="navigateTo('dashboard')">
     <span class="nav-icon">🏠</span><span class="nav-label">Home</span>
   </button>
@@ -1765,11 +1893,11 @@ function _cleanupLeaving(id) {
   if (id === "chores-maintenance")  _unsub("maintenance");
 }
 
-window.navigateTo = function(viewId) {
-  _cleanupLeaving(_cur);
+// ── Core swap logic (pure DOM, no animation) ─────────────
+function _swapView(viewId) {
   document.getElementById("view-" + _cur)?.classList.remove("active");
   const next = document.getElementById("view-" + viewId);
-  if (!next) return;
+  if (!next) return false;
   next.classList.add("active");
   _cur = viewId;
 
@@ -1782,16 +1910,53 @@ window.navigateTo = function(viewId) {
   } else {
     backBtn.classList.remove("visible");
   }
-  window.scrollTo(0, 0);
-
-  // Update bottom nav active state
-  const rootView = viewId.split("-")[0]; // e.g. "chores-cleaning" → "chores"
-  document.querySelectorAll(".nav-btn").forEach(b => {
-    const nav = b.dataset.nav;
-    b.classList.toggle("active", nav === viewId || nav === rootView);
-  });
-
+  window.scrollTo({ top: 0, behavior: "instant" });
+  _updateBottomNav(viewId);
   _onEnter(viewId);
+  return true;
+}
+
+function _updateBottomNav(viewId) {
+  const rootView = viewId.split("-")[0];
+  document.querySelectorAll(".nav-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.nav === viewId || b.dataset.nav === rootView);
+  });
+  // Slide the indicator pill to the active button
+  requestAnimationFrame(() => {
+    const activeBtn = document.querySelector(".nav-btn.active");
+    const indicator = document.getElementById("nav-indicator");
+    const nav = document.getElementById("bottom-nav");
+    if (!activeBtn || !indicator || !nav) return;
+    const bRect = activeBtn.getBoundingClientRect();
+    const nRect = nav.getBoundingClientRect();
+    const pillW = bRect.width * 0.45;
+    indicator.style.left  = (bRect.left - nRect.left + (bRect.width - pillW) / 2) + "px";
+    indicator.style.width = pillW + "px";
+  });
+}
+
+window.navigateTo = function(viewId) {
+  if (viewId === _cur) return;
+  _cleanupLeaving(_cur);
+
+  const isBack = VIEW_META[_cur]?.back === viewId;
+
+  if (document.startViewTransition) {
+    // Most modern: View Transitions API (Chrome 111+, Safari 18+)
+    if (isBack) document.documentElement.setAttribute("data-nav-back", "");
+    else         document.documentElement.removeAttribute("data-nav-back");
+
+    const t = document.startViewTransition(() => _swapView(viewId));
+    t.finished.finally(() => document.documentElement.removeAttribute("data-nav-back"));
+  } else {
+    // Graceful fallback — instant swap + simple fade-in on content
+    _swapView(viewId);
+    const el = document.getElementById("view-" + viewId);
+    if (el) {
+      el.classList.add("vt-fallback");
+      setTimeout(() => el.classList.remove("vt-fallback"), 320);
+    }
+  }
 };
 
 function _onEnter(id) {
@@ -4062,6 +4227,62 @@ window.showToast = function(msg, type = "") {
 ══════════════════════════════════════════════════════════ */
 initDashboard();
 initLaundryGlobal(); // global listener — keeps widget in sync on all views
+
+/* ══════════════════════════════════════════════════════════
+   MICRO-INTERACTIONS
+══════════════════════════════════════════════════════════ */
+
+// ── Init nav indicator position on load ───────────────────
+requestAnimationFrame(() => _updateBottomNav("dashboard"));
+
+// ── Water plant: row flash + button success morph ─────────
+document.addEventListener('click', function(e) {
+  const wb = e.target.closest('.btn-water');
+  if (!wb || wb.disabled) return;
+  const row = wb.closest('tr');
+  if (row) {
+    row.classList.remove('water-row-flash');
+    void row.offsetWidth;
+    row.classList.add('water-row-flash');
+    setTimeout(() => row.classList.remove('water-row-flash'), 800);
+  }
+  const prev = wb.textContent;
+  wb.classList.add('btn-success');
+  setTimeout(() => wb.classList.remove('btn-success'), 1200);
+});
+
+// ── Bills confirm: brief success state on button ──────────
+document.addEventListener('click', function(e) {
+  const cb = e.target.closest('.btn-confirm');
+  if (!cb) return;
+  const prev = cb.textContent;
+  cb.classList.add('btn-success');
+  setTimeout(() => cb.classList.remove('btn-success'), 1400);
+});
+
+// ── Stagger content on view enter ─────────────────────────
+// Observe the activity feed and stagger newly added items
+new MutationObserver(mutations => {
+  const feed = document.getElementById('activity-feed');
+  if (!feed) return;
+  // Apply stagger only on bulk re-renders (3+ new nodes)
+  const added = mutations.reduce((n, m) => n + m.addedNodes.length, 0);
+  if (added >= 2) {
+    feed.classList.remove('rise-stagger');
+    void feed.offsetWidth;
+    feed.classList.add('rise-stagger');
+    setTimeout(() => feed.classList.remove('rise-stagger'), 1200);
+  }
+}).observe(document.getElementById('activity-feed') || document.body, { childList: true });
+
+// ── Input error shake (global helper) ────────────────────
+window._shakeInput = function(el) {
+  if (!el) return;
+  el.classList.remove('input-shake');
+  void el.offsetWidth;
+  el.classList.add('input-shake');
+  setTimeout(() => el.classList.remove('input-shake'), 400);
+};
 
 </script>
 </body>
