@@ -880,6 +880,111 @@
   .btn-tv-vol:active{background:#667eea;border-color:#667eea;color:#fff;transform:scale(.92)}
   .tv-shortcut-note{font-size:.72rem;color:var(--text-light);text-align:center;
     padding-top:4px;line-height:1.5;direction:rtl}
+  /* ══ DRAMATIC REDESIGN OVERRIDES ══════════════════════════ */
+
+  /* Bottom Nav Bar */
+  #bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+    width:100%;max-width:480px;z-index:150;
+    background:rgba(255,255,255,.88);
+    backdrop-filter:blur(24px) saturate(200%);
+    -webkit-backdrop-filter:blur(24px) saturate(200%);
+    border-top:.5px solid rgba(0,0,0,.1);
+    display:flex;align-items:center;justify-content:space-around;
+    padding:8px 0 max(8px,env(safe-area-inset-bottom));
+    box-shadow:0 -4px 20px rgba(0,0,0,.06)}
+  .nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;
+    background:none;border:none;cursor:pointer;padding:6px 12px;
+    border-radius:14px;transition:var(--T);flex:1;min-width:0;font-family:inherit}
+  .nav-btn:active{transform:scale(.88);background:rgba(0,0,0,.05)}
+  .nav-icon{font-size:1.45rem;line-height:1;transition:var(--T)}
+  .nav-label{font-size:.62rem;font-weight:600;color:var(--text-light);
+    letter-spacing:.1px;white-space:nowrap;transition:var(--T)}
+  .nav-btn.active .nav-icon{transform:scale(1.12)}
+  .nav-btn.active .nav-label{color:var(--primary);font-weight:700}
+
+  /* Dashboard Hero */
+  .dash-hero{border-radius:var(--radius-lg);
+    background:linear-gradient(135deg,#0D3D26 0%,#1A7A4A 55%,#34C77B 100%);
+    padding:28px 22px 24px;margin-bottom:22px;position:relative;overflow:hidden;
+    box-shadow:0 10px 36px rgba(26,122,74,.35)}
+  .dash-hero::before{content:'';position:absolute;top:-40px;right:-40px;
+    width:180px;height:180px;border-radius:50%;
+    background:rgba(255,255,255,.06);pointer-events:none}
+  .dash-hero::after{content:'';position:absolute;bottom:-30px;left:-20px;
+    width:120px;height:120px;border-radius:50%;
+    background:rgba(255,255,255,.04);pointer-events:none}
+  .dash-hero-greeting{font-size:.75rem;font-weight:600;color:rgba(255,255,255,.7);
+    text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+  .dash-hero-name{font-family:-apple-system,'SF Pro Display',sans-serif;
+    font-size:2rem;font-weight:800;color:#fff;letter-spacing:-.5px;line-height:1.15;
+    margin-bottom:2px}
+  .dash-hero-date{font-size:.8rem;color:rgba(255,255,255,.65);margin-top:6px}
+  .dash-hero-badge{display:inline-flex;align-items:center;gap:6px;margin-top:14px;
+    background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+    border-radius:20px;padding:7px 14px}
+  .dash-hero-badge span{font-size:.78rem;color:rgba(255,255,255,.9);font-weight:600}
+
+  /* Gradient dashboard cards */
+  .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  .dash-card{border-radius:22px;padding:20px 18px 18px;cursor:pointer;
+    border:none;box-shadow:var(--shadow);
+    transition:transform .22s var(--spring),box-shadow .22s var(--ease);
+    position:relative;overflow:hidden;min-height:130px;
+    display:flex;flex-direction:column;justify-content:space-between;
+    user-select:none;color:#fff;background:var(--ca,var(--primary))}
+  .dash-card::before{content:'';position:absolute;top:-28px;right:-28px;
+    width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.1)}
+  .dash-card::after{content:'';position:absolute;bottom:-20px;left:-20px;
+    width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.07)}
+  .dash-card.wide{grid-column:1/-1;min-height:80px;flex-direction:row;
+    align-items:center;gap:16px;padding:18px 22px}
+  .dash-card.wide .card-emoji{font-size:1.85rem;margin-bottom:0;flex-shrink:0}
+  .dash-card:active{transform:scale(.94);box-shadow:var(--shadow-sm)}
+  .card-emoji{font-size:2.2rem;line-height:1;margin-bottom:10px;
+    filter:drop-shadow(0 2px 6px rgba(0,0,0,.2))}
+  .card-label{font-size:.97rem;font-weight:800;letter-spacing:-.2px;color:#fff}
+  .card-sub{font-size:.73rem;color:rgba(255,255,255,.75);margin-top:3px;line-height:1.4}
+  .card-arrow{position:absolute;bottom:16px;right:16px;color:rgba(255,255,255,.5);
+    font-size:1.1rem;font-weight:300}
+  .dash-card.wide .card-arrow{position:static;margin-left:auto;color:rgba(255,255,255,.5)}
+
+  /* Card colour map */
+  .dash-card[data-view="chores"]     {background:linear-gradient(135deg,#0D7A3E,#34C77B)}
+  .dash-card[data-view="expenses"]   {background:linear-gradient(135deg,#C07000,#F5A623)}
+  .dash-card[data-view="vault"]      {background:linear-gradient(135deg,#3A38B0,#7C79F0)}
+  .dash-card[data-view="shopping"]   {background:linear-gradient(135deg,#C0392B,#FF6B6B)}
+  .dash-card[data-view="smart-house"]{background:linear-gradient(135deg,#0077A8,#00C6F8)}
+  .dash-card[data-view="cooking"]    {background:linear-gradient(135deg,#B03A00,#FF6B35)}
+  .dash-card[data-view="calendar"]   {background:linear-gradient(135deg,#0051A8,#007AFF)}
+
+  /* Section title refresh */
+  .section-title{font-size:.72rem;font-weight:800;color:var(--text-muted);
+    margin-bottom:12px;display:flex;align-items:center;gap:8px;
+    text-transform:uppercase;letter-spacing:.8px}
+  .section-title::after{content:'';flex:1;height:.5px;background:var(--border)}
+
+  /* Views now account for bottom nav */
+  .view{padding-bottom:120px}
+  #view-dashboard{padding-bottom:120px}
+
+  /* Submenu cards – more colorful icon wrap */
+  .submenu-card{background:var(--bg-card);border-radius:18px;
+    padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;
+    border:none;box-shadow:var(--shadow-card);
+    transition:transform .18s var(--ease),box-shadow .18s var(--ease);user-select:none}
+  .submenu-card:active{transform:scale(.96);box-shadow:var(--shadow-sm)}
+  .icon-wrap{width:50px;height:50px;border-radius:16px;display:flex;align-items:center;
+    justify-content:center;font-size:1.5rem;background:var(--icon-bg,#f0f0f0);flex-shrink:0}
+  .item-title{font-size:.96rem;font-weight:700;letter-spacing:-.1px}
+  .item-desc{font-size:.77rem;color:var(--text-muted);margin-top:3px}
+  .item-arrow{color:var(--text-light);font-size:1rem;font-weight:600}
+
+  /* Header — sleeker */
+  #app-header{height:56px;padding:0 16px}
+  #header-title{font-size:1rem;font-weight:700}
+
+  /* Toast above nav */
+  #toast{bottom:96px}
   </style>
 
 </head>
@@ -895,6 +1000,25 @@
   </div>
 </header>
 
+<!-- ═════════════════ BOTTOM NAV ═════════════════════════ -->
+<nav id="bottom-nav">
+  <button class="nav-btn active" data-nav="dashboard" onclick="navigateTo('dashboard')">
+    <span class="nav-icon">🏠</span><span class="nav-label">Home</span>
+  </button>
+  <button class="nav-btn" data-nav="chores" onclick="navigateTo('chores')">
+    <span class="nav-icon">🧹</span><span class="nav-label">Chores</span>
+  </button>
+  <button class="nav-btn" data-nav="shopping" onclick="navigateTo('shopping')">
+    <span class="nav-icon">🛒</span><span class="nav-label">Shopping</span>
+  </button>
+  <button class="nav-btn" data-nav="cooking" onclick="navigateTo('cooking')">
+    <span class="nav-icon">🍽️</span><span class="nav-label">ארוחות</span>
+  </button>
+  <button class="nav-btn" data-nav="expenses" onclick="navigateTo('expenses')">
+    <span class="nav-icon">💰</span><span class="nav-label">Expenses</span>
+  </button>
+</nav>
+
 <!-- PAYMENT ALERT -->
 <div id="payment-alert" role="alert">
   <span class="alert-icon">🔔</span>
@@ -904,9 +1028,13 @@
 
 <!-- ═════════════════ DASHBOARD ═════════════════════════ -->
 <main id="view-dashboard" class="view active">
-  <div class="dash-greeting">
-    <h2 id="greeting-text">Good morning! 👋</h2>
-    <p id="greeting-date">—</p>
+  <div class="dash-hero">
+    <div class="dash-hero-greeting">Welcome back</div>
+    <div class="dash-hero-name" id="greeting-text">Good morning! 👋</div>
+    <div class="dash-hero-date" id="greeting-date">—</div>
+    <div class="dash-hero-badge">
+      <span>🏠 Home Manager</span>
+    </div>
   </div>
 
   <!-- Laundry widget — hidden when idle, auto-shown when running/done -->
@@ -1655,6 +1783,14 @@ window.navigateTo = function(viewId) {
     backBtn.classList.remove("visible");
   }
   window.scrollTo(0, 0);
+
+  // Update bottom nav active state
+  const rootView = viewId.split("-")[0]; // e.g. "chores-cleaning" → "chores"
+  document.querySelectorAll(".nav-btn").forEach(b => {
+    const nav = b.dataset.nav;
+    b.classList.toggle("active", nav === viewId || nav === rootView);
+  });
+
   _onEnter(viewId);
 };
 
