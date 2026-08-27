@@ -994,38 +994,74 @@
   .badge-evening{background:#ebf5fb;color:#1a5276;border:1px solid rgba(0,122,255,.3)}
 
   /* ── Smart House ──────────────────────────────────────── */
-  .smart-device-card{background:var(--bg-card);border-radius:var(--radius);
-    padding:20px;box-shadow:var(--shadow-card);margin-bottom:16px;direction:rtl;
-    border:.5px solid rgba(0,0,0,.06)}
-  .smart-device-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
-  .smart-device-icon{font-size:1.8rem;line-height:1}
-  .smart-device-title{font-size:1.05rem;font-weight:700;color:var(--text);letter-spacing:-.1px}
-  .smart-device-sub{font-size:.77rem;color:var(--text-muted);margin-top:2px}
-  .smart-device-card.disabled{opacity:.45;pointer-events:none}
-  .smart-device-card.disabled::after{content:"בקרוב ⏳";position:absolute;
-    right:14px;top:14px;font-size:.72rem;color:var(--text-muted);font-weight:700}
-  .smart-device-card.disabled{position:relative}
-  .tv-remote{display:flex;flex-direction:column;align-items:center;gap:13px}
-  .tv-power-row{display:flex;gap:12px;width:100%}
-  .btn-tv-on{flex:1;padding:15px 8px;background:linear-gradient(135deg,#27ae60,#2ecc71);
-    color:#fff;border:none;border-radius:16px;font-size:.95rem;font-weight:700;
-    cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(39,174,96,.3);
-    transition:var(--T);display:flex;align-items:center;justify-content:center;gap:6px}
-  .btn-tv-off{flex:1;padding:15px 8px;background:linear-gradient(135deg,#FF3B30,#c0392b);
-    color:#fff;border:none;border-radius:16px;font-size:.95rem;font-weight:700;
-    cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(255,59,48,.3);
-    transition:var(--T);display:flex;align-items:center;justify-content:center;gap:6px}
-  .btn-tv-on:active,.btn-tv-off:active{transform:scale(.94);opacity:.88}
-  .tv-vol-row{display:flex;gap:12px;width:100%;align-items:center}
-  .tv-vol-label{font-size:.78rem;font-weight:700;color:var(--text-muted);
-    text-align:center;flex-shrink:0}
-  .btn-tv-vol{flex:1;padding:18px 8px;background:var(--bg-surface);
-    border:1.5px solid var(--border);border-radius:16px;font-size:1.6rem;
-    cursor:pointer;transition:var(--T);color:var(--text);
-    display:flex;align-items:center;justify-content:center}
-  .btn-tv-vol:active{background:#667eea;border-color:#667eea;color:#fff;transform:scale(.92)}
-  .tv-shortcut-note{font-size:.72rem;color:var(--text-light);text-align:center;
-    padding-top:4px;line-height:1.5;direction:rtl}
+  .sh-settings-panel{background:var(--bg-card);border-radius:var(--radius-sm);padding:16px;
+    margin-bottom:16px;box-shadow:var(--shadow-card);display:none}
+  .sh-settings-panel.open{display:block}
+  .sh-field{margin-bottom:12px}
+  .sh-field label{font-size:.73rem;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px}
+  .sh-field input{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;
+    font-size:.8rem;font-family:inherit;background:var(--bg);color:var(--text);box-sizing:border-box}
+  .sh-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .sh-card{background:var(--bg-card);border-radius:var(--radius);padding:14px;
+    box-shadow:var(--shadow-card);border:.5px solid rgba(0,0,0,.06)}
+  .sh-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+  .sh-card-left{display:flex;align-items:center;gap:7px}
+  .sh-card-icon{font-size:1.45rem;line-height:1}
+  .sh-card-title{font-size:.86rem;font-weight:700;line-height:1.2}
+  .sh-card-sub{font-size:.67rem;color:var(--text-muted);margin-top:2px}
+  .sh-dot{width:8px;height:8px;border-radius:50%;background:#c7c7cc;flex-shrink:0;margin-top:5px}
+  .sh-dot.on{background:#34c77b;box-shadow:0 0 6px rgba(52,199,123,.5)}
+  /* Toggle */
+  .sh-toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+  .sh-toggle input{opacity:0;width:0;height:0;position:absolute}
+  .sh-toggle-track{position:absolute;cursor:pointer;inset:0;background:rgba(0,0,0,.12);
+    border-radius:12px;transition:.3s}
+  .sh-toggle-track::before{content:'';position:absolute;height:18px;width:18px;
+    left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;
+    box-shadow:0 1px 3px rgba(0,0,0,.22)}
+  .sh-toggle input:checked+.sh-toggle-track{background:var(--primary)}
+  .sh-toggle input:checked+.sh-toggle-track::before{transform:translateX(20px)}
+  /* AC */
+  .ac-temp-row{display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0 10px}
+  .ac-temp-val{font-size:2rem;font-weight:700;min-width:50px;text-align:center;line-height:1}
+  .btn-temp{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border);
+    background:var(--bg);font-size:1.1rem;cursor:pointer;font-family:inherit;
+    display:flex;align-items:center;justify-content:center;transition:var(--T);font-weight:700}
+  .btn-temp:active{background:var(--primary);border-color:var(--primary);color:#fff;transform:scale(.88)}
+  .ac-modes{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+  .btn-ac-mode{border:1.5px solid var(--border);background:var(--bg);border-radius:16px;
+    padding:4px 7px;font-size:.65rem;font-weight:700;cursor:pointer;transition:var(--T);font-family:inherit}
+  .btn-ac-mode.active{background:var(--primary);border-color:var(--primary);color:#fff}
+  /* Vacuum */
+  .vac-status{text-align:center;font-size:.72rem;font-weight:700;color:var(--text-muted);margin:4px 0 10px}
+  .vac-status.cleaning{color:#27ae60}
+  .vac-status.returning{color:var(--primary)}
+  .vac-btns{display:flex;flex-direction:column;gap:6px}
+  .btn-vac{padding:9px 4px;border:none;border-radius:10px;font-size:.72rem;font-weight:700;
+    cursor:pointer;transition:var(--T);font-family:inherit;width:100%}
+  .btn-vac.start{background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff}
+  .btn-vac.stop{background:linear-gradient(135deg,#FF3B30,#c0392b);color:#fff}
+  .btn-vac.dock{background:var(--bg-surface);color:var(--text);border:.5px solid rgba(0,0,0,.1)}
+  .btn-vac:active{transform:scale(.93);opacity:.88}
+  /* Switcher */
+  .sw-timer-row{display:flex;gap:4px;margin-top:10px}
+  .btn-sw-timer{flex:1;padding:7px 2px;border:1.5px solid var(--border);border-radius:8px;
+    background:var(--bg);font-size:.67rem;font-weight:700;cursor:pointer;transition:var(--T);font-family:inherit}
+  .btn-sw-timer.active{background:var(--primary);border-color:var(--primary);color:#fff}
+  .sw-countdown{text-align:center;font-size:1.25rem;font-weight:700;color:var(--primary);
+    margin:6px 0 0;display:none}
+  .sw-countdown.visible{display:block}
+  /* TV */
+  .tv-btns{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+  .btn-tv{padding:10px 4px;border:none;border-radius:10px;font-size:.72rem;font-weight:700;
+    cursor:pointer;transition:var(--T);font-family:inherit}
+  .btn-tv.power-on{background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff}
+  .btn-tv.power-off{background:linear-gradient(135deg,#FF3B30,#c0392b);color:#fff}
+  .btn-tv.vol{background:var(--bg-surface);color:var(--text);border:.5px solid rgba(0,0,0,.08)}
+  .btn-tv.mute{grid-column:span 2;background:var(--bg-surface);color:var(--text);border:.5px solid rgba(0,0,0,.08)}
+  .btn-tv:active{transform:scale(.93);opacity:.88}
+  /* Shared */
+  .sh-send-indicator{text-align:center;font-size:.7rem;color:var(--text-muted);margin-top:7px;min-height:14px}
   /* ══ DRAMATIC REDESIGN OVERRIDES ══════════════════════════ */
 
   /* Bottom Nav Bar */
@@ -2001,56 +2037,133 @@
 <!-- ═════════════════ SMART HOUSE ═══════════════════════ -->
 <main id="view-smart-house" class="view">
 
-  <!-- ── Philips TV Remote ─────────────────────────────── -->
-  <div class="smart-device-card">
-    <div class="smart-device-header">
-      <div class="smart-device-icon">📺</div>
-      <div>
-        <div class="smart-device-title">Philips Smart TV</div>
-        <div class="smart-device-sub">שלט רחוק — דרך iOS Shortcuts</div>
-      </div>
+  <!-- Settings (webhook URLs) -->
+  <div class="manage-tasks-bar">
+    <button class="manage-tasks-btn" onclick="toggleShSettings()">⚙️ Device Settings</button>
+  </div>
+  <div id="sh-settings-panel" class="sh-settings-panel">
+    <p style="font-size:.77rem;color:var(--text-muted);margin-bottom:14px;line-height:1.55">
+      Create a <strong>Make.com</strong> webhook scenario for each device, then paste the URL below.<br>
+      The app POSTs JSON commands to each URL.
+    </p>
+    <div class="sh-field">
+      <label>❄️ AC — Webhook URL</label>
+      <input type="url" id="sh-ac-webhook" placeholder="https://hook.eu1.make.com/…">
     </div>
-    <div class="tv-remote">
-      <!-- Power -->
-      <div class="tv-power-row">
-        <button class="btn-tv-on"  onclick="tvCmd('on')">⏻ הדלק</button>
-        <button class="btn-tv-off" onclick="tvCmd('off')">⏻ כבה</button>
-      </div>
-      <!-- Volume -->
-      <div class="tv-vol-row">
-        <button class="btn-tv-vol" onclick="tvCmd('voldown')">🔉</button>
-        <span class="tv-vol-label">עוצמה</span>
-        <button class="btn-tv-vol" onclick="tvCmd('volup')">🔊</button>
-      </div>
+    <div class="sh-field">
+      <label>🤖 Vacuum — Webhook URL</label>
+      <input type="url" id="sh-vacuum-webhook" placeholder="https://hook.eu1.make.com/…">
     </div>
-    <div class="tv-shortcut-note">
-      כל כפתור מפעיל iOS Shortcut שמתקשר ישירות לטלוויזיה.<br>
-      שמות הקיצורים: <strong>TV On · TV Off · TV VolUp · TV VolDown</strong>
+    <div class="sh-field">
+      <label>🚿 Switcher — Webhook URL</label>
+      <input type="url" id="sh-switcher-webhook" placeholder="https://hook.eu1.make.com/…">
     </div>
+    <button class="btn-send" onclick="saveShSettings()" style="width:100%;margin-top:4px">💾 Save</button>
   </div>
 
-  <!-- ── Water Heater (placeholder) ───────────────────── -->
-  <div class="smart-device-card disabled">
-    <div class="smart-device-header">
-      <div class="smart-device-icon">🚿</div>
-      <div>
-        <div class="smart-device-title">דוד מים</div>
-        <div class="smart-device-sub">חיבור עתידי</div>
+  <!-- 2×2 device grid -->
+  <div class="sh-grid">
+
+    <!-- ── ❄️ AC ─────────────────────────────── -->
+    <div class="sh-card">
+      <div class="sh-card-header">
+        <div class="sh-card-left">
+          <div class="sh-card-icon">❄️</div>
+          <div>
+            <div class="sh-card-title">מזגן</div>
+            <div class="sh-card-sub">חדר שינה</div>
+          </div>
+        </div>
+        <label class="sh-toggle" title="הדלק/כבה מזגן">
+          <input type="checkbox" id="ac-toggle" onchange="acCmd('power',this.checked)">
+          <span class="sh-toggle-track"></span>
+        </label>
+      </div>
+      <div class="ac-temp-row">
+        <button class="btn-temp" onclick="acCmd('temp',-1)">−</button>
+        <div>
+          <div class="ac-temp-val" id="ac-temp-val">22</div>
+          <div style="font-size:.65rem;color:var(--text-muted);text-align:center;font-weight:600">°C</div>
+        </div>
+        <button class="btn-temp" onclick="acCmd('temp',+1)">+</button>
+      </div>
+      <div class="ac-modes">
+        <button class="btn-ac-mode active" id="ac-mode-cool" onclick="acCmd('mode','cool')">❄️ Cool</button>
+        <button class="btn-ac-mode" id="ac-mode-heat" onclick="acCmd('mode','heat')">🌡️ Heat</button>
+        <button class="btn-ac-mode" id="ac-mode-fan"  onclick="acCmd('mode','fan')">💨 Fan</button>
+        <button class="btn-ac-mode" id="ac-mode-auto" onclick="acCmd('mode','auto')">🔄 Auto</button>
+      </div>
+      <div class="sh-send-indicator" id="ac-indicator"></div>
+    </div>
+
+    <!-- ── 📺 Philips TV ──────────────────────── -->
+    <div class="sh-card">
+      <div class="sh-card-header">
+        <div class="sh-card-left">
+          <div class="sh-card-icon">📺</div>
+          <div>
+            <div class="sh-card-title">Philips TV</div>
+            <div class="sh-card-sub">iOS Shortcuts</div>
+          </div>
+        </div>
+        <div class="sh-dot" id="tv-dot"></div>
+      </div>
+      <div class="tv-btns">
+        <button class="btn-tv power-on"  onclick="tvCmd('on')">⏻ הדלק</button>
+        <button class="btn-tv power-off" onclick="tvCmd('off')">⏻ כבה</button>
+        <button class="btn-tv vol"       onclick="tvCmd('volup')">🔊 Vol+</button>
+        <button class="btn-tv vol"       onclick="tvCmd('voldown')">🔉 Vol−</button>
+        <button class="btn-tv mute"      onclick="tvCmd('mute')">🔇 Mute</button>
       </div>
     </div>
-  </div>
 
-  <!-- ── Vacuum Cleaner (placeholder) ─────────────────── -->
-  <div class="smart-device-card disabled">
-    <div class="smart-device-header">
-      <div class="smart-device-icon">🤖</div>
-      <div>
-        <div class="smart-device-title">שואב אבק</div>
-        <div class="smart-device-sub">חיבור עתידי</div>
+    <!-- ── 🤖 Eureka Vacuum ───────────────────── -->
+    <div class="sh-card">
+      <div class="sh-card-header">
+        <div class="sh-card-left">
+          <div class="sh-card-icon">🤖</div>
+          <div>
+            <div class="sh-card-title">Eureka</div>
+            <div class="sh-card-sub">שואב רובוטי</div>
+          </div>
+        </div>
+        <div class="sh-dot" id="vac-dot"></div>
       </div>
+      <div class="vac-status" id="vac-status">⬜ Idle</div>
+      <div class="vac-btns">
+        <button class="btn-vac start" onclick="vacuumCmd('start')">▶ Start</button>
+        <button class="btn-vac dock"  onclick="vacuumCmd('dock')">🏠 Return to Dock</button>
+        <button class="btn-vac stop"  onclick="vacuumCmd('stop')">⏹ Stop</button>
+      </div>
+      <div class="sh-send-indicator" id="vac-indicator"></div>
     </div>
-  </div>
 
+    <!-- ── 🚿 Switcher / Water Heater ──────────── -->
+    <div class="sh-card">
+      <div class="sh-card-header">
+        <div class="sh-card-left">
+          <div class="sh-card-icon">🚿</div>
+          <div>
+            <div class="sh-card-title">Switcher</div>
+            <div class="sh-card-sub">דוד מים</div>
+          </div>
+        </div>
+        <label class="sh-toggle" title="הדלק/כבה דוד">
+          <input type="checkbox" id="sw-toggle" onchange="switcherCmd('power',this.checked)">
+          <span class="sh-toggle-track"></span>
+        </label>
+      </div>
+      <div class="sw-countdown" id="sw-countdown"></div>
+      <div class="sw-timer-row">
+        <button class="btn-sw-timer" onclick="switcherCmd('timer',30)">30'</button>
+        <button class="btn-sw-timer" onclick="switcherCmd('timer',45)">45'</button>
+        <button class="btn-sw-timer" onclick="switcherCmd('timer',60)">60'</button>
+        <button class="btn-sw-timer" onclick="switcherCmd('timer',90)">90'</button>
+      </div>
+      <div class="sh-send-indicator" id="sw-indicator"></div>
+    </div>
+
+  </div>
 </main>
 
 <!-- ═════════════════ COOKING WHEEL ═════════════════════ -->
@@ -2296,6 +2409,7 @@ function _cleanupLeaving(id) {
   if (id === "pantry")              _unsub("pantry");
   if (id === "chores-maintenance")  _unsub("maintenance");
   if (id === "chores-gardening")    { if (_gardenInterval) { clearInterval(_gardenInterval); _gardenInterval = null; } }
+  if (id === "smart-house")         { _unsub("smart-house"); if (_swTimer) { clearInterval(_swTimer); _swTimer = null; } }
 }
 
 // ── Core swap logic (pure DOM, no animation) ─────────────
@@ -2386,6 +2500,7 @@ function _onEnter(id) {
   if (id === "shopping-upgrades")  initShopping("upgrades");
   if (id === "pantry")             initPantry();
   if (id === "cooking")            initCooking();
+  if (id === "smart-house")        initSmartHouse();
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -4550,32 +4665,183 @@ window.cancelLaundry = async function() {
 // Nothing to initialize — static HTML card
 
 /* ══════════════════════════════════════════════════════════
-   SMART HOUSE — TV Remote (Philips via iOS Shortcuts)
-   Each button fires a Shortcuts URL. The Shortcut makes
-   the local HTTP call to the Philips JointSpace API:
-     POST http://<TV_IP>:1925/1/input/key
-     Body: {"key":"Standby"} | {"key":"VolumeUp"} | {"key":"VolumeDown"}
-   Shortcut names must match exactly:
-     "TV On"  |  "TV Off"  |  "TV VolUp"  |  "TV VolDown"
+   SMART HOUSE
+   State:  /smart_home/state  → { ac:{on,temp,mode}, vacuum:{status}, switcher:{on,timerEnds} }
+   Config: /smart_home/config → { acWebhook, vacuumWebhook, switcherWebhook }
+   TV stays on iOS Shortcuts (no CORS issue, no cloud needed).
+   All other devices use Make.com webhooks as the bridge:
+     App → fetch(webhookUrl, JSON) → Make.com → Device Cloud API
 ══════════════════════════════════════════════════════════ */
+let _shState = {
+  ac:      { on: false, temp: 22, mode: "cool" },
+  vacuum:  { status: "idle" },
+  switcher:{ on: false, timerEnds: null }
+};
+let _shConfig = { acWebhook:"", vacuumWebhook:"", switcherWebhook:"" };
+let _swTimer  = null;
+
+const _SH_STATE_DOC  = () => doc(db, "smart_home", "state");
+const _SH_CONFIG_DOC = () => doc(db, "smart_home", "config");
+
+async function initSmartHouse() {
+  // Load webhook config
+  try {
+    const cfg = await getDoc(_SH_CONFIG_DOC());
+    if (cfg.exists()) Object.assign(_shConfig, cfg.data());
+    const set = (id, val) => { const el = document.getElementById(id); if(el) el.value = val||""; };
+    set("sh-ac-webhook",      _shConfig.acWebhook);
+    set("sh-vacuum-webhook",  _shConfig.vacuumWebhook);
+    set("sh-switcher-webhook",_shConfig.switcherWebhook);
+  } catch(e) { console.warn("SH config:", e); }
+
+  // Live state via onSnapshot
+  _unsub("smart-house");
+  _unsubs["smart-house"] = onSnapshot(_SH_STATE_DOC(), snap => {
+    if (snap.exists()) Object.assign(_shState, snap.data());
+    _renderShState();
+  });
+}
+
+function _renderShState() {
+  const { ac, vacuum, switcher } = _shState;
+
+  // AC
+  const acEl = document.getElementById("ac-toggle");
+  if (acEl) acEl.checked = !!ac?.on;
+  const tempEl = document.getElementById("ac-temp-val");
+  if (tempEl) tempEl.textContent = ac?.temp ?? 22;
+  ["cool","heat","fan","auto"].forEach(m =>
+    document.getElementById(`ac-mode-${m}`)?.classList.toggle("active", (ac?.mode||"cool") === m));
+
+  // Vacuum
+  const vacDot = document.getElementById("vac-dot");
+  const vacSt  = document.getElementById("vac-status");
+  const status = vacuum?.status || "idle";
+  const vacLabels = { idle:"⬜ Idle", cleaning:"🟢 Cleaning…", returning:"🔵 Returning…", docked:"🏠 Docked" };
+  if (vacSt)  { vacSt.textContent = vacLabels[status] || status; vacSt.className = `vac-status ${status}`; }
+  if (vacDot) vacDot.className = `sh-dot ${status === "cleaning" ? "on" : ""}`;
+
+  // Switcher
+  const swEl = document.getElementById("sw-toggle");
+  if (swEl) swEl.checked = !!switcher?.on;
+  _tickSwitcherCountdown(switcher?.timerEnds || null);
+}
+
+function _tickSwitcherCountdown(endsMs) {
+  if (_swTimer) { clearInterval(_swTimer); _swTimer = null; }
+  const el = document.getElementById("sw-countdown");
+  if (!endsMs || endsMs < Date.now()) { if(el) el.className = "sw-countdown"; return; }
+  if (el) el.className = "sw-countdown visible";
+  const tick = () => {
+    const rem = endsMs - Date.now();
+    if (rem <= 0) {
+      if(el) { el.textContent = "✅ Done"; el.className = "sw-countdown visible"; }
+      clearInterval(_swTimer); _swTimer = null; return;
+    }
+    const m = Math.floor(rem/60000), s = Math.floor((rem%60000)/1000);
+    if(el) el.textContent = `⏱ ${m}:${String(s).padStart(2,"0")}`;
+  };
+  tick();
+  _swTimer = setInterval(tick, 1000);
+}
+
+/* ── Central webhook dispatcher ─────────────────────────── */
+async function _shSend(webhookUrl, payload, indicatorId) {
+  const ind = document.getElementById(indicatorId);
+  if (!webhookUrl) {
+    showToast("⚙️ Enter the webhook URL in Device Settings first", "error");
+    if(ind) { ind.textContent = "⚠️ No webhook set"; setTimeout(()=>{ if(ind) ind.textContent=""; },3000); }
+    return false;
+  }
+  if(ind) ind.textContent = "⏳ Sending…";
+  try {
+    // mode:"no-cors" — Make.com won't send CORS headers; we fire-and-forget
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(payload),
+      mode:    "no-cors"
+    });
+    if(ind) { ind.textContent = "✅ Sent"; setTimeout(()=>{ if(ind) ind.textContent=""; },2500); }
+    return true;
+  } catch(err) {
+    if(ind) { ind.textContent = "❌ Error"; setTimeout(()=>{ if(ind) ind.textContent=""; },4000); }
+    showToast("Send error: " + err.message, "error");
+    return false;
+  }
+}
+
+/* ── AC ──────────────────────────────────────────────────── */
+window.acCmd = async function(action, value) {
+  if (action === "power") {
+    _shState.ac.on = value;
+  } else if (action === "temp") {
+    _shState.ac.temp = Math.max(16, Math.min(30, (_shState.ac.temp || 22) + value));
+  } else if (action === "mode") {
+    _shState.ac.mode = value;
+  }
+  _renderShState();
+  try { await setDoc(_SH_STATE_DOC(), { ac: _shState.ac }, { merge:true }); } catch {}
+  await _shSend(_shConfig.acWebhook, { device:"ac", action, value, state:_shState.ac }, "ac-indicator");
+};
+
+/* ── Vacuum ──────────────────────────────────────────────── */
+window.vacuumCmd = async function(action) {
+  const map = { start:"cleaning", stop:"idle", dock:"returning" };
+  _shState.vacuum = { status: map[action] || "idle" };
+  _renderShState();
+  try { await setDoc(_SH_STATE_DOC(), { vacuum: _shState.vacuum }, { merge:true }); } catch {}
+  await _shSend(_shConfig.vacuumWebhook, { device:"vacuum", action }, "vac-indicator");
+};
+
+/* ── Switcher ────────────────────────────────────────────── */
+window.switcherCmd = async function(action, value) {
+  if (action === "power") {
+    _shState.switcher.on = value;
+    if (!value) _shState.switcher.timerEnds = null;
+  } else if (action === "timer") {
+    _shState.switcher.on       = true;
+    _shState.switcher.timerEnds = Date.now() + value * 60000;
+    const el = document.getElementById("sw-toggle"); if(el) el.checked = true;
+  }
+  _renderShState();
+  try { await setDoc(_SH_STATE_DOC(), { switcher: _shState.switcher }, { merge:true }); } catch {}
+  await _shSend(_shConfig.switcherWebhook,
+    { device:"switcher", action, minutes: value||null, on: _shState.switcher.on }, "sw-indicator");
+};
+
+/* ── Philips TV (iOS Shortcuts) ──────────────────────────── */
 const _TV_SHORTCUT = {
   on:      "TV On",
   off:     "TV Off",
   volup:   "TV VolUp",
-  voldown: "TV VolDown"
+  voldown: "TV VolDown",
+  mute:    "TV Mute"
 };
-
 window.tvCmd = function(cmd) {
   const name = _TV_SHORTCUT[cmd];
   if (!name) return;
-  showToast(_tvCmdLabel(cmd), "success");
+  const labels = { on:"📺 מדליק…", off:"📺 כובה…", volup:"🔊 Vol+", voldown:"🔉 Vol−", mute:"🔇 Muted" };
+  showToast(labels[cmd] || cmd, "success");
   window.location.href = "shortcuts://run-shortcut?name=" + encodeURIComponent(name);
 };
 
-function _tvCmdLabel(cmd) {
-  return { on:"📺 מדליק טלוויזיה…", off:"📺 כובה טלוויזיה…",
-           volup:"🔊 מעלה עוצמה…",  voldown:"🔉 מוריד עוצמה…" }[cmd] || "";
-}
+/* ── Settings panel ──────────────────────────────────────── */
+window.toggleShSettings = function() {
+  document.getElementById("sh-settings-panel").classList.toggle("open");
+};
+
+window.saveShSettings = async function() {
+  const get = id => document.getElementById(id)?.value.trim() || "";
+  _shConfig.acWebhook       = get("sh-ac-webhook");
+  _shConfig.vacuumWebhook   = get("sh-vacuum-webhook");
+  _shConfig.switcherWebhook = get("sh-switcher-webhook");
+  try {
+    await setDoc(_SH_CONFIG_DOC(), _shConfig, { merge:true });
+    showToast("✅ Settings saved!", "success");
+    document.getElementById("sh-settings-panel").classList.remove("open");
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+};
 
 /* ══════════════════════════════════════════════════════════
    COOKING WHEEL
