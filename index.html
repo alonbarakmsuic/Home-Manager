@@ -277,6 +277,26 @@
   .away-card ul{padding-left:17px}
   .away-card li{margin-bottom:4px}
 
+  /* ═══ Plant inline rename & notification ════════════════ */
+  .plant-name-input{font-size:.88rem;font-weight:500;border:1.5px solid var(--border-focus);
+    border-radius:8px;padding:4px 8px;font-family:inherit;color:var(--text);
+    background:var(--bg);outline:none;width:calc(100% - 4px)}
+  .plant-row-btns{display:flex;gap:5px;margin-top:5px;align-items:center}
+  .btn-plant-rename{background:rgba(0,122,255,.1);color:var(--info);border:none;
+    border-radius:6px;padding:3px 8px;font-size:.7rem;cursor:pointer;
+    font-family:inherit;transition:var(--T);line-height:1.4}
+  .btn-plant-rename:active{background:rgba(0,122,255,.2)}
+  .btn-plant-notify{background:none;border:none;font-size:.95rem;cursor:pointer;
+    opacity:.38;transition:opacity .15s;padding:1px 2px;line-height:1}
+  .btn-plant-notify.notif-on{opacity:1}
+  /* Due-plants banner */
+  .due-banner{background:linear-gradient(135deg,rgba(255,149,0,.08),rgba(255,59,48,.06));
+    border:1px solid rgba(255,149,0,.3);border-radius:14px;
+    padding:12px 14px;margin-bottom:14px;display:none}
+  .due-banner.visible{display:block;animation:msg-pop .3s var(--ease-out)}
+  .due-banner-title{font-size:.82rem;font-weight:700;color:#a05e00;margin-bottom:5px}
+  .due-banner-row{font-size:.79rem;color:var(--text-muted);line-height:1.65}
+
   /* ═══ Plant add bar ══════════════════════════════════════ */
   .plant-add-bar{display:flex;gap:10px;align-items:center;margin-bottom:20px}
   .plant-add-bar .name-input{flex:1;padding:12px 14px;border:1.5px solid var(--border);
@@ -1567,6 +1587,12 @@
            placeholder="Days" min="1" max="60" value="3" title="Water every X days">
     <button class="btn-add-plant" onclick="addPlant()" title="Add plant">＋</button>
   </div>
+  <!-- Due-plants notification banner -->
+  <div class="due-banner" id="plant-due-banner">
+    <div class="due-banner-title">💧 Plants need watering!</div>
+    <div class="due-banner-row" id="plant-due-list"></div>
+  </div>
+
   <p class="section-title">💧 Watering Tracker</p>
   <div class="water-table-wrap">
     <table class="water-table">
@@ -2193,6 +2219,7 @@ function _cleanupLeaving(id) {
   if (id === "shopping-upgrades")   _unsub("hist-upgrades");
   if (id === "pantry")              _unsub("pantry");
   if (id === "chores-maintenance")  _unsub("maintenance");
+  if (id === "chores-gardening")    { if (_gardenInterval) { clearInterval(_gardenInterval); _gardenInterval = null; } }
 }
 
 // ── Core swap logic (pure DOM, no animation) ─────────────
@@ -2801,9 +2828,13 @@ async function _deleteCleaningTask(id) {
 
 /* ══════════════════════════════════════════════════════════
    GARDENING  (fully dynamic — /plants collection)
-   Schema: /plants/{autoId} → { name, intervalDays, createdAt }
+   Schema: /plants/{autoId} → { name, intervalDays, notifyEnabled, createdAt }
    Watering log: /watering/log → { plantId: timestampMs }
 ══════════════════════════════════════════════════════════ */
+let _gardenInterval = null;   // periodic notification check while on this view
+let _cachedPlants   = [];     // latest plant list for interval checks
+let _cachedWater    = {};     // latest water data for interval checks
+
 async function initGardening() {
   const tbody = document.getElementById("plants-tbody");
   tbody.innerHTML = `<tr><td colspan="5"><div class="skeleton-wrap">
@@ -2821,11 +2852,64 @@ async function initGardening() {
     plantsSnap.forEach(d => plants.push({ id: d.id, ...d.data() }));
     plants.sort((a, b) => _tsMs(a.createdAt) - _tsMs(b.createdAt));
     const waterData = waterSnap.exists() ? waterSnap.data() : {};
+    _cachedPlants = plants;
+    _cachedWater  = waterData;
     _renderPlants(plants, waterData);
+    _notifyCheck(plants, waterData);
+    // Periodic check every 15 min while garden view is open
+    if (_gardenInterval) clearInterval(_gardenInterval);
+    _gardenInterval = setInterval(() => _notifyCheck(_cachedPlants, _cachedWater), 15 * 60 * 1000);
   } catch(err) {
     document.getElementById("plants-tbody").innerHTML =
       `<tr><td colspan="5"><div class="empty" style="color:var(--danger)">⚠️ ${err.message}</div></td></tr>`;
   }
+}
+
+// ── Notification check ─────────────────────────────────
+function _notifyCheck(plants, waterData) {
+  const now = Date.now();
+  const due = plants.filter(p => {
+    if (!p.notifyEnabled) return false;
+    const days = p.intervalDays || 3;
+    const lastMs = waterData[p.id] || 0;
+    return (now - lastMs) >= days * 864e5;
+  });
+
+  // In-app banner (show for ALL overdue plants regardless of notify toggle)
+  const allDue = plants.filter(p => {
+    const days = p.intervalDays || 3;
+    const lastMs = waterData[p.id] || 0;
+    return (now - lastMs) >= days * 864e5;
+  });
+  const banner = document.getElementById("plant-due-banner");
+  const list   = document.getElementById("plant-due-list");
+  if (banner && allDue.length) {
+    list.innerHTML = allDue.map(p => {
+      const days = p.intervalDays || 3;
+      const lastMs = waterData[p.id] || 0;
+      const daysLate = Math.floor((now - lastMs) / 864e5) - days;
+      return `🌿 <strong>${p.name}</strong> — ${daysLate >= 0 ? daysLate + "d overdue" : "due today"}`;
+    }).join("<br>");
+    banner.classList.add("visible");
+  } else if (banner) {
+    banner.classList.remove("visible");
+  }
+
+  // Browser notifications for plants with notifyEnabled
+  if (!due.length) return;
+  if (Notification.permission !== "granted") return;
+  due.forEach(p => {
+    const lsKey = `plant_notified_${p.id}`;
+    const lastNotif = parseInt(localStorage.getItem(lsKey) || "0");
+    // Don't re-notify within 20 hours
+    if (now - lastNotif < 20 * 3600 * 1000) return;
+    new Notification("🌿 Time to water!", {
+      body: `${p.name} needs watering`,
+      icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>🌿</text></svg>",
+      tag: `plant-${p.id}`
+    });
+    localStorage.setItem(lsKey, String(now));
+  });
 }
 
 function _renderPlants(plants, waterData) {
@@ -2839,28 +2923,85 @@ function _renderPlants(plants, waterData) {
     return;
   }
   plants.forEach(p => {
-    const days = p.intervalDays || 3;
-    const ms   = waterData[p.id] || null;
-    const dt   = ms ? new Date(ms) : null;
-    const ago  = dt ? Math.floor((Date.now() - dt) / 864e5) : 999;
-    const cls  = ago <= days * .7 ? "dot-ok" : ago <= days ? "dot-warn" : "dot-late";
-    const str  = dt
+    const days    = p.intervalDays || 3;
+    const ms      = waterData[p.id] || null;
+    const dt      = ms ? new Date(ms) : null;
+    const ago     = dt ? Math.floor((Date.now() - dt) / 864e5) : 999;
+    const cls     = ago <= days * .7 ? "dot-ok" : ago <= days ? "dot-warn" : "dot-late";
+    const str     = dt
       ? dt.toLocaleDateString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})
       : "Never";
+    const notifOn = !!p.notifyEnabled;
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>
-        <div class="plant-name">${p.name}</div>
+        <div class="plant-name" id="pname-${p.id}">${p.name}</div>
         <div class="last-watered" style="font-size:.7rem">every ${days}d</div>
+        <div class="plant-row-btns">
+          <button class="btn-plant-rename" title="Rename plant">✏️ Rename</button>
+          <button class="btn-plant-notify ${notifOn ? "notif-on" : ""}"
+            title="${notifOn ? "Disable notifications" : "Enable watering reminder"}">
+            ${notifOn ? "🔔" : "🔕"}
+          </button>
+        </div>
       </td>
       <td class="last-watered" id="lw-${p.id}">${str}</td>
       <td id="st-${p.id}"><span class="status-dot ${cls}"></span>${ago > 900 ? "—" : ago + "d ago"}</td>
       <td><button class="btn-water" id="bw-${p.id}">💧 Water</button></td>
       <td><button class="btn-trash" title="Remove plant">🗑️</button></td>`;
-    tr.querySelector(`#bw-${p.id}`).addEventListener("click", () => waterPlant(p.id, p.name, days));
-    tr.querySelector(".btn-trash").addEventListener("click", () => deletePlant(p.id, p.name));
+    tr.querySelector(".btn-plant-rename").addEventListener("click", () => _startRename(p.id, p.name));
+    tr.querySelector(".btn-plant-notify").addEventListener("click",  () => _togglePlantNotify(p.id, notifOn));
+    tr.querySelector(`#bw-${p.id}`).addEventListener("click",       () => waterPlant(p.id, p.name, days));
+    tr.querySelector(".btn-trash").addEventListener("click",         () => deletePlant(p.id, p.name));
     tbody.appendChild(tr);
   });
+}
+
+// ── Inline rename ──────────────────────────────────────
+function _startRename(id, currentName) {
+  const nameEl = document.getElementById(`pname-${id}`);
+  if (!nameEl || nameEl.querySelector("input")) return; // already editing
+  const orig = nameEl.textContent;
+  nameEl.innerHTML = `<input class="plant-name-input" value="${orig.replace(/"/g,'&quot;')}" maxlength="60">`;
+  const inp = nameEl.querySelector("input");
+  inp.focus(); inp.select();
+  const save = async () => {
+    const newName = inp.value.trim();
+    if (newName && newName !== orig) {
+      try {
+        await setDoc(doc(db, "plants", id), { name: newName }, { merge: true });
+        showToast(`✏️ Renamed to "${newName}"`, "success");
+        _logActivity("✏️", `renamed plant "${orig}" to "${newName}"`);
+        initGardening();
+      } catch(e) { showToast("Error: " + e.message, "error"); nameEl.innerHTML = orig; }
+    } else {
+      nameEl.textContent = orig;
+    }
+  };
+  inp.addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); save(); }
+    if (e.key === "Escape") nameEl.textContent = orig;
+  });
+  inp.addEventListener("blur", save);
+}
+
+// ── Notification toggle ────────────────────────────────
+async function _togglePlantNotify(id, currentlyOn) {
+  const newVal = !currentlyOn;
+  if (newVal && Notification.permission === "default") {
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") {
+      showToast("Please allow notifications in your browser settings 🔔", "error"); return;
+    }
+  }
+  if (newVal && Notification.permission === "denied") {
+    showToast("Notifications blocked — enable them in browser settings", "error"); return;
+  }
+  try {
+    await setDoc(doc(db, "plants", id), { notifyEnabled: newVal }, { merge: true });
+    showToast(newVal ? "🔔 Watering reminders on!" : "🔕 Reminders off", "success");
+    initGardening();
+  } catch(e) { showToast("Error: " + e.message, "error"); }
 }
 
 window.addPlant = async function() {
@@ -2870,7 +3011,7 @@ window.addPlant = async function() {
   if (!name) { nameEl.classList.add("err"); setTimeout(() => nameEl.classList.remove("err"), 1500); return; }
   const intervalDays = Math.max(1, parseInt(daysEl.value) || 3);
   try {
-    await addDoc(collection(db, "plants"), { name, intervalDays, createdAt: serverTimestamp() });
+    await addDoc(collection(db, "plants"), { name, intervalDays, notifyEnabled: false, createdAt: serverTimestamp() });
     nameEl.value = ""; daysEl.value = "3";
     showToast(`🌱 ${name} added!`, "success");
     _logActivity("🌱", `added ${name} to the garden`);
@@ -2882,8 +3023,8 @@ async function deletePlant(id, name) {
   if (!confirm(`Remove "${name}" from your garden?`)) return;
   try {
     await deleteDoc(doc(db, "plants", id));
-    // Remove from watering log (set to null with merge — harmless if missing)
     await setDoc(doc(db, "watering", "log"), { [id]: null }, { merge: true }).catch(() => {});
+    localStorage.removeItem(`plant_notified_${id}`);
     showToast("🗑️ Plant removed", "success");
     initGardening();
   } catch(err) { showToast("Error: " + err.message, "error"); }
@@ -2895,12 +3036,15 @@ async function waterPlant(id, name, days) {
   try {
     const now = Date.now();
     await setDoc(doc(db, "watering", "log"), { [id]: now }, { merge: true });
+    _cachedWater[id] = now; // keep cache in sync
+    localStorage.removeItem(`plant_notified_${id}`); // reset notification so it fires again next cycle
     const str = new Date(now).toLocaleDateString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
     document.getElementById(`lw-${id}`).textContent = str;
     document.getElementById(`st-${id}`).innerHTML = `<span class="status-dot dot-ok"></span>just now`;
     btn.textContent = "✅";
     setTimeout(() => { btn.disabled = false; btn.textContent = "💧 Water"; }, 2200);
     showToast(`💧 ${name} watered!`, "success");
+    _notifyCheck(_cachedPlants, _cachedWater); // refresh banner
   } catch(err) {
     btn.disabled = false; btn.textContent = "💧 Water";
     showToast("Error — check connection.", "error");
