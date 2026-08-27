@@ -199,6 +199,28 @@
     box-shadow:0 1px 4px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.06)}
   .tab-panel{display:none}
   .tab-panel.active{display:block}
+  /* Scrollable tab bar for room tabs */
+  .tab-bar-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;
+    justify-content:flex-start;scrollbar-width:none}
+  .tab-bar-scroll::-webkit-scrollbar{display:none}
+  .tab-bar-scroll .tab-btn{flex:0 0 auto;white-space:nowrap;font-size:.76rem;padding:7px 10px}
+  .tab-bar-divider{width:1px;background:rgba(116,116,128,.3);margin:4px 3px;
+    border-radius:1px;align-self:stretch;flex-shrink:0}
+  /* Room checklist freq badge */
+  .rfreq{display:inline-block;font-size:.6rem;font-weight:700;padding:1px 5px;
+    border-radius:4px;margin-left:5px;vertical-align:middle}
+  .rfreq-w{background:rgba(0,122,255,.1);color:var(--info)}
+  .rfreq-m{background:rgba(245,166,35,.12);color:#B8860B}
+  /* Schedule button per task */
+  .btn-sched{background:none;border:none;cursor:pointer;font-size:.82rem;
+    padding:2px 4px;opacity:.3;transition:opacity .15s;line-height:1;display:block;margin:auto}
+  .btn-sched.has-date{opacity:1;color:var(--primary)}
+  /* Schedule date picker row */
+  .sched-row{display:none}
+  .sched-row.open{display:table-row;background:rgba(0,122,255,.03)}
+  .sched-row td{padding:4px 12px 10px 44px}
+  .btn-clear-sched{background:none;border:none;color:var(--danger);cursor:pointer;
+    font-size:.75rem;margin-left:8px;opacity:.8;vertical-align:middle}
 
   /* ═══ Checklist ══════════════════════════════════════════ */
   .manage-tasks-bar{display:flex;justify-content:flex-end;margin-bottom:12px}
@@ -1537,9 +1559,24 @@
   <div class="manage-tasks-bar">
     <button class="manage-tasks-btn" onclick="openManageTasks()">⚙️ Manage Tasks</button>
   </div>
-  <div class="tab-bar">
+  <!-- Cleaning due-tasks alert banner -->
+  <div class="due-banner" id="clean-due-banner">
+    <div class="due-banner-title">🗓️ Cleaning tasks are due!</div>
+    <div class="due-banner-row" id="clean-due-list"></div>
+  </div>
+
+  <div class="tab-bar tab-bar-scroll">
     <button class="tab-btn active" onclick="switchTab('cleaning','weekly',this)">📅 Weekly</button>
-    <button class="tab-btn"        onclick="switchTab('cleaning','monthly',this)">🗓️ Monthly Grand</button>
+    <button class="tab-btn"        onclick="switchTab('cleaning','monthly',this)">🗓️ Monthly</button>
+    <div class="tab-bar-divider"></div>
+    <button class="tab-btn" onclick="switchCleaningRoom('living',this)">🛋️ Living</button>
+    <button class="tab-btn" onclick="switchCleaningRoom('hallway',this)">🚪 Hallway</button>
+    <button class="tab-btn" onclick="switchCleaningRoom('kitchen',this)">🍳 Kitchen</button>
+    <button class="tab-btn" onclick="switchCleaningRoom('utility',this)">🔧 Utility</button>
+    <button class="tab-btn" onclick="switchCleaningRoom('toilet',this)">🚽 Toilet</button>
+    <button class="tab-btn" onclick="switchCleaningRoom('shower',this)">🚿 Shower</button>
+    <button class="tab-btn" onclick="switchCleaningRoom('bedroom',this)">🛏️ Bedroom</button>
+    <button class="tab-btn" onclick="switchCleaningRoom('balcony',this)">🏡 Balcony</button>
   </div>
 
   <!-- Weekly -->
@@ -1552,9 +1589,9 @@
       <span>Week of <strong id="weekly-start">—</strong></span><span>Resets Sunday</span>
     </div>
     <table class="checklist-table">
-      <thead><tr><th style="width:34px"></th><th>Task</th><th>Area</th></tr></thead>
+      <thead><tr><th style="width:34px"></th><th>Task</th><th>Room</th><th style="width:36px"></th></tr></thead>
       <tbody id="weekly-tbody">
-        <tr><td colspan="3" style="padding:16px"><div class="skeleton-wrap">
+        <tr><td colspan="4" style="padding:16px"><div class="skeleton-wrap">
   <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
   <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line"></div><div class="sk sk-line short"></div></div></div>
   <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
@@ -1573,14 +1610,26 @@
       <span>Month of <strong id="monthly-month">—</strong></span><span>Resets 1st</span>
     </div>
     <table class="checklist-table">
-      <thead><tr><th style="width:34px"></th><th>Task</th><th>Area</th></tr></thead>
+      <thead><tr><th style="width:34px"></th><th>Task</th><th>Room</th><th style="width:36px"></th></tr></thead>
       <tbody id="monthly-tbody">
-        <tr><td colspan="3" style="padding:16px"><div class="skeleton-wrap">
+        <tr><td colspan="4" style="padding:16px"><div class="skeleton-wrap">
   <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
   <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line"></div><div class="sk sk-line short"></div></div></div>
   <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
 </div></td></tr>
       </tbody>
+    </table>
+  </div>
+
+  <!-- Room tab (shared panel, re-rendered on room switch) -->
+  <div id="tab-cleaning-room" class="tab-panel">
+    <div class="progress-wrap">
+      <div class="progress-label" id="room-prog-label">0 / 0 done</div>
+      <div class="progress-track"><div class="progress-fill" id="room-prog-fill" style="width:0%"></div></div>
+    </div>
+    <table class="checklist-table">
+      <thead><tr><th style="width:34px"></th><th>Task</th><th style="width:36px"></th></tr></thead>
+      <tbody id="room-tbody"></tbody>
     </table>
   </div>
 </main>
@@ -2121,8 +2170,18 @@
              onkeydown="if(event.key==='Enter') addCleaningTask()">
     </div>
     <div class="form-group">
-      <label for="task-area-input">Area / Room (optional)</label>
-      <input type="text" id="task-area-input" placeholder="e.g. Kitchen, Bathroom">
+      <label for="task-room-select">Room (optional)</label>
+      <select id="task-room-select">
+        <option value="">— General / No Room —</option>
+        <option value="living">🛋️ Living Room</option>
+        <option value="hallway">🚪 Hallway</option>
+        <option value="kitchen">🍳 Kitchen</option>
+        <option value="utility">🔧 Utility Room</option>
+        <option value="toilet">🚽 Toilet</option>
+        <option value="shower">🚿 Shower</option>
+        <option value="bedroom">🛏️ Bedroom</option>
+        <option value="balcony">🏡 Balcony</option>
+      </select>
     </div>
     <div class="form-group">
       <label for="task-freq-select">Frequency</label>
@@ -2658,6 +2717,23 @@ function _tsMs(val) {
   return 0;
 }
 
+const _CLEANING_ROOMS = [
+  { id:"living",  emoji:"🛋️", label:"Living Room"  },
+  { id:"hallway", emoji:"🚪", label:"Hallway"       },
+  { id:"kitchen", emoji:"🍳", label:"Kitchen"       },
+  { id:"utility", emoji:"🔧", label:"Utility Room"  },
+  { id:"toilet",  emoji:"🚽", label:"Toilet"        },
+  { id:"shower",  emoji:"🚿", label:"Shower"        },
+  { id:"bedroom", emoji:"🛏️", label:"Bedroom"       },
+  { id:"balcony", emoji:"🏡", label:"Balcony"       },
+];
+let _cachedCleaningTpls     = [];
+let _cachedCleaningWData    = {};
+let _cachedCleaningMData    = {};
+let _cachedCleaningWeekRef  = null;
+let _cachedCleaningMonthRef = null;
+let _currentCleaningRoom    = "";
+
 async function initCleaning() {
   const now = new Date(), sun = new Date(now);
   sun.setDate(now.getDate() - now.getDay());
@@ -2669,42 +2745,46 @@ async function initCleaning() {
   // Show loading spinners
   ["weekly","monthly"].forEach(t => {
     document.getElementById(`${t}-tbody`).innerHTML =
-      `<tr><td colspan="3"><div class="skeleton-wrap">
+      `<tr><td colspan="4"><div class="skeleton-wrap">
   <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
   <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line"></div><div class="sk sk-line short"></div></div></div>
   <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
 </div></td></tr>`;
   });
 
-  const weekRef  = doc(db, "checklists", _weekKey());
-  const monthRef = doc(db, "checklists", _monthKey());
+  _cachedCleaningWeekRef  = doc(db, "checklists", _weekKey());
+  _cachedCleaningMonthRef = doc(db, "checklists", _monthKey());
 
   try {
     // ✅ FLAT query — no where() + orderBy() = no composite index needed
     const [tplSnap, ws, ms] = await Promise.all([
       getDocs(collection(db, "cleaning_templates")),
-      getDoc(weekRef),
-      getDoc(monthRef)
+      getDoc(_cachedCleaningWeekRef),
+      getDoc(_cachedCleaningMonthRef)
     ]);
 
-    // Collect all templates and sort by createdAt in JavaScript
-    const allTpls = [];
-    tplSnap.forEach(d => allTpls.push({ id: d.id, ...d.data() }));
-    allTpls.sort((a, b) => _tsMs(a.createdAt) - _tsMs(b.createdAt));
+    _cachedCleaningTpls = [];
+    tplSnap.forEach(d => _cachedCleaningTpls.push({ id: d.id, ...d.data() }));
+    _cachedCleaningTpls.sort((a, b) => _tsMs(a.createdAt) - _tsMs(b.createdAt));
 
-    const weeklyTpls  = allTpls.filter(t => t.frequency === "weekly");
-    const monthlyTpls = allTpls.filter(t => t.frequency === "monthly");
+    const weeklyTpls  = _cachedCleaningTpls.filter(t => t.frequency === "weekly");
+    const monthlyTpls = _cachedCleaningTpls.filter(t => t.frequency === "monthly");
 
-    const wData = ws.exists() ? ws.data() : {};
-    const mData = ms.exists() ? ms.data() : {};
+    _cachedCleaningWData = ws.exists() ? ws.data() : {};
+    _cachedCleaningMData = ms.exists() ? ms.data() : {};
 
-    renderChecklist("weekly",  weeklyTpls,  wData, weekRef);
-    renderChecklist("monthly", monthlyTpls, mData, monthRef);
+    renderChecklist("weekly",  weeklyTpls,  _cachedCleaningWData,  _cachedCleaningWeekRef);
+    renderChecklist("monthly", monthlyTpls, _cachedCleaningMData, _cachedCleaningMonthRef);
+
+    // Refresh active room tab if one is selected
+    if (_currentCleaningRoom) _renderRoomTab(_currentCleaningRoom);
+
+    _checkCleaningSchedules(_cachedCleaningTpls);
   } catch(err) {
     console.error("initCleaning:", err);
     ["weekly","monthly"].forEach(t => {
       document.getElementById(`${t}-tbody`).innerHTML =
-        `<tr><td colspan="3"><div class="empty" style="color:var(--danger)">⚠️ ${err.message}</div></td></tr>`;
+        `<tr><td colspan="4"><div class="empty" style="color:var(--danger)">⚠️ ${err.message}</div></td></tr>`;
     });
   }
 }
@@ -2714,7 +2794,7 @@ function renderChecklist(type, templates, data, docRef) {
   tbody.innerHTML = "";
 
   if (!templates.length) {
-    tbody.innerHTML = `<tr><td colspan="3"><div class="empty">
+    tbody.innerHTML = `<tr><td colspan="4"><div class="empty">
       <div class="empty-icon">✏️</div>
       <p>No tasks yet.<br>Tap <strong>⚙️ Manage Tasks</strong> to add chores.</p>
     </div></td></tr>`;
@@ -2722,14 +2802,23 @@ function renderChecklist(type, templates, data, docRef) {
     return;
   }
 
+  const today = new Date().toISOString().split("T")[0];
   templates.forEach(task => {
-    const done = data[task.id] === true;
-    const tr   = document.createElement("tr");
+    const done     = data[task.id] === true;
+    const roomInfo = _CLEANING_ROOMS.find(r => r.id === task.room);
+    const roomLabel= roomInfo ? `${roomInfo.emoji} ${roomInfo.label}` : (task.area || "—");
+    const hasDate  = !!task.nextDate;
+    const isDue    = hasDate && task.nextDate <= today;
+
+    // Task row
+    const tr = document.createElement("tr");
     if (done) tr.classList.add("done");
     tr.innerHTML = `
       <td><input type="checkbox" class="task-check"${done ? " checked" : ""}></td>
-      <td class="task-name">${task.name}</td>
-      <td class="task-room">${task.area || "—"}</td>`;
+      <td class="task-name">${task.name}${isDue ? ' <span style="color:var(--danger);font-size:.7rem;font-weight:700"> ● Due</span>' : ''}</td>
+      <td class="task-room">${roomLabel}</td>
+      <td><button class="btn-sched${hasDate ? ' has-date' : ''}" title="${hasDate ? 'Scheduled: ' + task.nextDate : 'Set cleaning date'}"
+        onclick="_toggleSchedRow('${type}-${task.id}')">📅</button></td>`;
     tr.querySelector(".task-check").addEventListener("change", async function() {
       tr.classList.toggle("done", this.checked);
       await setDoc(docRef, { [task.id]: this.checked }, { merge: true });
@@ -2737,6 +2826,20 @@ function renderChecklist(type, templates, data, docRef) {
       _progUpdate(type, templates, s.exists() ? s.data() : {});
     });
     tbody.appendChild(tr);
+
+    // Collapsible schedule-date picker row
+    const schedTr = document.createElement("tr");
+    schedTr.className = "sched-row";
+    schedTr.id = `sched-row-${type}-${task.id}`;
+    schedTr.innerHTML = `<td colspan="4" style="padding:4px 12px 10px 44px">
+      <label style="font-size:.73rem;color:var(--text-muted);display:block;margin-bottom:4px">📅 Next cleaning date:</label>
+      <input type="date" value="${task.nextDate || ''}"
+        style="border:1.5px solid var(--border-focus);border-radius:8px;padding:5px 10px;
+          font-family:inherit;font-size:.82rem;background:var(--bg);color:var(--text)"
+        onchange="saveTaskSchedule('${task.id}', this.value)">
+      ${hasDate ? `<button class="btn-clear-sched" onclick="saveTaskSchedule('${task.id}','')">✕ Clear</button>` : ''}
+    </td>`;
+    tbody.appendChild(schedTr);
   });
   _progUpdate(type, templates, data);
 }
@@ -2752,7 +2855,7 @@ function _progUpdate(type, templates, data) {
 /* ── Manage Tasks Modal ──────────────────────────────── */
 window.openManageTasks = function() {
   document.getElementById("task-name-input").value  = "";
-  document.getElementById("task-area-input").value  = "";
+  document.getElementById("task-room-select").value = "";
   document.getElementById("task-freq-select").value = "weekly";
   document.getElementById("manage-tasks-modal").classList.add("open");
   setTimeout(() => document.getElementById("task-name-input").focus(), 300);
@@ -2796,7 +2899,7 @@ async function _renderTemplatesList() {
         </span>
         <div class="manage-task-info">
           <span class="manage-task-name">${t.name}</span>
-          ${t.area ? `<span class="manage-task-area">${t.area}</span>` : ""}
+          ${(()=>{const r=_CLEANING_ROOMS.find(x=>x.id===t.room);return r?`<span class="manage-task-area">${r.emoji} ${r.label}</span>`:(t.area?`<span class="manage-task-area">${t.area}</span>`:"");})()}
         </div>
         <button class="btn-trash" title="Delete task">🗑️</button>`;
       div.querySelector(".btn-trash").addEventListener("click", () => _deleteCleaningTask(t.id));
@@ -2809,7 +2912,7 @@ async function _renderTemplatesList() {
 
 window.addCleaningTask = async function() {
   const nameEl = document.getElementById("task-name-input");
-  const areaEl = document.getElementById("task-area-input");
+  const roomEl = document.getElementById("task-room-select");
   const freqEl = document.getElementById("task-freq-select");
   const name   = nameEl.value.trim();
   if (!name) { nameEl.classList.add("err"); return; }
@@ -2820,12 +2923,12 @@ window.addCleaningTask = async function() {
   try {
     await addDoc(collection(db, "cleaning_templates"), {
       name,
-      area:      areaEl.value.trim(),
+      room:      roomEl.value || "",
       frequency: freqEl.value,
       createdAt: serverTimestamp()
     });
     nameEl.value = "";
-    areaEl.value = "";
+    roomEl.value = "";
     await _renderTemplatesList();
     initCleaning();
     showToast("✅ Task added!", "success");
@@ -2842,6 +2945,121 @@ async function _deleteCleaningTask(id) {
     showToast("🗑️ Task deleted", "success");
   } catch(err) { showToast("Error: " + err.message, "error"); }
 }
+
+/* ── Room Tabs ───────────────────────────────────────── */
+window.switchCleaningRoom = function(room, btn) {
+  _currentCleaningRoom = room;
+  const root = document.getElementById("view-chores-cleaning");
+  root.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  root.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("tab-cleaning-room").classList.add("active");
+  _renderRoomTab(room);
+};
+
+function _renderRoomTab(room) {
+  const roomInfo = _CLEANING_ROOMS.find(r => r.id === room);
+  const tbody    = document.getElementById("room-tbody");
+  const tasks    = _cachedCleaningTpls.filter(t => t.room === room);
+  tbody.innerHTML = "";
+
+  if (!tasks.length) {
+    tbody.innerHTML = `<tr><td colspan="3"><div class="empty">
+      <div class="empty-icon">${roomInfo?.emoji || "🏠"}</div>
+      <p>No tasks for ${roomInfo?.label || room} yet.<br>
+        Add tasks via <strong>⚙️ Manage Tasks</strong> and choose this room.</p>
+    </div></td></tr>`;
+    document.getElementById("room-prog-label").textContent = "0 / 0 done";
+    document.getElementById("room-prog-fill").style.width = "0%";
+    return;
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+
+  tasks.forEach(task => {
+    const isWeekly = task.frequency === "weekly";
+    const data     = isWeekly ? _cachedCleaningWData : _cachedCleaningMData;
+    const docRef   = isWeekly ? _cachedCleaningWeekRef : _cachedCleaningMonthRef;
+    const done     = data[task.id] === true;
+    const hasDate  = !!task.nextDate;
+    const isDue    = hasDate && task.nextDate <= today;
+
+    const tr = document.createElement("tr");
+    if (done) tr.classList.add("done");
+    tr.innerHTML = `
+      <td><input type="checkbox" class="task-check"${done ? " checked" : ""}></td>
+      <td class="task-name">
+        ${task.name}${isDue ? ' <span style="color:var(--danger);font-size:.7rem;font-weight:700"> ● Due</span>' : ''}
+        <span class="rfreq ${isWeekly ? 'rfreq-w' : 'rfreq-m'}">${isWeekly ? 'Weekly' : 'Monthly'}</span>
+      </td>
+      <td><button class="btn-sched${hasDate ? ' has-date' : ''}" title="${hasDate ? 'Scheduled: ' + task.nextDate : 'Set date'}"
+        onclick="_toggleSchedRow('room-${task.id}')">📅</button></td>`;
+
+    tr.querySelector(".task-check").addEventListener("change", async function() {
+      tr.classList.toggle("done", this.checked);
+      await setDoc(docRef, { [task.id]: this.checked }, { merge: true });
+      if (isWeekly) _cachedCleaningWData[task.id] = this.checked;
+      else          _cachedCleaningMData[task.id]  = this.checked;
+      _updateRoomProgress(tasks);
+    });
+    tbody.appendChild(tr);
+
+    // Collapsible schedule row
+    const schedTr = document.createElement("tr");
+    schedTr.className = "sched-row";
+    schedTr.id = `sched-row-room-${task.id}`;
+    schedTr.innerHTML = `<td colspan="3" style="padding:4px 12px 10px 44px">
+      <label style="font-size:.73rem;color:var(--text-muted);display:block;margin-bottom:4px">📅 Next cleaning date:</label>
+      <input type="date" value="${task.nextDate || ''}"
+        style="border:1.5px solid var(--border-focus);border-radius:8px;padding:5px 10px;
+          font-family:inherit;font-size:.82rem;background:var(--bg);color:var(--text)"
+        onchange="saveTaskSchedule('${task.id}', this.value)">
+      ${hasDate ? `<button class="btn-clear-sched" onclick="saveTaskSchedule('${task.id}','')">✕ Clear</button>` : ''}
+    </td>`;
+    tbody.appendChild(schedTr);
+  });
+
+  _updateRoomProgress(tasks);
+}
+
+function _updateRoomProgress(tasks) {
+  const done = tasks.filter(t => {
+    const d = t.frequency === "weekly" ? _cachedCleaningWData : _cachedCleaningMData;
+    return d[t.id] === true;
+  }).length;
+  const pct = tasks.length ? Math.round(done / tasks.length * 100) : 0;
+  document.getElementById("room-prog-fill").style.width  = pct + "%";
+  document.getElementById("room-prog-label").textContent = `${done} / ${tasks.length} done`;
+}
+
+/* ── Scheduling ──────────────────────────────────────── */
+function _checkCleaningSchedules(allTpls) {
+  const today = new Date().toISOString().split("T")[0];
+  const due   = allTpls.filter(t => t.nextDate && t.nextDate <= today);
+  const banner = document.getElementById("clean-due-banner");
+  if (!banner) return;
+  if (due.length) {
+    document.getElementById("clean-due-list").textContent =
+      due.map(t => t.name).join("  •  ");
+    banner.classList.add("visible");
+  } else {
+    banner.classList.remove("visible");
+  }
+}
+
+window._toggleSchedRow = function(rowId) {
+  const row = document.getElementById(`sched-row-${rowId}`);
+  if (row) row.classList.toggle("open");
+};
+
+window.saveTaskSchedule = async function(taskId, date) {
+  try {
+    await setDoc(doc(db, "cleaning_templates", taskId),
+      { nextDate: date || null }, { merge: true });
+    showToast(date ? `📅 Scheduled for ${date}` : "📅 Schedule cleared", "success");
+    await initCleaning();
+  } catch(err) { showToast("Error: " + err.message, "error"); }
+};
 
 /* ══════════════════════════════════════════════════════════
    GARDENING  (fully dynamic — /plants collection)
