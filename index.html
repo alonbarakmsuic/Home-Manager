@@ -348,23 +348,49 @@
     border-radius:8px;transition:var(--T);color:var(--text-muted);line-height:1;flex-shrink:0}
   .btn-trash:active{background:rgba(255,59,48,.1);color:var(--danger);transform:scale(.9)}
 
-  /* ═══ Maintenance Log ════════════════════════════════════ */
+  /* ═══ Task Log (formerly Maintenance Log) ════════════════ */
   .maint-item{background:var(--bg-card);border-radius:var(--radius-sm);
     border:.5px solid rgba(0,0,0,.06);padding:15px;margin-bottom:10px;
-    box-shadow:var(--shadow-sm)}
+    box-shadow:var(--shadow-sm);position:relative}
+  .maint-item.priority-high{border-left:3px solid var(--danger)}
+  .maint-item.priority-medium{border-left:3px solid var(--accent)}
+  .maint-item.priority-low{border-left:3px solid rgba(0,0,0,.15)}
   .maint-item-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+  .maint-task-num{font-size:.72rem;font-weight:700;color:var(--text-light);
+    background:var(--bg);border:1px solid var(--border);border-radius:6px;
+    padding:2px 7px;flex-shrink:0;margin-top:1px}
   .maint-title-text{flex:1;font-size:.88rem;font-weight:600;line-height:1.4;color:var(--text)}
+  .maint-actions{display:flex;gap:6px;flex-shrink:0}
+  .btn-edit-maint{background:rgba(0,122,255,.1);color:var(--info);border:none;
+    border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:.8rem;
+    display:flex;align-items:center;justify-content:center;transition:var(--T)}
+  .btn-edit-maint:active{background:rgba(0,122,255,.2)}
   .maint-meta{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
   .maint-date-label{font-size:.73rem;color:var(--text-muted)}
   .maint-status-pill{font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:20px}
   .pill-pending{background:rgba(255,149,0,.12);color:#a05e00}
   .pill-in-progress{background:rgba(0,122,255,.1);color:var(--info)}
   .pill-resolved{background:rgba(52,199,123,.12);color:var(--primary)}
+  .pill-priority-high{background:rgba(255,59,48,.12);color:#c0392b;font-size:.68rem;
+    font-weight:700;padding:2px 8px;border-radius:20px}
+  .pill-priority-medium{background:rgba(245,166,35,.12);color:#a05e00;font-size:.68rem;
+    font-weight:700;padding:2px 8px;border-radius:20px}
+  .pill-priority-low{background:rgba(142,142,147,.12);color:#636366;font-size:.68rem;
+    font-weight:700;padding:2px 8px;border-radius:20px}
   .maint-status-sel{width:100%;padding:10px 12px;border:1.5px solid rgba(0,0,0,.1);
     border-radius:var(--radius-sm);font-size:.83rem;background:var(--bg-surface);
     font-family:inherit;color:var(--text);appearance:none;-webkit-appearance:none;
     cursor:pointer;transition:var(--T)}
   .maint-status-sel:focus{outline:none;border-color:var(--border-focus);background:#fff}
+  .maint-count-bar{display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:12px}
+  .maint-count-badge{font-size:.75rem;font-weight:700;color:var(--text-muted);
+    background:var(--bg);border:1px solid var(--border);border-radius:20px;
+    padding:4px 12px}
+  .btn-cancel-edit{background:rgba(0,0,0,.06);color:var(--text-muted);border:none;
+    border-radius:var(--radius-sm);padding:12px;font-size:.85rem;font-weight:600;
+    cursor:pointer;width:100%;margin-top:8px;font-family:inherit;transition:var(--T)}
+  .btn-cancel-edit:active{background:rgba(0,0,0,.1)}
 
   /* ═══ Current Status ══════════════════════════════════════ */
   .stat-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
@@ -1471,7 +1497,7 @@
     </div>
     <div class="submenu-card" onclick="navigateTo('chores-maintenance')">
       <div class="icon-wrap" style="--icon-bg:rgba(59,130,246,.12)">🔧</div>
-      <div class="item-text"><div class="item-title">Maintenance Log</div><div class="item-desc">יומן תקלות — track apartment issues</div></div>
+      <div class="item-text"><div class="item-title">Task Log</div><div class="item-desc">יומן משימות — track apartment tasks</div></div>
       <span class="item-arrow">›</span>
     </div>
   </div>
@@ -1610,15 +1636,23 @@
 
 <!-- ═════════════════ MAINTENANCE LOG ════════════════════ -->
 <main id="view-chores-maintenance" class="view">
-  <p class="section-title">➕ Log New Issue</p>
+  <p class="section-title" id="maint-form-title">➕ Add New Task</p>
   <div class="form-card" style="margin-bottom:20px">
     <div class="form-group">
-      <label for="maint-title-input">Issue Title</label>
-      <input type="text" id="maint-title-input" placeholder="e.g. Leaky faucet in bathroom">
+      <label for="maint-title-input">Task Title</label>
+      <input type="text" id="maint-title-input" placeholder="e.g. Fix leaky faucet in bathroom">
     </div>
     <div class="form-group">
       <label for="maint-date-input">Date Reported</label>
       <input type="date" id="maint-date-input">
+    </div>
+    <div class="form-group">
+      <label for="maint-priority-input">Priority</label>
+      <select id="maint-priority-input">
+        <option value="high">🔴 High</option>
+        <option value="medium" selected>🟡 Medium</option>
+        <option value="low">⚪ Low</option>
+      </select>
     </div>
     <div class="form-group">
       <label for="maint-status-input">Status</label>
@@ -1628,11 +1662,12 @@
         <option value="resolved">✅ Resolved</option>
       </select>
     </div>
-    <button class="btn-send" id="btn-log-maint">📋 Log Issue</button>
+    <button class="btn-send" id="btn-log-maint">📋 Log Task</button>
+    <button class="btn-cancel-edit" id="btn-cancel-edit" style="display:none" onclick="cancelEditMaint()">Cancel Edit</button>
   </div>
-  <p class="section-title">📋 Issue Tracker</p>
+  <p class="section-title">📋 Task Tracker</p>
   <div id="maint-list">
-    <div class="empty"><div class="empty-icon">🔧</div>No issues logged yet.</div>
+    <div class="empty"><div class="empty-icon">📋</div>No tasks logged yet.</div>
   </div>
 </main>
 
@@ -2129,7 +2164,7 @@ const VIEW_META = {
   "chores-cleaning":     { title:"🧼 Cleaning",          back:"chores" },
   "chores-gardening":    { title:"🌱 Gardening",         back:"chores" },
   "chores-payments":     { title:"💳 Payments",          back:"chores" },
-  "chores-maintenance":  { title:"🔧 Maintenance Log",   back:"chores" },
+  "chores-maintenance":  { title:"📋 Task Log",           back:"chores" },
   "expenses":            { title:"💰 Expenses",          back:"dashboard" },
   "expenses-status":     { title:"📊 Current Status",    back:"expenses" },
   "expenses-reports":    { title:"📋 Monthly Reports",   back:"expenses" },
@@ -2976,68 +3011,133 @@ async function deleteBill(monthStr) {
 /* ══════════════════════════════════════════════════════════
    MAINTENANCE LOG (יומן תקלות)
 ══════════════════════════════════════════════════════════ */
+let _editingMaintId = null;  // null = adding new, string = editing existing
+
+const _PRIORITY_RANK = { high: 0, medium: 1, low: 2 };
+const _PRIORITY_PILL = {
+  high:   `<span class="pill-priority-high">🔴 High</span>`,
+  medium: `<span class="pill-priority-medium">🟡 Medium</span>`,
+  low:    `<span class="pill-priority-low">⚪ Low</span>`,
+};
+
 function initMaintenance() {
+  _editingMaintId = null;
+  _resetMaintForm();
   document.getElementById("btn-log-maint").onclick = saveMaintenance;
-  // Default date to today
-  document.getElementById("maint-date-input").value = new Date().toISOString().slice(0, 10);
 
   _unsub("maintenance");
-  // ✅ FLAT query — onSnapshot on whole collection, sort in JS
+  // ✅ FLAT query — sort by priority then date in JS
   _unsubs["maintenance"] = onSnapshot(collection(db, "maintenance"), snap => {
     const items = [];
     snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-    items.sort((a, b) => _tsMs(b.createdAt) - _tsMs(a.createdAt)); // newest first
+    // Sort: High → Medium → Low, then newest first within same priority
+    items.sort((a, b) => {
+      const pr = (_PRIORITY_RANK[a.priority||"medium"] || 1) - (_PRIORITY_RANK[b.priority||"medium"] || 1);
+      return pr !== 0 ? pr : _tsMs(b.createdAt) - _tsMs(a.createdAt);
+    });
     renderMaintList(items);
   });
 }
 
+function _resetMaintForm() {
+  document.getElementById("maint-title-input").value = "";
+  document.getElementById("maint-date-input").value = new Date().toISOString().slice(0, 10);
+  document.getElementById("maint-priority-input").value = "medium";
+  document.getElementById("maint-status-input").value = "pending";
+  document.getElementById("btn-log-maint").textContent = "📋 Log Task";
+  document.getElementById("btn-cancel-edit").style.display = "none";
+  document.getElementById("maint-form-title").textContent = "➕ Add New Task";
+  _editingMaintId = null;
+}
+
+window.startEditMaint = function(item) {
+  _editingMaintId = item.id;
+  document.getElementById("maint-title-input").value    = item.title || "";
+  document.getElementById("maint-date-input").value     = item.dateReported || "";
+  document.getElementById("maint-priority-input").value = item.priority || "medium";
+  document.getElementById("maint-status-input").value   = item.status  || "pending";
+  document.getElementById("btn-log-maint").textContent  = "💾 Save Changes";
+  document.getElementById("btn-cancel-edit").style.display = "block";
+  document.getElementById("maint-form-title").textContent  = "✏️ Edit Task";
+  document.getElementById("maint-title-input").focus();
+  document.getElementById("view-chores-maintenance").scrollTo({ top: 0, behavior: "smooth" });
+};
+
+window.cancelEditMaint = function() {
+  _resetMaintForm();
+};
+
 async function saveMaintenance() {
-  const title  = document.getElementById("maint-title-input").value.trim();
-  const date   = document.getElementById("maint-date-input").value;
-  const status = document.getElementById("maint-status-input").value;
-  if (!title) { showToast("Please enter an issue title.", "error"); return; }
+  const title    = document.getElementById("maint-title-input").value.trim();
+  const date     = document.getElementById("maint-date-input").value;
+  const priority = document.getElementById("maint-priority-input").value;
+  const status   = document.getElementById("maint-status-input").value;
+  if (!title) { showToast("Please enter a task title.", "error"); _shakeInput(document.getElementById("maint-title-input")); return; }
   if (!date)  { showToast("Please select a date.", "error"); return; }
   const btn = document.getElementById("btn-log-maint");
   btn.disabled = true; btn.textContent = "⏳ Saving…";
   try {
-    await addDoc(collection(db, "maintenance"), {
-      title, dateReported: date, status, createdAt: serverTimestamp()
-    });
-    document.getElementById("maint-title-input").value = "";
-    document.getElementById("maint-status-input").value = "pending";
-    showToast("✅ Issue logged!", "success");
-    _logActivity("🔧", `logged a new issue: ${title}`);
+    if (_editingMaintId) {
+      // Edit existing
+      await setDoc(doc(db, "maintenance", _editingMaintId),
+        { title, dateReported: date, priority, status }, { merge: true });
+      showToast("✅ Task updated!", "success");
+      _logActivity("✏️", `updated task: ${title}`);
+    } else {
+      // Add new
+      await addDoc(collection(db, "maintenance"), {
+        title, dateReported: date, priority, status, createdAt: serverTimestamp()
+      });
+      showToast("✅ Task logged!", "success");
+      _logActivity("📋", `logged a new task: ${title}`);
+    }
+    _resetMaintForm();
   } catch(err) { showToast("Error: " + err.message, "error"); }
-  finally { btn.disabled = false; btn.textContent = "📋 Log Issue"; }
+  finally { btn.disabled = false; if (!_editingMaintId) btn.textContent = "📋 Log Task"; }
 }
 
 function renderMaintList(items) {
   const el = document.getElementById("maint-list");
   if (!items.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">🔧</div>No issues logged yet.</div>`; return;
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📋</div>No tasks logged yet.</div>`; return;
   }
-  el.innerHTML = "";
-  const pillMap = {
+
+  // Count bar
+  const countBar = `<div class="maint-count-bar">
+    <span class="section-title" style="margin:0">📋 Task Tracker</span>
+    <span class="maint-count-badge">${items.length} task${items.length!==1?"s":""}</span>
+  </div>`;
+
+  el.innerHTML = countBar;
+  const statusPills = {
     "pending":     `<span class="maint-status-pill pill-pending">⏳ Pending</span>`,
     "in-progress": `<span class="maint-status-pill pill-in-progress">🔧 In Progress</span>`,
     "resolved":    `<span class="maint-status-pill pill-resolved">✅ Resolved</span>`,
   };
-  items.forEach(item => {
-    const div = document.createElement("div"); div.className = "maint-item";
+  items.forEach((item, idx) => {
+    const priority = item.priority || "medium";
+    const div = document.createElement("div");
+    div.className = `maint-item priority-${priority}`;
     div.innerHTML = `
       <div class="maint-item-header">
+        <span class="maint-task-num">#${idx + 1}</span>
         <span class="maint-title-text">${item.title}</span>
-        <button class="btn-trash" title="Delete">🗑️</button>
+        <div class="maint-actions">
+          <button class="btn-edit-maint" title="Edit task">✏️</button>
+          <button class="btn-trash" title="Delete">🗑️</button>
+        </div>
       </div>
       <div class="maint-meta">
         <span class="maint-date-label">📅 ${_fmtDate(item.dateReported)}</span>
-        ${pillMap[item.status] || ""}
+        ${_PRIORITY_PILL[priority] || ""}
+        ${statusPills[item.status] || ""}
       </div>
       <select class="maint-status-sel">
         <option value="pending"     ${item.status==="pending"     ? "selected":""}>⏳ Pending</option>
         <option value="in-progress" ${item.status==="in-progress" ? "selected":""}>🔧 In Progress</option>
         <option value="resolved"    ${item.status==="resolved"    ? "selected":""}>✅ Resolved</option>
       </select>`;
+    div.querySelector(".btn-edit-maint").addEventListener("click", () => startEditMaint(item));
     div.querySelector(".btn-trash").addEventListener("click", () => deleteMaintenance(item.id));
     div.querySelector(".maint-status-sel").addEventListener("change", async function() {
       try {
@@ -3050,10 +3150,12 @@ function renderMaintList(items) {
 }
 
 async function deleteMaintenance(id) {
-  if (!confirm("Delete this issue?")) return;
+  if (!confirm("Delete this task?")) return;
+  // If we were editing this task, reset the form
+  if (_editingMaintId === id) _resetMaintForm();
   try {
     await deleteDoc(doc(db, "maintenance", id));
-    showToast("🗑️ Issue deleted", "success");
+    showToast("🗑️ Task deleted", "success");
   } catch(err) { showToast("Error: " + err.message, "error"); }
 }
 
