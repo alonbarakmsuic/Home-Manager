@@ -289,6 +289,14 @@
   .btn-plant-notify{background:none;border:none;font-size:.95rem;cursor:pointer;
     opacity:.38;transition:opacity .15s;padding:1px 2px;line-height:1}
   .btn-plant-notify.notif-on{opacity:1}
+  /* Plant search (reuses .pantry-search-wrap layout) */
+  #plant-search{flex:1;border:none;background:none;padding:11px 0;
+    font-size:.9rem;font-family:inherit;outline:none;color:var(--text)}
+  #plant-search::placeholder{color:var(--text-light)}
+  #plant-search-clear{background:rgba(0,0,0,.07);border:none;cursor:pointer;
+    color:var(--text-muted);font-size:.75rem;width:20px;height:20px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+  #plant-search-clear:active{background:rgba(0,0,0,.14)}
   /* Due-plants banner */
   .due-banner{background:linear-gradient(135deg,rgba(255,149,0,.08),rgba(255,59,48,.06));
     border:1px solid rgba(255,149,0,.3);border-radius:14px;
@@ -1587,6 +1595,15 @@
            placeholder="Days" min="1" max="60" value="3" title="Water every X days">
     <button class="btn-add-plant" onclick="addPlant()" title="Add plant">＋</button>
   </div>
+  <!-- Plant search bar -->
+  <div class="pantry-search-wrap" style="margin-bottom:14px">
+    <span class="pantry-search-icon">🔍</span>
+    <input type="search" id="plant-search" placeholder="Search plants…"
+      oninput="setPlantSearch(this.value)" autocomplete="off" />
+    <button id="plant-search-clear" onclick="clearPlantSearch()"
+      style="display:none" aria-label="Clear search">✕</button>
+  </div>
+
   <!-- Due-plants notification banner -->
   <div class="due-banner" id="plant-due-banner">
     <div class="due-banner-title">💧 Plants need watering!</div>
@@ -2834,8 +2851,31 @@ async function _deleteCleaningTask(id) {
 let _gardenInterval = null;   // periodic notification check while on this view
 let _cachedPlants   = [];     // latest plant list for interval checks
 let _cachedWater    = {};     // latest water data for interval checks
+let _plantSearch    = "";     // current search query
+
+window.setPlantSearch = function(val) {
+  _plantSearch = val.trim();
+  const sb = document.getElementById("plant-search-clear");
+  if (sb) sb.style.display = _plantSearch ? "flex" : "none";
+  _renderPlants(_cachedPlants, _cachedWater);
+};
+
+window.clearPlantSearch = function() {
+  _plantSearch = "";
+  const si = document.getElementById("plant-search");
+  const sb = document.getElementById("plant-search-clear");
+  if (si) { si.value = ""; si.focus(); }
+  if (sb) sb.style.display = "none";
+  _renderPlants(_cachedPlants, _cachedWater);
+};
 
 async function initGardening() {
+  // Reset search
+  _plantSearch = "";
+  const si = document.getElementById("plant-search");
+  const sb = document.getElementById("plant-search-clear");
+  if (si) si.value = "";
+  if (sb) sb.style.display = "none";
   const tbody = document.getElementById("plants-tbody");
   tbody.innerHTML = `<tr><td colspan="5"><div class="skeleton-wrap">
   <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
@@ -2897,7 +2937,7 @@ function _notifyCheck(plants, waterData) {
 
   // Browser notifications for plants with notifyEnabled
   if (!due.length) return;
-  if (Notification.permission !== "granted") return;
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
   due.forEach(p => {
     const lsKey = `plant_notified_${p.id}`;
     const lastNotif = parseInt(localStorage.getItem(lsKey) || "0");
@@ -2915,14 +2955,21 @@ function _notifyCheck(plants, waterData) {
 function _renderPlants(plants, waterData) {
   const tbody = document.getElementById("plants-tbody");
   tbody.innerHTML = "";
-  if (!plants.length) {
+
+  // Filter by search query
+  const q = _plantSearch.toLowerCase().trim();
+  const visible = q ? plants.filter(p => p.name.toLowerCase().includes(q)) : plants;
+
+  if (!visible.length) {
+    const msg = q
+      ? `🔍 No plants found for "${_plantSearch}"`
+      : "No plants yet — type a name above and tap ＋ to add one!";
     tbody.innerHTML = `<tr><td colspan="5"><div class="empty">
-      <div class="empty-icon">🌱</div>
-      <p>No plants yet — type a name above and tap ＋ to add one!</p>
+      <div class="empty-icon">🌱</div><p>${msg}</p>
     </div></td></tr>`;
     return;
   }
-  plants.forEach(p => {
+  visible.forEach(p => {
     const days    = p.intervalDays || 3;
     const ms      = waterData[p.id] || null;
     const dt      = ms ? new Date(ms) : null;
@@ -2988,20 +3035,29 @@ function _startRename(id, currentName) {
 // ── Notification toggle ────────────────────────────────
 async function _togglePlantNotify(id, currentlyOn) {
   const newVal = !currentlyOn;
-  if (newVal && Notification.permission === "default") {
-    const perm = await Notification.requestPermission();
-    if (perm !== "granted") {
-      showToast("Please allow notifications in your browser settings 🔔", "error"); return;
-    }
-  }
-  if (newVal && Notification.permission === "denied") {
-    showToast("Notifications blocked — enable them in browser settings", "error"); return;
-  }
+  // Always save the toggle first — in-app banner works regardless of browser support
   try {
     await setDoc(doc(db, "plants", id), { notifyEnabled: newVal }, { merge: true });
-    showToast(newVal ? "🔔 Watering reminders on!" : "🔕 Reminders off", "success");
-    initGardening();
-  } catch(e) { showToast("Error: " + e.message, "error"); }
+  } catch(e) { showToast("Error: " + e.message, "error"); return; }
+
+  // Browser notification support check (not available on iOS Safari or some browsers)
+  if (newVal && typeof Notification === "undefined") {
+    showToast("🔔 Reminder saved! (In-app banner only — this browser doesn't support push notifications)", "success");
+    initGardening(); return;
+  }
+  if (newVal && Notification.permission === "denied") {
+    showToast("🔔 Reminder saved! Browser notifications are blocked — enable in settings for push alerts.", "success");
+    initGardening(); return;
+  }
+  if (newVal && Notification.permission === "default") {
+    const perm = await Notification.requestPermission().catch(() => "denied");
+    if (perm !== "granted") {
+      showToast("🔔 Reminder saved! Allow notifications for push alerts.", "success");
+      initGardening(); return;
+    }
+  }
+  showToast(newVal ? "🔔 Watering reminders on!" : "🔕 Reminders off", "success");
+  initGardening();
 }
 
 window.addPlant = async function() {
