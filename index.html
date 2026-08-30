@@ -828,6 +828,30 @@
   .sw-table tbody td{padding:11px 13px;font-size:.84rem;vertical-align:middle;
     direction:rtl;text-align:right}
   .sw-table tbody td:last-child{text-align:center}
+  /* ── Settle up ─────────────────────────────────────── */
+  .btn-settle{margin-top:14px;width:100%;padding:12px;border:none;border-radius:12px;
+    background:rgba(255,255,255,.22);color:#fff;font-size:.86rem;font-weight:700;
+    cursor:pointer;font-family:inherit;transition:var(--T);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    border:1px solid rgba(255,255,255,.3)}
+  .btn-settle:active{transform:scale(.97);background:rgba(255,255,255,.32)}
+  .settle-summary{background:var(--bg-surface);border-radius:var(--radius-sm);
+    padding:14px;margin-bottom:16px;font-size:.88rem;font-weight:600;
+    text-align:center;line-height:1.6;color:var(--text)}
+  .settle-summary strong{color:var(--primary-dark);font-size:1.15rem}
+  .settle-hint{font-size:.73rem;color:var(--text-light);margin-top:6px;line-height:1.5}
+  .btn-settle-cancel{width:100%;padding:12px;margin-top:9px;background:transparent;
+    border:none;color:var(--text-muted);font-size:.85rem;font-weight:600;
+    cursor:pointer;font-family:inherit;border-radius:12px}
+  .btn-settle-cancel:active{background:rgba(0,0,0,.05)}
+  .sw-settle-row{background:rgba(52,199,123,.06)}
+  .sw-settle-row td{color:var(--primary-dark)}
+  .sw-settle-tag{font-size:.6rem;background:rgba(52,199,123,.16);color:#0D6E35;
+    padding:1px 6px;border-radius:7px;font-weight:700;margin-inline-start:5px;
+    white-space:nowrap}
+  .sw-history-note{font-size:.72rem;color:var(--text-light);text-align:center;
+    margin:10px 0 0;line-height:1.5}
+
   .badge-alon{background:rgba(16,185,129,.12);color:#065F46}
   .badge-tali{background:rgba(236,72,153,.12);color:#9D174D}
 
@@ -2359,6 +2383,26 @@
   </div>
 </div>
 
+<!-- ═════════════════ SETTLE UP MODAL ═══════════════════ -->
+<div id="settle-modal" class="modal-bg" onclick="settleBgClick(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💸 סגירת חשבון</div>
+    <div class="settle-summary" id="settle-summary">—</div>
+    <div class="form-group">
+      <label for="settle-amount">סכום ההחזר (₪)</label>
+      <input type="number" id="settle-amount" placeholder="0" min="0" step="0.01">
+      <div class="settle-hint" id="settle-hint"></div>
+    </div>
+    <div class="form-group">
+      <label for="settle-date">📅 תאריך</label>
+      <input type="date" id="settle-date">
+    </div>
+    <button class="btn-send" id="btn-confirm-settle" style="margin-top:4px">✅ אשר תשלום</button>
+    <button class="btn-settle-cancel" onclick="closeSettleModal()">ביטול</button>
+  </div>
+</div>
+
 <!-- ═════════════════ MANAGE TASKS MODAL ════════════════ -->
 <div id="manage-tasks-modal" class="modal-bg" onclick="manageBgClick(event)">
   <div class="modal-sheet">
@@ -2426,7 +2470,9 @@
    /cleaning_templates/{id}  → { name, area, frequency, createdAt }
    /checklists/{key}         → { templateId: bool, … }
    /watering/log             → { plantId: timestampMs, … }
-   /bills/{YYYY-MM}          → { rent, electricity, water, arnona, updatedAt }
+   /bills/{YYYY-MM}          → { rentAlon, rentTali, electricity, gas, water, arnona, wifi,
+                                 <key>Payer:"Alon"|"Tali", updatedAt }
+   /upgrade_queue/{id}       → { name, addedAt }   pending house-upgrade items
    /expenses/{id}            → { type, date, amount, items[], createdAt }
    /maintenance/{id}         → { title, dateReported, status, createdAt }
    /pantry/{id}              → { name, status:"stock"|"low", createdAt }
@@ -3944,22 +3990,51 @@ window.modalBgClick = function(e) {
   if (e.target === e.currentTarget) e.currentTarget.classList.remove("open");
 };
 
-window.confirmAddItem = function() {
+/* Firestore collection that persists each list's pending items.
+   Without this the lists live only in memory and vanish on navigation. */
+const _QUEUE_COL = { groceries: "grocery_queue", upgrades: "upgrade_queue" };
+
+window.confirmAddItem = async function() {
   const input = document.getElementById("new-item");
   const name  = input.value.trim();
   if (!name) { input.classList.add("err"); return; }
   input.classList.remove("err");
-  const prefix = _modalTarget === "groceries" ? "grocery" : "upgrade";
+
+  const type   = _modalTarget;
+  const prefix = type === "groceries" ? "grocery" : "upgrade";
   const ul     = document.getElementById(`${prefix}-list`);
-  _itemLists[_modalTarget].push(name);
-  _appendShopItem(ul, name, _modalTarget, null);
+
+  // Don't add the same thing twice
+  const dupe = _itemLists[type].some(i => i.trim().toLowerCase() === name.toLowerCase());
+  if (dupe) {
+    showToast(`"${name}" כבר ברשימה 🚫`, "error");
+    input.classList.add("err");
+    return;
+  }
+
   document.getElementById("add-modal").classList.remove("open");
+  _itemLists[type].push(name);
+
+  // Optimistic render, then persist and attach the real doc ID
+  const li = _appendShopItem(ul, name, type, null, false);
+  try {
+    const ref = await addDoc(collection(db, _QUEUE_COL[type]), {
+      name, fromPantry: false, addedAt: serverTimestamp()
+    });
+    if (li) li.dataset.queueId = ref.id;
+  } catch (err) {
+    showToast("לא נשמר — בדוק חיבור", "error");
+    console.warn("Queue add failed:", err);
+  }
 };
 
-// pantryId: the Firestore doc ID from /grocery_queue (null for manually-added items)
-function _appendShopItem(ul, name, type, pantryId) {
+// queueId: Firestore doc ID in the item's queue collection (null until saved)
+// fromPantry: true only for items auto-added by marking a staple "Running Low"
+function _appendShopItem(ul, name, type, queueId, fromPantry = false) {
+  const pantryId = fromPantry ? queueId : null;   // 🧺 tag shows only for pantry items
   ul.querySelector(".list-empty")?.remove();
   const li = document.createElement("li"); li.className = "shop-item";
+  li.dataset.queueId = queueId || "";
 
   // Wrap content in inner div for swipe transform
   li.innerHTML = `
@@ -3973,9 +4048,10 @@ function _appendShopItem(ul, name, type, pantryId) {
 
   const doDelete = () => {
     _itemLists[type] = _itemLists[type].filter(i => i !== name);
-    if (pantryId) {
-      delete _pantryQueueItems[pantryId];
-      deleteDoc(doc(db, "grocery_queue", pantryId)).catch(() => {});
+    const qid = li.dataset.queueId;
+    if (qid) {
+      delete _pantryQueueItems[qid];
+      deleteDoc(doc(db, _QUEUE_COL[type], qid)).catch(() => {});
     }
     li.style.transition = "opacity .2s, max-height .25s, margin .25s";
     li.style.opacity = "0"; li.style.maxHeight = "0"; li.style.marginBottom = "0";
@@ -3989,8 +4065,9 @@ function _appendShopItem(ul, name, type, pantryId) {
 
   li.querySelector(".item-check").addEventListener("change", function() {
     li.classList.toggle("checked", this.checked);
-    if (pantryId && _pantryQueueItems[pantryId])
-      _pantryQueueItems[pantryId].checked = this.checked;
+    const qid = li.dataset.queueId;
+    if (qid && _pantryQueueItems[qid])
+      _pantryQueueItems[qid].checked = this.checked;
   });
   li.querySelector(".item-del").addEventListener("click", doDelete);
 
@@ -4026,6 +4103,7 @@ function _appendShopItem(ul, name, type, pantryId) {
   });
 
   ul.appendChild(li);
+  return li;
 }
 
 async function initShopping(type) {
@@ -4037,21 +4115,31 @@ async function initShopping(type) {
   document.getElementById(`${prefix}-date`).value   = "";
   document.getElementById(`${prefix}-amount`).value = "";
 
-  // Pre-load items from pantry grocery_queue (flat getDocs, no index needed)
-  if (type === "groceries") {
-    _pantryQueueItems = {};
-    const qSnap = await getDocs(collection(db, "grocery_queue"));
-    if (!qSnap.empty) {
-      qSnap.forEach(d => {
-        const name = d.data().name;
-        _pantryQueueItems[d.id] = { name, checked: false }; // track for auto-reset
-        _itemLists.groceries.push(name);
-        _appendShopItem(ul, name, "groceries", d.id); // pass pantry doc ID
+  // ── Restore saved items from this list's queue collection ──
+  //    Applies to BOTH lists, so nothing is lost when navigating away.
+  if (type === "groceries") _pantryQueueItems = {};
+  try {
+    const qSnap = await getDocs(collection(db, _QUEUE_COL[type]));
+    const rows  = [];
+    qSnap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+    rows.sort((a, b) => _tsMs(a.addedAt) - _tsMs(b.addedAt));   // oldest first
+
+    if (rows.length) {
+      rows.forEach(r => {
+        const name = r.name;
+        if (!name) return;
+        // Pantry-sourced grocery items keep their 🧺 tag. Legacy docs (written
+        // before `fromPantry` existed) used the pantry doc ID, so default true.
+        const fromPantry = type === "groceries" ? (r.fromPantry !== false) : false;
+        if (fromPantry) _pantryQueueItems[r.id] = { name, checked: false };
+        _itemLists[type].push(name);
+        _appendShopItem(ul, name, type, r.id, fromPantry);
       });
     } else {
       ul.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
     }
-  } else {
+  } catch (err) {
+    console.warn("Queue load failed:", err);
     ul.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
   }
 
@@ -4121,14 +4209,27 @@ async function sendEntry(type) {
   if (!amountEl.value || +amountEl.value <= 0)  { amountEl.classList.add("err"); amountErr.classList.add("show"); valid=false; }
   if (!valid) return;
 
+  // Both lists work the same way: only CHECKED items count as purchased.
+  const listElNow    = document.getElementById(`${prefix}-list`);
+  const checkedLis   = [...listElNow.querySelectorAll(".shop-item.checked")];
+  const purchasedItems = checkedLis
+    .map(li => li.querySelector(".item-label")?.textContent.trim())
+    .filter(Boolean);
+  const checkedQueueIds = checkedLis.map(li => li.dataset.queueId).filter(Boolean);
+
+  // Guard: don't file an expense with nothing ticked
+  if (!purchasedItems.length) {
+    showToast("סמן ✓ מה שקנית לפני השליחה", "error");
+    listElNow.querySelectorAll(".shop-item").forEach(li => {
+      li.style.transition = "background .3s";
+      li.style.background = "rgba(255,149,0,.12)";
+      setTimeout(() => { li.style.background = ""; }, 700);
+    });
+    return;
+  }
+
   const btn = document.getElementById(`btn-send-${type}`);
   btn.disabled = true; btn.textContent = "⏳ Sending…";
-  // For groceries: capture only CHECKED items (these are what was actually bought)
-  // For upgrades: capture all items (no checkbox distinction)
-  const purchasedItems = type === "groceries"
-    ? [...document.querySelectorAll("#grocery-list .shop-item.checked .item-label")]
-        .map(el => el.textContent.trim()).filter(Boolean)
-    : [..._itemLists[type]];
   const entryAmount = parseFloat(amountEl.value) || 0;
   try {
     await addDoc(collection(db, "expenses"), {
@@ -4180,25 +4281,34 @@ async function sendEntry(type) {
       }
       // Log grocery trip with the list of checked/purchased items
       _logActivity("🛒", `submitted a grocery trip — ₪${entryAmount.toFixed(0)}`, purchasedItems);
-      _pantryQueueItems = {};
     } else {
-      showToast("✅ Entry saved to Monthly Expenses!", "success");
-      _logActivity("🏠", `logged a house upgrade — ₪${entryAmount.toFixed(0)}`);
+      showToast(`✅ ${purchasedItems.length} פריט(ים) נרשמו בהוצאות`, "success");
+      _logActivity("🏠", `logged a house upgrade — ₪${entryAmount.toFixed(0)}`, purchasedItems);
     }
 
+    // 🧹 Purchased items leave the pending queue for good (both lists).
+    //    Sweep by NAME as well as by ID — covers items added moments earlier
+    //    whose Firestore write hadn't returned an ID yet.
+    try {
+      const boughtNorm = new Set(purchasedItems.map(_normalizePantryName));
+      const qSnap = await getDocs(collection(db, _QUEUE_COL[type]));
+      const kill  = new Set(checkedQueueIds);
+      qSnap.forEach(d => {
+        if (boughtNorm.has(_normalizePantryName(d.data()?.name || ""))) kill.add(d.id);
+      });
+      await Promise.all([...kill].map(id =>
+        deleteDoc(doc(db, _QUEUE_COL[type], id)).catch(() => {})));
+      kill.forEach(id => delete _pantryQueueItems[id]);
+    } catch (e) { console.warn("Queue cleanup:", e); }
+
+    // Remove only CHECKED rows; anything still unticked stays for next time
     const listEl = document.getElementById(`${prefix}-list`);
-    if (type === "groceries") {
-      // Remove only CHECKED items; keep unchecked for next trip to the market
-      listEl.querySelectorAll(".shop-item.checked").forEach(li => li.remove());
-      _itemLists["groceries"] = [...listEl.querySelectorAll(".shop-item .item-label")]
-        .map(el => el.textContent.trim());
-      if (!listEl.querySelector(".shop-item"))
-        listEl.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
-    } else {
-      // Upgrades: clear the full list as before
-      _itemLists[type] = [];
+    listEl.querySelectorAll(".shop-item.checked").forEach(li => li.remove());
+    _itemLists[type] = [...listEl.querySelectorAll(".shop-item .item-label")]
+      .map(el => el.textContent.trim());
+    if (!listEl.querySelector(".shop-item"))
       listEl.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
-    }
+
     dateEl.value = ""; amountEl.value = "";
   } catch(err) { showToast("Error: " + err.message, "error"); }
   finally { btn.disabled = false; btn.textContent = "📤 Send to Monthly Expenses"; }
@@ -4386,7 +4496,7 @@ async function _toggleStaple(id, name, currentStatus) {
   try {
     await setDoc(doc(db, "pantry", id), { status: newStatus }, { merge: true });
     if (newStatus === "low") {
-      await setDoc(doc(db, "grocery_queue", id), { name, addedAt: serverTimestamp() });
+      await setDoc(doc(db, "grocery_queue", id), { name, fromPantry: true, addedAt: serverTimestamp() });
       showToast(`🛒 "${name}" added to Groceries list`, "success");
       _logActivity("🧺", `marked ${name} as running low`);
     } else {
@@ -4700,38 +4810,61 @@ function initSplitwise() {
   });
 }
 
+/* Net balance, in ₪, that TALI owes ALON (negative ⇒ Alon owes Tali).
+
+   Shared expenses split 50/50:   net = (paidAlon − paidTali) / 2
+   A settlement is NOT an expense — it's a direct transfer that
+   pays the debt down, so it moves `net` by its full amount:
+     Tali → Alon  reduces what Tali owes   (net −= amount)
+     Alon → Tali  reduces what Alon owes   (net += amount)          */
+function _swBalance(items) {
+  let paidAlon = 0, paidTali = 0, settled = 0;
+  items.forEach(e => {
+    const amt = e.amount || 0;
+    if (e.kind === "settlement") {
+      settled += (e.from === "Tali") ? -amt : amt;
+    } else if (e.paidBy === "Alon") paidAlon += amt;
+    else if (e.paidBy === "Tali")   paidTali += amt;
+  });
+  return { paidAlon, paidTali, net: (paidAlon - paidTali) / 2 + settled };
+}
+
+// Balance snapshot kept fresh for the settle-up modal
+let _swNet = 0;
+
 function _renderSplitwise(items) {
   // ── Balance calculation ──────────────────────────────────
-  let totalAlon = 0, totalTali = 0;
-  items.forEach(e => {
-    if      (e.paidBy === "Alon") totalAlon += e.amount || 0;
-    else if (e.paidBy === "Tali") totalTali += e.amount || 0;
-  });
-  const diff  = totalAlon - totalTali;
-  const owed  = Math.abs(diff) / 2;
-  const card  = document.getElementById("sw-balance-card");
+  const { paidAlon: totalAlon, paidTali: totalTali, net } = _swBalance(items);
+  _swNet = net;
 
-  if (Math.abs(diff) < 0.01) {
+  const owed = Math.abs(net);
+  const card = document.getElementById("sw-balance-card");
+  const sub  = `אלון שילם ₪${totalAlon.toFixed(0)} · טלי שילמה ₪${totalTali.toFixed(0)}`;
+  const settleBtn = `<button class="btn-settle" onclick="openSettleModal()">💸 סגור חשבון</button>`;
+
+  if (owed < 0.01) {
     card.className = "sw-balance-card balanced";
     card.innerHTML = `
       <div class="sw-balance-text">⚖️ אתם מאוזנים לחלוטין!</div>
-      <div class="sw-balance-sub">אלון שילם ₪${totalAlon.toFixed(0)} · טלי שילמה ₪${totalTali.toFixed(0)}</div>`;
-  } else if (diff > 0) {
-    // Alon paid more → Tali owes Alon
+      <div class="sw-balance-sub">${sub}</div>`;
+  } else if (net > 0) {
+    // Tali owes Alon
     card.className = "sw-balance-card tali-owes";
     card.innerHTML = `
       <div class="sw-balance-label">יתרה לתשלום</div>
       <div class="sw-balance-text">טלי חייבת לאלון</div>
       <div class="sw-balance-amount">₪${owed.toFixed(0)}</div>
-      <div class="sw-balance-sub">אלון שילם ₪${totalAlon.toFixed(0)} · טלי שילמה ₪${totalTali.toFixed(0)}</div>`;
+      <div class="sw-balance-sub">${sub}</div>
+      ${settleBtn}`;
   } else {
-    // Tali paid more → Alon owes Tali
+    // Alon owes Tali
     card.className = "sw-balance-card alon-owes";
     card.innerHTML = `
       <div class="sw-balance-label">יתרה לתשלום</div>
       <div class="sw-balance-text">אלון חייב לטלי</div>
       <div class="sw-balance-amount">₪${owed.toFixed(0)}</div>
-      <div class="sw-balance-sub">אלון שילם ₪${totalAlon.toFixed(0)} · טלי שילמה ₪${totalTali.toFixed(0)}</div>`;
+      <div class="sw-balance-sub">${sub}</div>
+      ${settleBtn}`;
   }
 
   // ── Table ────────────────────────────────────────────────
@@ -4753,17 +4886,106 @@ function _renderSplitwise(items) {
 
   const tbody = document.getElementById("sw-tbody");
   items.forEach(e => {
-    const isAlon = e.paidBy === "Alon";
-    const isBill = e.source === "bill";
     const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td style="font-weight:500">${e.name || "—"}${isBill ? `<span class="sw-src-tag">חשבון</span>` : ""}</td>
-      <td style="font-weight:700;color:var(--primary-dark)">₪${(e.amount||0).toFixed(2)}</td>
-      <td><span class="badge ${isAlon ? "badge-alon" : "badge-tali"}">${isAlon ? "אלון" : "טלי"}</span></td>
-      <td><button class="btn-trash" title="Delete">🗑️</button></td>`;
-    tr.querySelector(".btn-trash").addEventListener("click", () => _deleteSWExpense(e.id));
+
+    if (e.kind === "settlement") {
+      // A repayment between partners — not a shared expense
+      const fromHe = e.from === "Tali" ? "טלי" : "אלון";
+      const toHe   = e.from === "Tali" ? "אלון" : "טלי";
+      tr.className = "sw-settle-row";
+      tr.innerHTML = `
+        <td style="font-weight:600">💸 ${fromHe} העביר/ה ל${toHe}<span class="sw-settle-tag">סגירת חשבון</span></td>
+        <td style="font-weight:700">−₪${(e.amount||0).toFixed(2)}</td>
+        <td><span class="badge ${e.from === "Alon" ? "badge-alon" : "badge-tali"}">${fromHe}</span></td>
+        <td><button class="btn-trash" title="Delete">🗑️</button></td>`;
+    } else {
+      const isAlon = e.paidBy === "Alon";
+      const isBill = e.source === "bill";
+      tr.innerHTML = `
+        <td style="font-weight:500">${e.name || "—"}${isBill ? `<span class="sw-src-tag">חשבון</span>` : ""}</td>
+        <td style="font-weight:700;color:var(--primary-dark)">₪${(e.amount||0).toFixed(2)}</td>
+        <td><span class="badge ${isAlon ? "badge-alon" : "badge-tali"}">${isAlon ? "אלון" : "טלי"}</span></td>
+        <td><button class="btn-trash" title="Delete">🗑️</button></td>`;
+    }
+
+    tr.querySelector(".btn-trash").addEventListener("click", () =>
+      _deleteSWExpense(e.id, e.kind === "settlement"));
     tbody.appendChild(tr);
   });
+
+  listEl.insertAdjacentHTML("beforeend",
+    `<p class="sw-history-note">ההיסטוריה נשמרת גם אחרי סגירת חשבון — היתרה מתאפסת, הרישומים נשארים.</p>`);
+}
+
+/* ══════════════════════════════════════════════════════════
+   SETTLE UP  (סגירת חשבון)
+   Records a real money transfer between partners. Stored in the
+   same collection with kind:"settlement" so it appears inline in
+   the history, but it pays down the debt instead of adding to it.
+══════════════════════════════════════════════════════════ */
+window.settleBgClick = function(e) {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove("open");
+};
+
+window.closeSettleModal = function() {
+  document.getElementById("settle-modal").classList.remove("open");
+};
+
+window.openSettleModal = function() {
+  const owed = Math.abs(_swNet);
+  if (owed < 0.01) { showToast("אתם כבר מאוזנים ⚖️", "success"); return; }
+
+  const payer = _swNet > 0 ? "Tali" : "Alon";           // whoever is in debt
+  const payerHe = payer === "Tali" ? "טלי"  : "אלון";
+  const payeeHe = payer === "Tali" ? "אלון" : "טלי";
+
+  document.getElementById("settle-summary").innerHTML =
+    `${payerHe} מעביר/ה ל${payeeHe}<br><strong>₪${owed.toFixed(2)}</strong>`;
+  document.getElementById("settle-amount").value = owed.toFixed(2);
+  document.getElementById("settle-hint").textContent =
+    `אפשר לשנות לסכום חלקי — היתרה תתעדכן בהתאם.`;
+  document.getElementById("settle-date").value = new Date().toISOString().slice(0, 10);
+  document.getElementById("btn-confirm-settle").onclick = () => _confirmSettle(payer);
+  document.getElementById("settle-modal").classList.add("open");
+};
+
+async function _confirmSettle(payer) {
+  const amtEl  = document.getElementById("settle-amount");
+  const amount = parseFloat(amtEl.value) || 0;
+  if (amount <= 0) {
+    amtEl.classList.add("err");
+    setTimeout(() => amtEl.classList.remove("err"), 1500);
+    return;
+  }
+
+  const btn = document.getElementById("btn-confirm-settle");
+  btn.disabled = true; btn.textContent = "⏳ רושם…";
+
+  const payerHe = payer === "Tali" ? "טלי"  : "אלון";
+  const payeeHe = payer === "Tali" ? "אלון" : "טלי";
+
+  try {
+    await addDoc(collection(db, "splitwise_expenses"), {
+      kind: "settlement",
+      from: payer,
+      to:   payer === "Tali" ? "Alon" : "Tali",
+      amount,
+      name: `💸 ${payerHe} → ${payeeHe}`,
+      date: document.getElementById("settle-date").value || null,
+      createdAt: serverTimestamp()
+    });
+
+    closeSettleModal();
+    const left = Math.abs(_swNet) - amount;
+    showToast(left > 0.01
+      ? `✅ נרשם ₪${amount.toFixed(0)} — נותרו ₪${left.toFixed(0)}`
+      : "✅ החשבון נסגר — אתם מאוזנים! ⚖️", "success");
+    _logActivity("💸", `${payerHe} העביר/ה ל${payeeHe} ₪${amount.toFixed(0)} — סגירת חשבון`);
+  } catch (err) {
+    showToast("Error: " + err.message, "error");
+  } finally {
+    btn.disabled = false; btn.textContent = "✅ אשר תשלום";
+  }
 }
 
 async function _addSWExpense() {
@@ -4786,8 +5008,10 @@ async function _addSWExpense() {
   finally { btn.disabled = false; btn.textContent = "➕ הוסף הוצאה"; }
 }
 
-async function _deleteSWExpense(id) {
-  if (!confirm("Delete this shared expense?")) return;
+async function _deleteSWExpense(id, isSettlement = false) {
+  if (!confirm(isSettlement
+    ? "למחוק את סגירת החשבון? החוב יחזור ליתרה."
+    : "Delete this shared expense?")) return;
   try {
     await deleteDoc(doc(db, "splitwise_expenses", id));
     showToast("🗑️ נמחק", "success");
