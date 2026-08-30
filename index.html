@@ -113,6 +113,28 @@
     transform:scale(1.08);
     box-shadow:0 3px 12px rgba(0,0,0,.25)}
 
+  /* ═══ Restore from backup ═════════════════════════════ */
+  .restore-block{margin-top:18px;padding-top:16px;border-top:1px dashed var(--border)}
+  .restore-title{font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:6px}
+  .restore-warn{font-size:.76rem;color:var(--text-muted);line-height:1.55;margin-bottom:12px}
+  .btn-restore{width:100%;padding:12px;border-radius:var(--radius);
+    background:var(--bg-surface);color:var(--text);border:1.5px solid var(--border);
+    font-size:.87rem;font-weight:700;cursor:pointer;font-family:inherit;transition:var(--T)}
+  .btn-restore:active{transform:scale(.97);background:rgba(0,0,0,.05)}
+  .btn-restore:disabled{opacity:.5;cursor:default}
+  .restore-log{margin-top:11px;font-size:.75rem;line-height:1.6;color:var(--text-muted);
+    max-height:170px;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
+
+  /* ═══ Sync / Offline Banner ═══════════════════════════ */
+  #sync-banner{display:none;position:fixed;left:0;right:0;top:0;z-index:400;
+    padding:9px 16px;font-size:.78rem;font-weight:600;line-height:1.45;
+    align-items:center;justify-content:center;gap:8px;text-align:center;
+    background:#9A5B00;color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.18);
+    padding-top:calc(9px + env(safe-area-inset-top))}
+  #sync-banner.visible{display:flex;animation:fadeIn .25s var(--ease)}
+  #sync-banner.synced{background:var(--primary-dark)}
+  #sync-banner-icon{font-size:.95rem;flex-shrink:0}
+
   /* ═══ Payment Alert ═══════════════════════════════════ */
   #payment-alert{display:none;
     background:linear-gradient(135deg,#c0392b,var(--danger));
@@ -1556,6 +1578,12 @@
   </button>
 </nav>
 
+<!-- OFFLINE / PENDING-SYNC BANNER -->
+<div id="sync-banner" role="status">
+  <span id="sync-banner-icon">📡</span>
+  <span id="sync-banner-text">אין חיבור — השינויים נשמרים במכשיר ויסתנכרנו אוטומטית</span>
+</div>
+
 <!-- PAYMENT ALERT -->
 <div id="payment-alert" role="alert">
   <span class="alert-icon">🔔</span>
@@ -1868,6 +1896,23 @@
 
   <p class="section-title" style="margin-top:22px">📋 Saved Bills</p>
   <div id="bills-history"><div class="empty"><div class="empty-icon">📄</div>No bills saved yet.</div></div>
+
+  <p class="section-title" style="margin-top:22px">💾 גיבוי נתונים</p>
+  <div class="confirm-card">
+    <p>מוריד קובץ אחד עם <strong>כל</strong> נתוני האפליקציה — הוצאות, חשבונות, התחשבנות, מלאי, משימות. שמור אותו ב-iCloud או ב-Drive.</p>
+    <p class="last-conf" id="backup-status">⚠️ עדיין לא נוצר גיבוי</p>
+    <button class="btn-confirm" id="btn-export-data" onclick="exportAllData('btn-export-data')">⬇️ הורד גיבוי מלא</button>
+
+    <div class="restore-block">
+      <p class="restore-title">♻️ שחזור מגיבוי</p>
+      <p class="restore-warn">בוחר קובץ גיבוי ומחזיר את כל הנתונים. רשומות קיימות עם אותו מזהה יידרסו.</p>
+      <input type="file" id="restore-file" accept="application/json,.json" style="display:none"
+             onchange="restoreFromBackup(this)">
+      <button class="btn-restore" id="btn-restore-data"
+              onclick="document.getElementById('restore-file').click()">📂 בחר קובץ גיבוי</button>
+      <div class="restore-log" id="restore-log"></div>
+    </div>
+  </div>
 </main>
 
 <!-- ═════════════════ MAINTENANCE LOG ════════════════════ -->
@@ -2483,7 +2528,8 @@
 import { initializeApp }    from "firebase/app";
 import { getAnalytics }     from "firebase/analytics";
 import {
-  getFirestore,
+  getFirestore, initializeFirestore,
+  persistentLocalCache, persistentMultipleTabManager,
   collection, doc, getDoc, getDocs,
   setDoc, addDoc, deleteDoc,
   onSnapshot,
@@ -2501,7 +2547,218 @@ const firebaseConfig = {
 };
 const app       = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
-const db        = getFirestore(app);
+
+/* ── Offline durability ────────────────────────────────────
+   Without a persistent cache, Firestore keeps pending writes in
+   MEMORY only. On a phone that means: save something with a weak
+   signal, the app gets swapped out — the write is gone silently.
+
+   persistentLocalCache writes to IndexedDB, so:
+     · pending writes survive an app close / reload and send later
+     · the whole app still reads correctly with no connection
+   multiple-tab manager keeps two open tabs from fighting over it.
+   Falls back to the memory cache if IndexedDB is unavailable
+   (private browsing, old browsers) rather than failing to start. */
+let db;
+try {
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+  });
+} catch (e) {
+  console.warn("Persistent cache unavailable, using memory cache:", e);
+  db = getFirestore(app);
+}
+
+/* ══════════════════════════════════════════════════════════
+   CONNECTION / SYNC MONITOR
+   Pending writes are safe in IndexedDB, but the user should still
+   KNOW when something hasn't reached the server yet — silence is
+   what makes people think data was lost.
+══════════════════════════════════════════════════════════ */
+let _syncHideTimer = null;
+
+function _showSyncBanner(text, icon, synced = false) {
+  const el = document.getElementById("sync-banner");
+  if (!el) return;
+  document.getElementById("sync-banner-icon").textContent = icon;
+  document.getElementById("sync-banner-text").textContent = text;
+  el.classList.toggle("synced", synced);
+  el.classList.add("visible");
+  clearTimeout(_syncHideTimer);
+  if (synced) _syncHideTimer = setTimeout(() => el.classList.remove("visible"), 2600);
+}
+
+function _hideSyncBanner() {
+  const el = document.getElementById("sync-banner");
+  if (el) el.classList.remove("visible");
+}
+
+function _initSyncMonitor() {
+  const online = () => _showSyncBanner("החיבור חזר — מסנכרן…", "🔄", true);
+  const offline = () =>
+    _showSyncBanner("אין חיבור — השינויים נשמרים במכשיר ויסתנכרנו אוטומטית", "📡", false);
+
+  window.addEventListener("online",  online);
+  window.addEventListener("offline", offline);
+  if (!navigator.onLine) offline(); else _hideSyncBanner();
+}
+
+/* ══════════════════════════════════════════════════════════
+   DATA EXPORT / BACKUP
+   Firestore has no automatic backup on the free tier, so this
+   pulls every collection into a single JSON file the user keeps.
+══════════════════════════════════════════════════════════ */
+/* Every collection the app writes to. Keep this in sync when adding
+   new ones — a collection missing here is silently absent from backups. */
+const _BACKUP_COLLECTIONS = [
+  "expenses", "bills", "splitwise_expenses", "reports",
+  "pantry", "grocery_queue", "upgrade_queue",
+  "cleaning_templates", "checklists", "maintenance",
+  "plants", "watering", "activity", "smart_home",
+  "laundry_status", "meal_wheels", "weekly_plan"
+];
+
+window.exportAllData = async function(btnId) {
+  const btn = btnId ? document.getElementById(btnId) : null;
+  const orig = btn?.textContent;
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ מייצא…"; }
+
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    appVersion: "home-manager",
+    collections: {}
+  };
+  let docCount = 0, failed = [];
+
+  for (const name of _BACKUP_COLLECTIONS) {
+    try {
+      const snap = await getDocs(collection(db, name));
+      const rows = [];
+      snap.forEach(d => {
+        // serverTimestamp objects don't survive JSON — flatten to millis
+        const raw = d.data();
+        const clean = {};
+        for (const [k, v] of Object.entries(raw)) {
+          clean[k] = (v && typeof v.toMillis === "function") ? v.toMillis() : v;
+        }
+        rows.push({ _id: d.id, ...clean });
+      });
+      backup.collections[name] = rows;
+      docCount += rows.length;
+    } catch (e) {
+      failed.push(name);
+      console.warn(`Backup: ${name} failed`, e);
+    }
+  }
+
+  backup.documentCount = docCount;
+
+  try {
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url;
+    a.download = `home-manager-backup-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+
+    localStorage.setItem("lastBackupAt", String(Date.now()));
+    _renderBackupStatus();
+    showToast(failed.length
+      ? `✅ ${docCount} רשומות — ${failed.length} אוספים נכשלו`
+      : `✅ גובו ${docCount} רשומות`, failed.length ? "error" : "success");
+  } catch (e) {
+    showToast("שגיאת ייצוא: " + e.message, "error");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = orig; }
+  }
+};
+
+/* ── Restore ───────────────────────────────────────────────
+   Writes every document back using its ORIGINAL id, so relationships
+   survive (bill→splitwise line IDs, pantry↔grocery_queue, etc.).
+   Additive: documents not present in the file are left untouched. */
+window.restoreFromBackup = async function(input) {
+  const file = input.files?.[0];
+  input.value = "";                    // allow re-picking the same file
+  if (!file) return;
+
+  const logEl = document.getElementById("restore-log");
+  const btn   = document.getElementById("btn-restore-data");
+  const log   = msg => { if (logEl) logEl.textContent += msg + "\n"; };
+  if (logEl) logEl.textContent = "";
+
+  let backup;
+  try {
+    backup = JSON.parse(await file.text());
+  } catch {
+    showToast("הקובץ אינו קובץ גיבוי תקין", "error");
+    log("❌ שגיאה: הקובץ אינו JSON תקין");
+    return;
+  }
+
+  if (!backup?.collections || typeof backup.collections !== "object") {
+    showToast("הקובץ אינו קובץ גיבוי של האפליקציה", "error");
+    log("❌ שגיאה: חסר שדה collections");
+    return;
+  }
+
+  const total = Object.values(backup.collections)
+    .reduce((s, r) => s + (Array.isArray(r) ? r.length : 0), 0);
+  const when = backup.exportedAt
+    ? new Date(backup.exportedAt).toLocaleString("en-GB") : "לא ידוע";
+
+  if (!confirm(
+    `לשחזר ${total} רשומות מהגיבוי?\n\nתאריך הגיבוי: ${when}\n\n` +
+    `רשומות קיימות עם אותו מזהה יידרסו.\nרשומות שנוספו אחרי הגיבוי לא יימחקו.`
+  )) { log("בוטל."); return; }
+
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ משחזר…"; }
+  let done = 0, failed = 0;
+
+  for (const [name, rows] of Object.entries(backup.collections)) {
+    if (!Array.isArray(rows) || !rows.length) continue;
+    let ok = 0;
+    for (const row of rows) {
+      const { _id, ...data } = row;
+      if (!_id) { failed++; continue; }
+      try {
+        await setDoc(doc(db, name, String(_id)), data, { merge: true });
+        ok++; done++;
+      } catch (e) {
+        failed++;
+        console.warn(`Restore ${name}/${_id}:`, e);
+      }
+    }
+    log(`✔️ ${name}: ${ok}/${rows.length}`);
+  }
+
+  log(`\nסה״כ שוחזרו ${done} רשומות${failed ? ` · ${failed} נכשלו` : ""}`);
+  showToast(failed ? `שוחזרו ${done} · ${failed} נכשלו` : `✅ שוחזרו ${done} רשומות`,
+            failed ? "error" : "success");
+  _logActivity("♻️", `שחזר נתונים מגיבוי — ${done} רשומות`);
+  if (btn) { btn.disabled = false; btn.textContent = "📂 בחר קובץ גיבוי"; }
+  log("\nרענן את הדף כדי לראות את כל הנתונים המשוחזרים.");
+};
+
+function _renderBackupStatus() {
+  const el = document.getElementById("backup-status");
+  if (!el) return;
+  const last = +localStorage.getItem("lastBackupAt") || 0;
+  if (!last) {
+    el.innerHTML = `⚠️ עדיין לא נוצר גיבוי`;
+    el.style.color = "#9A5B00";
+    return;
+  }
+  const days = Math.floor((Date.now() - last) / 86400000);
+  const when = new Date(last).toLocaleDateString("en-GB",
+    { day:"numeric", month:"long", year:"numeric" });
+  const stale = days >= 30;
+  el.innerHTML = stale
+    ? `⚠️ הגיבוי האחרון לפני ${days} ימים (${when})`
+    : `✅ גיבוי אחרון: ${when}`;
+  el.style.color = stale ? "#9A5B00" : "var(--primary-dark)";
+}
 
 /* ══════════════════════════════════════════════════════════
    NAVIGATION
@@ -3595,6 +3852,7 @@ async function initPayments() {
     }
   }
   _initBillPayerToggles();
+  _renderBackupStatus();
   sel.onchange = () => _loadBillInputs(sel.value);
   await _loadBillInputs(sel.value);
   document.getElementById("btn-save-bills").onclick = saveBills;
@@ -6068,6 +6326,20 @@ window._shakeInput = function(el) {
   el.classList.add('input-shake');
   setTimeout(() => el.classList.remove('input-shake'), 400);
 };
+
+// ── Connection monitor + backup reminder ─────────────────
+_initSyncMonitor();
+
+// Nudge for a fresh backup if the last one is over 30 days old
+setTimeout(() => {
+  const last = +localStorage.getItem("lastBackupAt") || 0;
+  const days = last ? Math.floor((Date.now() - last) / 86400000) : Infinity;
+  if (days >= 30 && navigator.onLine) {
+    showToast(last
+      ? `💾 הגיבוי האחרון לפני ${days} ימים — כדאי לגבות`
+      : "💾 כדאי ליצור גיבוי ראשון (Payments ← גיבוי נתונים)", "");
+  }
+}, 6000);
 
 
 </script>
