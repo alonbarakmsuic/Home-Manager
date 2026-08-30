@@ -489,6 +489,8 @@
   .stat-value{font-family:-apple-system,'SF Pro Display',sans-serif;
     font-size:1.45rem;font-weight:700;color:var(--text);margin-top:4px;letter-spacing:-.5px}
   .stat-value.accent{color:var(--accent)}
+  .stat-sub{font-size:.72rem;font-weight:600;color:var(--text-muted);
+    margin-top:5px;line-height:1.5}
   .live-table-wrap{background:var(--bg-card);border-radius:var(--radius-sm);overflow:hidden;
     box-shadow:var(--shadow-card);border:.5px solid rgba(0,0,0,.06)}
   .live-table{width:100%;border-collapse:collapse}
@@ -1910,7 +1912,10 @@
   <div class="stat-cards">
     <div class="stat-card"><div class="stat-label">🛒 Groceries</div><div class="stat-value" id="stat-groceries">₪0</div></div>
     <div class="stat-card"><div class="stat-label">🏠 Upgrades</div><div class="stat-value accent" id="stat-upgrades">₪0</div></div>
-    <div class="stat-card full"><div class="stat-label">Total Variable This Month</div><div class="stat-value" id="stat-total">₪0</div></div>
+    <div class="stat-card full"><div class="stat-label">💳 Monthly Bills</div><div class="stat-value" id="stat-bills">₪0</div>
+      <div class="stat-sub" id="stat-bills-sub">לא נרשמו חשבונות לחודש זה</div></div>
+    <div class="stat-card full"><div class="stat-label">Total This Month</div><div class="stat-value" id="stat-total">₪0</div>
+      <div class="stat-sub" id="stat-total-sub">משתנות ₪0 · קבועות ₪0</div></div>
   </div>
   <p class="section-title">📋 All Entries</p>
   <div class="live-table-wrap">
@@ -2484,7 +2489,7 @@ function _unsub(key) { if (_unsubs[key]) { _unsubs[key](); delete _unsubs[key]; 
 
 function _cleanupLeaving(id) {
   if (id === "dashboard")           _unsub("activity");
-  if (id === "expenses-status")     _unsub("status");
+  if (id === "expenses-status")   { _unsub("status"); _unsub("status-bills"); }
   if (id === "expenses-splitwise")  _unsub("splitwise");
   if (id === "shopping-groceries")  _unsub("hist-groceries");
   if (id === "shopping-upgrades")   _unsub("hist-upgrades");
@@ -4411,14 +4416,55 @@ window.deleteExpense = async function(id) {
   } catch(err) { showToast("Error: " + err.message, "error"); }
 };
 
+// Month-to-date running totals, shared between the two live listeners below
+let _statusVar = 0, _statusFix = 0;
+
+function _paintStatusTotals() {
+  const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+  set("stat-total", `₪${(_statusVar + _statusFix).toFixed(0)}`);
+  set("stat-total-sub", `משתנות ₪${_statusVar.toFixed(0)} · קבועות ₪${_statusFix.toFixed(0)}`);
+}
+
 function initExpensesStatus() {
   const now  = new Date();
   const yyyy = now.getFullYear();
   const mm   = String(now.getMonth() + 1).padStart(2, "0");
   const from = `${yyyy}-${mm}-01`;
   const to   = `${yyyy}-${mm}-31`;
+  const monthStr = `${yyyy}-${mm}`;
 
   _unsub("status");
+  _unsub("status-bills");
+  _statusVar = 0; _statusFix = 0;
+
+  // 💳 Live listener on THIS month's bills doc
+  _unsubs["status-bills"] = onSnapshot(doc(db, "bills", monthStr), bSnap => {
+    const b = bSnap.exists() ? bSnap.data() : {};
+    const rentAlon = b.rentAlon ?? b.rent ?? 0;
+    const rentTali = b.rentTali ?? 0;
+
+    _statusFix = rentAlon + rentTali +
+                 _BILL_DEFS.reduce((s, d) => s + (b[d.key] || 0), 0);
+
+    const filled  = [];
+    const missing = [];
+    (rentAlon || rentTali) ? filled.push("🏠") : missing.push("🏠 שכ״ד");
+    _BILL_DEFS.forEach(d => (b[d.key] || 0)
+      ? filled.push(d.emoji)
+      : missing.push(`${d.emoji} ${d.he}`));
+
+    const bEl = document.getElementById("stat-bills");
+    if (bEl) bEl.textContent = `₪${_statusFix.toFixed(0)}`;
+    const sub = document.getElementById("stat-bills-sub");
+    if (sub) {
+      sub.innerHTML = missing.length
+        ? `⚠️ חסר: ${missing.join(" · ")}`
+        : `✅ כל ${filled.length} החשבונות נרשמו`;
+      sub.style.color = missing.length ? "#9A5B00" : "var(--primary-dark)";
+    }
+    _paintStatusTotals();
+  }, err => console.warn("Status bills listener:", err));
+
   // ✅ FLAT onSnapshot — filter current month in JS
   _unsubs["status"] = onSnapshot(collection(db, "expenses"), snap => {
     const rows = [];
@@ -4453,7 +4499,8 @@ function initExpensesStatus() {
     }
     document.getElementById("stat-groceries").textContent = `₪${g.toFixed(0)}`;
     document.getElementById("stat-upgrades").textContent  = `₪${u.toFixed(0)}`;
-    document.getElementById("stat-total").textContent     = `₪${(g+u).toFixed(0)}`;
+    _statusVar = g + u;
+    _paintStatusTotals();
   });
 }
 
@@ -4504,8 +4551,18 @@ window.loadReport = async function(monthStr) {
       }
     });
 
-    const b     = bSnap.exists() ? bSnap.data() : {};
-    const bills = { rent:b.rent||0, electricity:b.electricity||0, water:b.water||0, arnona:b.arnona||0 };
+    const b = bSnap.exists() ? bSnap.data() : {};
+
+    // Rent is a split payment — legacy docs stored a single `rent` field
+    const rentAlon = b.rentAlon ?? b.rent ?? 0;
+    const rentTali = b.rentTali ?? 0;
+
+    const bills = { rent: rentAlon + rentTali, rentAlon, rentTali };
+    _BILL_DEFS.forEach(d => {
+      bills[d.key]              = b[d.key] || 0;
+      bills[`${d.key}Payer`]    = b[`${d.key}Payer`] || d.defaultPayer;
+    });
+
     _renderReport(container, monthStr, groceries, upgrades, bills);
   } catch(err) {
     container.innerHTML = `<div class="empty" style="color:var(--danger)">⚠️ ${err.message}</div>`;
@@ -4516,12 +4573,28 @@ function _renderReport(container, monthStr, groceries, upgrades, bills) {
   const [y, m] = monthStr.split("-");
   const label  = new Date(+y, +m-1, 1).toLocaleDateString("en-GB",{month:"long",year:"numeric"});
   const varT   = groceries + upgrades;
-  const fixT   = bills.rent + bills.electricity + bills.water + bills.arnona;
+  const fixT   = bills.rent + _BILL_DEFS.reduce((s, d) => s + (bills[d.key] || 0), 0);
   const grand  = varT + fixT;
 
-  const COLORS = ["#52B788","#6C63FF","#F4A261","#3B82F6","#D4A017","#E63946"];
-  const LABELS = ["Groceries","House Upgrades","Rent","Electricity","Water","Arnona"];
-  const VALUES = [groceries, upgrades, bills.rent, bills.electricity, bills.water, bills.arnona];
+  // ── Who paid what (bills only) ─────────────────────────
+  let paidAlon = bills.rentAlon || 0;
+  let paidTali = bills.rentTali || 0;
+  _BILL_DEFS.forEach(d => {
+    const amt = bills[d.key] || 0;
+    if (bills[`${d.key}Payer`] === "Tali") paidTali += amt; else paidAlon += amt;
+  });
+
+  // ── Chart / detail rows (data-driven → new bills appear automatically) ──
+  const BILL_COLORS = {
+    electricity:"#3B82F6", gas:"#E63946", water:"#06B6D4",
+    arnona:"#D4A017",      wifi:"#8B5CF6"
+  };
+  const LABELS = ["🛒 Groceries", "🏠 House Upgrades", "🏠 Rent",
+                  ..._BILL_DEFS.map(d => `${d.emoji} ${d.he}`)];
+  const VALUES = [groceries, upgrades, bills.rent,
+                  ..._BILL_DEFS.map(d => bills[d.key] || 0)];
+  const COLORS = ["#52B788", "#6C63FF", "#F4A261",
+                  ..._BILL_DEFS.map(d => BILL_COLORS[d.key] || "#94A3B8")];
 
   container.innerHTML = `
     <div class="report-hero">
@@ -4534,16 +4607,37 @@ function _renderReport(container, monthStr, groceries, upgrades, bills) {
       <canvas id="expense-pie"></canvas>
       <div class="legend" id="pie-legend"></div>
     </div>
-    <div class="chart-card" style="margin-bottom:0">
+    <div class="chart-card">
       <h4>Detail</h4>
       <table class="report-detail">
         <tbody>
-          ${LABELS.map((l,i) => `<tr><td>${l}</td><td>₪${VALUES[i].toFixed(2)}</td></tr>`).join("")}
+          ${LABELS.map((l,i) => {
+            // Annotate each bill row with who paid it
+            let note = "";
+            if (l === "🏠 Rent" && (bills.rentAlon || bills.rentTali))
+              note = `<small style="color:var(--text-light)"> אלון ₪${(bills.rentAlon||0).toFixed(0)} · טלי ₪${(bills.rentTali||0).toFixed(0)}</small>`;
+            const def = _BILL_DEFS.find(d => l === `${d.emoji} ${d.he}`);
+            if (def && VALUES[i])
+              note = `<small style="color:var(--text-light)"> ${bills[`${def.key}Payer`] === "Tali" ? "טלי" : "אלון"}</small>`;
+            return `<tr><td>${l}${note}</td><td>₪${VALUES[i].toFixed(2)}</td></tr>`;
+          }).join("")}
         </tbody>
         <tfoot>
           <tr><td>Variable Total</td><td>₪${varT.toFixed(2)}</td></tr>
           <tr><td>Fixed Bills Total</td><td>₪${fixT.toFixed(2)}</td></tr>
           <tr><td><strong>Grand Total</strong></td><td><strong>₪${grand.toFixed(2)}</strong></td></tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="chart-card" style="margin-bottom:0">
+      <h4>🤝 מי שילם את החשבונות</h4>
+      <table class="report-detail">
+        <tbody>
+          <tr><td>אלון</td><td>₪${paidAlon.toFixed(2)}</td></tr>
+          <tr><td>טלי</td><td>₪${paidTali.toFixed(2)}</td></tr>
+        </tbody>
+        <tfoot>
+          <tr><td><strong>סה״כ חשבונות</strong></td><td><strong>₪${fixT.toFixed(2)}</strong></td></tr>
         </tfoot>
       </table>
     </div>`;
