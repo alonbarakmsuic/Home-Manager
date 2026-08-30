@@ -545,8 +545,9 @@
   .item-label{flex:1;font-size:.86rem}
   .shop-item.checked .item-label{text-decoration:line-through;color:var(--text-muted)}
   .item-del{background:none;border:none;color:var(--text-light);cursor:pointer;
-    font-size:.95rem;padding:4px;transition:var(--T);border-radius:6px}
-  .item-del:active{color:var(--danger);background:rgba(255,59,48,.1)}
+    font-size:1.02rem;line-height:1;padding:6px;transition:var(--T);border-radius:8px;
+    flex-shrink:0;opacity:.62}
+  .item-del:active{background:rgba(255,59,48,.12);opacity:1;transform:scale(.88)}
   .pantry-tag{font-size:.69rem;background:rgba(245,166,35,.12);color:#a05e00;
     padding:2px 8px;border-radius:10px;font-weight:700;flex-shrink:0}
 
@@ -3735,7 +3736,7 @@ function _appendShopItem(ul, name, type, pantryId) {
       <input type="checkbox" class="item-check">
       <span class="item-label">${name}</span>
       ${pantryId ? `<span class="pantry-tag">🧺</span>` : ""}
-      <button class="item-del" title="Remove">✕</button>
+      <button class="item-del" title="מחק פריט" aria-label="Delete item">🗑️</button>
     </div>`;
 
   const doDelete = () => {
@@ -3913,18 +3914,35 @@ async function sendEntry(type) {
       createdAt: serverTimestamp()
     });
 
-    // ✅ Auto-reset checked pantry items back to "In Stock"
+    // ✅ Sync every PURCHASED (checked) grocery item back to Pantry "In Stock".
+    //    Matches by fuzzy name against the whole /pantry collection, so it covers
+    //    BOTH auto-queued items (marked Running Low) and manually-typed items.
     if (type === "groceries") {
-      const checkedPantryIds = Object.entries(_pantryQueueItems)
-        .filter(([, v]) => v.checked)
-        .map(([id]) => id);
-      if (checkedPantryIds.length) {
-        await Promise.all(checkedPantryIds.flatMap(id => [
-          setDoc(doc(db, "pantry", id), { status: "stock" }, { merge: true }),
-          deleteDoc(doc(db, "grocery_queue", id))
-        ]));
-        showToast(`✅ Saved! ${checkedPantryIds.length} pantry item(s) back In Stock 🧺`, "success");
-        _logActivity("🛒", `bought ${checkedPantryIds.length} pantry item(s) — back In Stock`);
+      let syncedNames = [];
+      try {
+        const boughtNorm = new Set(purchasedItems.map(_normalizePantryName));
+        if (boughtNorm.size) {
+          const pantrySnap = await getDocs(collection(db, "pantry"));
+          const ops = [];
+          pantrySnap.forEach(d => {
+            const pName = d.data()?.name || "";
+            if (!boughtNorm.has(_normalizePantryName(pName))) return;
+            syncedNames.push(pName);
+            ops.push(
+              setDoc(doc(db, "pantry", d.id), { status: "stock" }, { merge: true }),
+              deleteDoc(doc(db, "grocery_queue", d.id)).catch(() => {})
+            );
+            delete _pantryQueueItems[d.id];
+          });
+          if (ops.length) await Promise.all(ops);
+        }
+      } catch (e) {
+        console.warn("Pantry sync failed:", e);   // non-fatal — expense is already saved
+      }
+
+      if (syncedNames.length) {
+        showToast(`✅ Saved! ${syncedNames.length} pantry item(s) back In Stock 🧺`, "success");
+        _logActivity("🧺", `${syncedNames.length} pantry item(s) restocked after shopping`, syncedNames);
       } else {
         showToast("✅ Entry saved to Monthly Expenses!", "success");
       }
