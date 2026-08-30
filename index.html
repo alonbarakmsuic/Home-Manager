@@ -362,6 +362,43 @@
   .err-msg{font-size:.74rem;color:var(--danger);margin-top:4px;display:none}
   .err-msg.show{display:block}
   .bills-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+  /* ── Bill payer toggle (Alon / Tali) ─────────────────── */
+  .bill-field{position:relative}
+  .bill-payer{display:flex;gap:4px;margin-top:6px;background:rgba(0,0,0,.045);
+    padding:3px;border-radius:9px}
+  .bp-btn{flex:1;padding:6px 4px;border:none;background:transparent;border-radius:7px;
+    font-size:.71rem;font-weight:700;color:var(--text-light);cursor:pointer;
+    font-family:inherit;transition:var(--T)}
+  .bp-btn.active{background:var(--bg-card);color:var(--text);
+    box-shadow:0 1px 4px rgba(0,0,0,.1)}
+  .bp-btn[data-p="Alon"].active{color:#0051D0}
+  .bp-btn[data-p="Tali"].active{color:#C2185B}
+  .bp-btn:active{transform:scale(.94)}
+
+  /* ── Rent split block ────────────────────────────────── */
+  .bill-rent-block{background:rgba(52,199,123,.05);border:1px solid rgba(52,199,123,.18);
+    border-radius:var(--radius-sm);padding:13px;margin-bottom:14px}
+  .bill-rent-title{font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:10px;
+    display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .bill-rent-hint{font-size:.68rem;font-weight:500;color:var(--text-light);
+    background:rgba(0,0,0,.05);padding:2px 7px;border-radius:8px}
+  .bill-rent-total{margin-top:9px;font-size:.76rem;font-weight:700;color:var(--primary-dark);
+    text-align:center}
+
+  /* ── Missing-bill warning ────────────────────────────── */
+  .bill-missing{display:none;background:rgba(255,149,0,.1);
+    border:1px solid rgba(255,149,0,.3);border-radius:var(--radius-sm);
+    padding:10px 13px;margin-bottom:12px;font-size:.76rem;color:#9A5B00;
+    line-height:1.55}
+  .bill-missing.show{display:block}
+  .bill-sync-note{font-size:.71rem;color:var(--text-light);text-align:center;
+    margin-top:9px;line-height:1.5}
+
+  /* ── Bill-sourced rows in Splitwise ──────────────────── */
+  .sw-src-tag{font-size:.6rem;background:rgba(0,81,208,.1);color:#0051D0;
+    padding:1px 6px;border-radius:7px;font-weight:700;margin-inline-start:5px;
+    white-space:nowrap}
   .btn-send{width:100%;padding:14px;
     background:linear-gradient(135deg,var(--primary),var(--primary-light));
     color:#fff;border:none;border-radius:var(--radius);font-size:.93rem;font-weight:700;
@@ -1738,25 +1775,69 @@
       <label for="bills-month-sel">Month</label>
       <select id="bills-month-sel"></select>
     </div>
-    <div class="bills-grid">
-      <div class="form-group">
-        <label for="bill-rent">🏠 Rent</label>
-        <input type="number" id="bill-rent" placeholder="0" min="0">
+    <!-- Rent — split between both partners -->
+    <div class="bill-rent-block">
+      <div class="bill-rent-title">🏠 Rent <span class="bill-rent-hint">מחולק בין שניכם</span></div>
+      <div class="bills-grid">
+        <div class="form-group">
+          <label for="bill-rent-alon">חלק של אלון</label>
+          <input type="number" id="bill-rent-alon" placeholder="1500" min="0">
+        </div>
+        <div class="form-group">
+          <label for="bill-rent-tali">חלק של טלי</label>
+          <input type="number" id="bill-rent-tali" placeholder="1200" min="0">
+        </div>
       </div>
-      <div class="form-group">
+      <div class="bill-rent-total" id="bill-rent-total">סה״כ שכ״ד: ₪0</div>
+    </div>
+
+    <!-- Other bills — each with its own payer -->
+    <div class="bills-grid">
+      <div class="form-group bill-field">
         <label for="bill-elec">⚡ Electricity</label>
         <input type="number" id="bill-elec" placeholder="0" min="0">
+        <div class="bill-payer" data-key="electricity">
+          <button type="button" class="bp-btn" data-p="Alon">אלון</button>
+          <button type="button" class="bp-btn" data-p="Tali">טלי</button>
+        </div>
       </div>
-      <div class="form-group">
+      <div class="form-group bill-field">
+        <label for="bill-gas">🔥 Gas</label>
+        <input type="number" id="bill-gas" placeholder="0" min="0">
+        <div class="bill-payer" data-key="gas">
+          <button type="button" class="bp-btn" data-p="Alon">אלון</button>
+          <button type="button" class="bp-btn" data-p="Tali">טלי</button>
+        </div>
+      </div>
+      <div class="form-group bill-field">
         <label for="bill-water">💧 Water</label>
         <input type="number" id="bill-water" placeholder="0" min="0">
+        <div class="bill-payer" data-key="water">
+          <button type="button" class="bp-btn" data-p="Alon">אלון</button>
+          <button type="button" class="bp-btn" data-p="Tali">טלי</button>
+        </div>
       </div>
-      <div class="form-group">
+      <div class="form-group bill-field">
         <label for="bill-arnona">🏛️ Arnona</label>
         <input type="number" id="bill-arnona" placeholder="0" min="0">
+        <div class="bill-payer" data-key="arnona">
+          <button type="button" class="bp-btn" data-p="Alon">אלון</button>
+          <button type="button" class="bp-btn" data-p="Tali">טלי</button>
+        </div>
+      </div>
+      <div class="form-group bill-field">
+        <label for="bill-wifi">📶 Wifi</label>
+        <input type="number" id="bill-wifi" placeholder="0" min="0">
+        <div class="bill-payer" data-key="wifi">
+          <button type="button" class="bp-btn" data-p="Alon">אלון</button>
+          <button type="button" class="bp-btn" data-p="Tali">טלי</button>
+        </div>
       </div>
     </div>
+
+    <div class="bill-missing" id="bill-missing"></div>
     <button class="btn-send" id="btn-save-bills">💾 Save Bills for this Month</button>
+    <p class="bill-sync-note">🤝 כל חשבון שתמלא ייכנס אוטומטית להתחשבנות הזוגית לפי מי ששילם</p>
   </div>
 
   <p class="section-title" style="margin-top:22px">📋 Saved Bills</p>
@@ -3462,20 +3543,141 @@ async function initPayments() {
       sel.appendChild(o);
     }
   }
+  _initBillPayerToggles();
   sel.onchange = () => _loadBillInputs(sel.value);
   await _loadBillInputs(sel.value);
   document.getElementById("btn-save-bills").onclick = saveBills;
   await renderBillsHistory();
 }
 
+/* ── Bill definitions ──────────────────────────────────────
+   Each non-rent bill: an amount + who paid it.
+   defaultPayer reflects the household arrangement:
+     Tali → Electricity, Gas   ·   Alon → Water, Arnona, Wifi
+   Rent is handled separately (split: Alon + Tali each pay a share).
+────────────────────────────────────────────────────────── */
+const _BILL_DEFS = [
+  { key:"electricity", input:"bill-elec",   emoji:"⚡",  he:"חשמל",  defaultPayer:"Tali" },
+  { key:"gas",         input:"bill-gas",    emoji:"🔥",  he:"גז",    defaultPayer:"Tali" },
+  { key:"water",       input:"bill-water",  emoji:"💧",  he:"מים",   defaultPayer:"Alon" },
+  { key:"arnona",      input:"bill-arnona", emoji:"🏛️", he:"ארנונה", defaultPayer:"Alon" },
+  { key:"wifi",        input:"bill-wifi",   emoji:"📶",  he:"אינטרנט", defaultPayer:"Alon" },
+];
+
+// Current payer selection per bill key, e.g. { electricity:"Tali", … }
+let _billPayers = {};
+
+function _setBillPayer(key, person) {
+  _billPayers[key] = person;
+  const grp = document.querySelector(`.bill-payer[data-key="${key}"]`);
+  if (!grp) return;
+  grp.querySelectorAll(".bp-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.p === person));
+}
+
+// Wire the Alon/Tali toggles once
+function _initBillPayerToggles() {
+  document.querySelectorAll(".bill-payer").forEach(grp => {
+    const key = grp.dataset.key;
+    grp.querySelectorAll(".bp-btn").forEach(btn => {
+      btn.onclick = () => _setBillPayer(key, btn.dataset.p);
+    });
+  });
+  // Live rent total
+  ["bill-rent-alon","bill-rent-tali"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("input", _updateRentTotal);
+  });
+  // Live "missing bills" hint
+  [..._BILL_DEFS.map(b => b.input), "bill-rent-alon", "bill-rent-tali"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("input", _updateMissingHint);
+  });
+}
+
+function _updateRentTotal() {
+  const a = parseFloat(document.getElementById("bill-rent-alon")?.value) || 0;
+  const t = parseFloat(document.getElementById("bill-rent-tali")?.value) || 0;
+  const el = document.getElementById("bill-rent-total");
+  if (el) el.textContent = `סה״כ שכ״ד: ₪${(a + t).toFixed(0)}`;
+}
+
+// Warn about any bill left empty, so nothing gets forgotten
+function _updateMissingHint() {
+  const el = document.getElementById("bill-missing");
+  if (!el) return;
+  const missing = [];
+  const rentA = parseFloat(document.getElementById("bill-rent-alon")?.value) || 0;
+  const rentT = parseFloat(document.getElementById("bill-rent-tali")?.value) || 0;
+  if (!rentA && !rentT) missing.push("🏠 שכר דירה");
+  _BILL_DEFS.forEach(b => {
+    if (!(parseFloat(document.getElementById(b.input)?.value) || 0))
+      missing.push(`${b.emoji} ${b.he}`);
+  });
+  if (missing.length) {
+    el.classList.add("show");
+    el.innerHTML = `⚠️ <strong>עדיין לא מולא:</strong> ${missing.join(" · ")}`;
+  } else {
+    el.classList.remove("show");
+    el.innerHTML = "";
+  }
+}
+
 async function _loadBillInputs(monthStr) {
   if (!monthStr) return;
   const snap = await getDoc(doc(db, "bills", monthStr));
   const d    = snap.exists() ? snap.data() : {};
-  document.getElementById("bill-rent").value   = d.rent        || "";
-  document.getElementById("bill-elec").value   = d.electricity || "";
-  document.getElementById("bill-water").value  = d.water       || "";
-  document.getElementById("bill-arnona").value = d.arnona      || "";
+
+  // Rent — falls back to the legacy single `rent` field on old docs
+  document.getElementById("bill-rent-alon").value = d.rentAlon ?? d.rent ?? "";
+  document.getElementById("bill-rent-tali").value = d.rentTali ?? "";
+
+  _BILL_DEFS.forEach(b => {
+    const el = document.getElementById(b.input);
+    if (el) el.value = d[b.key] || "";
+    _setBillPayer(b.key, d[`${b.key}Payer`] || b.defaultPayer);
+  });
+
+  _updateRentTotal();
+  _updateMissingHint();
+}
+
+/* Deterministic Splitwise doc IDs so re-saving a month OVERWRITES
+   its lines instead of duplicating them. */
+const _billSWId = (monthStr, key) => `bill_${monthStr}_${key}`;
+
+/* Push this month's bills into /splitwise_expenses — one line per bill. */
+async function _syncBillsToSplitwise(monthStr, data) {
+  const label = _monthLabel(monthStr);
+  const ops   = [];
+
+  const push = (key, name, amount, paidBy) => {
+    const id = _billSWId(monthStr, key);
+    if (amount > 0) {
+      ops.push(setDoc(doc(db, "splitwise_expenses", id), {
+        name, amount, paidBy,
+        source: "bill", billMonth: monthStr, billKey: key,
+        createdAt: serverTimestamp()
+      }));
+    } else {
+      // Amount cleared → remove any previously-synced line
+      ops.push(deleteDoc(doc(db, "splitwise_expenses", id)).catch(() => {}));
+    }
+  };
+
+  push("rentAlon", `🏠 שכר דירה — ${label}`, data.rentAlon || 0, "Alon");
+  push("rentTali", `🏠 שכר דירה — ${label}`, data.rentTali || 0, "Tali");
+  _BILL_DEFS.forEach(b =>
+    push(b.key, `${b.emoji} ${b.he} — ${label}`, data[b.key] || 0, data[`${b.key}Payer`]));
+
+  await Promise.all(ops);
+}
+
+/* Remove every Splitwise line generated from a given bill month. */
+async function _removeBillsFromSplitwise(monthStr) {
+  const keys = ["rentAlon", "rentTali", ..._BILL_DEFS.map(b => b.key)];
+  await Promise.all(keys.map(k =>
+    deleteDoc(doc(db, "splitwise_expenses", _billSWId(monthStr, k))).catch(() => {})));
 }
 
 async function saveBills() {
@@ -3483,16 +3685,32 @@ async function saveBills() {
   if (!monthStr) return;
   const btn = document.getElementById("btn-save-bills");
   btn.disabled = true; btn.textContent = "⏳ Saving…";
+
+  const num = id => parseFloat(document.getElementById(id)?.value) || 0;
+  const data = {
+    rentAlon: num("bill-rent-alon"),
+    rentTali: num("bill-rent-tali"),
+  };
+  _BILL_DEFS.forEach(b => {
+    data[b.key]             = num(b.input);
+    data[`${b.key}Payer`]   = _billPayers[b.key] || b.defaultPayer;
+  });
+
   try {
-    await setDoc(doc(db, "bills", monthStr), {
-      rent:        parseFloat(document.getElementById("bill-rent").value)   || 0,
-      electricity: parseFloat(document.getElementById("bill-elec").value)   || 0,
-      water:       parseFloat(document.getElementById("bill-water").value)  || 0,
-      arnona:      parseFloat(document.getElementById("bill-arnona").value) || 0,
-      updatedAt:   serverTimestamp()
-    });
-    showToast("✅ Bills saved!", "success");
-    _logActivity("💳", `saved bills for ${_monthLabel(monthStr)}`);
+    await setDoc(doc(db, "bills", monthStr), { ...data, updatedAt: serverTimestamp() });
+
+    // 🤝 Mirror every bill into the couple's balance sheet
+    let syncErr = null;
+    try { await _syncBillsToSplitwise(monthStr, data); }
+    catch (e) { syncErr = e; console.warn("Splitwise bill sync:", e); }
+
+    const total = data.rentAlon + data.rentTali +
+                  _BILL_DEFS.reduce((s, b) => s + data[b.key], 0);
+
+    showToast(syncErr
+      ? "✅ Bills saved (התחשבנות sync failed)"
+      : `✅ Bills saved — ₪${total.toFixed(0)} נכנס להתחשבנות 🤝`, syncErr ? "error" : "success");
+    _logActivity("💳", `saved bills for ${_monthLabel(monthStr)} — ₪${total.toFixed(0)}`);
     await renderBillsHistory();
   } catch(err) { showToast("Error: " + err.message, "error"); }
   finally { btn.disabled = false; btn.textContent = "💾 Save Bills for this Month"; }
@@ -3511,20 +3729,28 @@ async function renderBillsHistory() {
     rows.sort((a, b) => b.id.localeCompare(a.id)); // YYYY-MM sort descending
     el.innerHTML = "";
     rows.forEach(b => {
-      const total = (b.rent||0) + (b.electricity||0) + (b.water||0) + (b.arnona||0);
-      const div   = document.createElement("div"); div.className = "bill-card";
+      const rentA = b.rentAlon ?? b.rent ?? 0;
+      const rentT = b.rentTali ?? 0;
+      const total = rentA + rentT + _BILL_DEFS.reduce((s, d) => s + (b[d.key] || 0), 0);
+      const who   = p => p === "Tali" ? "טלי" : "אלון";
+
+      const details = [
+        (rentA || rentT)
+          ? `<span>🏠 ₪${(rentA + rentT).toFixed(0)} <small>(א׳${rentA.toFixed(0)}/ט׳${rentT.toFixed(0)})</small></span>`
+          : "",
+        ..._BILL_DEFS.map(d => (b[d.key] || 0)
+          ? `<span>${d.emoji} ₪${b[d.key].toFixed(0)} <small>${who(b[`${d.key}Payer`] || d.defaultPayer)}</small></span>`
+          : "")
+      ].filter(Boolean).join("");
+
+      const div = document.createElement("div"); div.className = "bill-card";
       div.innerHTML = `
         <div class="bill-card-header">
           <span class="bill-month">${_monthLabel(b.id)}</span>
           <span class="bill-total">₪${total.toFixed(0)}</span>
           <button class="btn-trash" title="Delete">🗑️</button>
         </div>
-        <div class="bill-details">
-          <span>🏠 ₪${b.rent||0}</span>
-          <span>⚡ ₪${b.electricity||0}</span>
-          <span>💧 ₪${b.water||0}</span>
-          <span>🏛️ ₪${b.arnona||0}</span>
-        </div>`;
+        <div class="bill-details">${details || "<span>—</span>"}</div>`;
       div.querySelector(".btn-trash").addEventListener("click", () => deleteBill(b.id));
       el.appendChild(div);
     });
@@ -3534,9 +3760,10 @@ async function renderBillsHistory() {
 }
 
 async function deleteBill(monthStr) {
-  if (!confirm(`Delete bills for ${_monthLabel(monthStr)}?`)) return;
+  if (!confirm(`Delete bills for ${_monthLabel(monthStr)}?\nגם השורות שלהם בהתחשבנות הזוגית יימחקו.`)) return;
   try {
     await deleteDoc(doc(db, "bills", monthStr));
+    await _removeBillsFromSplitwise(monthStr);   // keep the balance in sync
     showToast("🗑️ Deleted", "success");
     await renderBillsHistory();
   } catch(err) { showToast("Error: " + err.message, "error"); }
@@ -4433,9 +4660,10 @@ function _renderSplitwise(items) {
   const tbody = document.getElementById("sw-tbody");
   items.forEach(e => {
     const isAlon = e.paidBy === "Alon";
+    const isBill = e.source === "bill";
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td style="font-weight:500">${e.name || "—"}</td>
+      <td style="font-weight:500">${e.name || "—"}${isBill ? `<span class="sw-src-tag">חשבון</span>` : ""}</td>
       <td style="font-weight:700;color:var(--primary-dark)">₪${(e.amount||0).toFixed(2)}</td>
       <td><span class="badge ${isAlon ? "badge-alon" : "badge-tali"}">${isAlon ? "אלון" : "טלי"}</span></td>
       <td><button class="btn-trash" title="Delete">🗑️</button></td>`;
