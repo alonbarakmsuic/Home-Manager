@@ -139,6 +139,8 @@
   .asst-label{font-size:1.02rem;font-weight:700;color:var(--text);
     line-height:1.5;margin-bottom:4px;word-break:break-word}
   .asst-note{font-size:.76rem;color:var(--text-muted);line-height:1.55;margin-top:7px}
+  .asst-dup{background:rgba(0,122,255,.07);border:1.5px solid rgba(0,122,255,.32);
+    border-radius:var(--radius);padding:16px;margin-bottom:12px}
   .asst-low-conf{background:rgba(255,149,0,.09);border-color:rgba(255,149,0,.4)}
   .asst-low-conf .asst-verb{color:#9A5B00}
   .asst-btns{display:flex;gap:9px;margin-top:14px}
@@ -2864,9 +2866,9 @@ function _renderBackupStatus() {
 
 /* ══════════════════════════════════════════════════════════
    ✨ ASSISTANT — COMMAND PARSER
-   Rule-based and bilingual. No AI, no network, no API key:
-   commands have a fixed shape (action + target), and the target
-   is fuzzy-matched against the user's OWN data. Works offline.
+   Rule-based and bilingual. No AI, no network, no API key.
+   Cross-references the user's existing pantry, lists and tasks
+   so it redirects or refuses instead of creating duplicates.
 ══════════════════════════════════════════════════════════ */
 
 
@@ -2895,11 +2897,35 @@ function similarity(a, b) {
   return 1 - prev[n] / Math.max(m, n);
 }
 
+/* Hebrew glues single-letter particles onto the front of a word:
+   ה=the ו=and ב=in ל=to מ=from ש=that כ=as
+   So "נגמר הקפה" yields the needle "הקפה", which must still match a
+   staple called "קפה טורקי". Generate the stripped variants too. */
+function heVariants(s) {
+  const out = [s];
+  const m = String(s).match(/^([הולמשכב])(.{2,})$/);
+  if (m) out.push(m[2]);
+  // also strip the particle from each word of a multi-word needle
+  const words = String(s).split(" ");
+  if (words.length > 1) {
+    const stripped = words.map(w => {
+      const mm = w.match(/^([הולמשכב])(.{2,})$/);
+      return mm ? mm[2] : w;
+    }).join(" ");
+    if (stripped !== s) out.push(stripped);
+  }
+  return out;
+}
+
 /* Returns {item,score} plus runners-up for disambiguation */
 function bestMatch(needle, list, field = "name", threshold = 0.5) {
   if (!needle || !list?.length) return null;
+  const variants = heVariants(needle);
   const scored = list
-    .map(item => ({ item, score: similarity(needle, item[field]) }))
+    .map(item => ({
+      item,
+      score: Math.max(...variants.map(v => similarity(v, item[field])))
+    }))
     .sort((a, b) => b.score - a.score);
   const top = scored[0];
   if (!top || top.score < threshold) return null;
@@ -2907,14 +2933,21 @@ function bestMatch(needle, list, field = "name", threshold = 0.5) {
 }
 
 /* Strip leading/trailing filler so captured names read cleanly */
-const FILLER = /^(?:the|a|an|my|our|some|של|את|ה|כל)\s+|\s+(?:the|a|an|my|our|של|את)$/gi;
-const clean = s => String(s || "")
-  .replace(/[₪$]/g, "")
-  .replace(/\d+(?:[.,]\d+)?/g, "")
-  .replace(FILLER, "")
-  .replace(/\s+/g, " ")
-  .replace(/^[\s,.\-–—]+|[\s,.\-–—]+$/g, "")
-  .trim();
+const FILLER = /^(?:the|a|an|my|our|some|new|another|של|את|כל)\s+|\s+(?:the|a|an|my|our|של|את)$/i;
+function clean(s) {
+  let out = String(s || "")
+    .replace(/[₪$]/g, "")
+    .replace(/\d+(?:[.,]\d+)?/g, "")
+    .replace(/\s+/g, " ")
+    .replace(/^[\s,.\-–—]+|[\s,.\-–—]+$/g, "")
+    .trim();
+  // Strip filler REPEATEDLY and only after trimming — a leading space
+  // would otherwise defeat the ^ anchor ("  את הקפה"), and one pass
+  // would leave "a new bookshelf" as "new bookshelf".
+  let prev;
+  do { prev = out; out = out.replace(FILLER, "").trim(); } while (out !== prev && out);
+  return out;
+}
 
 /* ── Bilingual word boundaries ──────────────────────────────
    JS `\b` is defined over [A-Za-z0-9_], so `\bחשמל\b` can NEVER
@@ -2969,13 +3002,24 @@ const PANTRY_EMOJI = { low:"🔴", stock:"🟢" };
 function parseCommand(raw, ctx = {}) {
   const text = normText(raw);
   if (!text) return null;
-  const { pantry = [], plants = [], tasks = [], rooms = [] } = ctx;
+  const { pantry = [], plants = [], tasks = [], rooms = [],
+          groceryQueue = [], upgradeQueue = [] } = ctx;
   const amount = extractAmount(text);
 
   const noMatch = (kind, needle, list, field) => ({
     type: "ambiguous", kind, needle,
     options: list.slice(0, 6).map(i => ({ id: i.id, name: i[field] }))
   });
+
+  /* Duplicates are the main way these lists get messy, so every
+     "add" path checks what already exists before creating anything.
+     Threshold is deliberately high (0.72) — a near-identical name is
+     a duplicate, a merely similar one is a different product. */
+  const DUP = 0.72;
+  const already = (needle, list, field = "name") => {
+    const hit = bestMatch(needle, list, field, DUP);
+    return hit ? hit.item : null;
+  };
 
   /* ── 1. BILLS: "<bill> 300" / "300 <bill>" ────────────── */
   const PAID_ALTS = "paid|שילם|שילמה|שילמתי|שילמנו";
@@ -3064,10 +3108,45 @@ function parseCommand(raw, ctx = {}) {
       let name = text.replace(addRe, " ").replace(addHe, " ").replace(t.re, " ");
       name = clean(name);
       if (!name) continue;
-      if (t.list === "pantry") return {
-        type:"addPantry", name,
-        label:`🧺 ${name} → מלאי הבית`, verb:"הוספת מוצר חדש למלאי (In Stock)"
+
+      if (t.list === "pantry") {
+        const dup = already(name, pantry);
+        if (dup) return {
+          type:"duplicate", where:"pantry", name:dup.name,
+          label:`🧺 "${dup.name}" כבר קיים במלאי`,
+          note: dup.status === "low"
+            ? "והוא כבר מסומן כנגמר, אז הוא נמצא ברשימת הקניות."
+            : "אם נגמר לך — אמור למשל \"" + dup.name + " נגמר\"."
+        };
+        return {
+          type:"addPantry", name,
+          label:`🧺 ${name} → מלאי הבית`, verb:"הוספת מוצר חדש למלאי (In Stock)"
+        };
+      }
+
+      const queue = t.list === "groceries" ? groceryQueue : upgradeQueue;
+      const onList = already(name, queue);
+      if (onList) return {
+        type:"duplicate", where:t.list, name:onList.name,
+        label:`${t.list === "groceries" ? "🛒" : "🏠"} "${onList.name}" כבר ברשימה`,
+        note:"אין צורך להוסיף שוב."
       };
+
+      /* KEY RULE: a grocery item that is also a pantry staple must not
+         become a second, disconnected row. Mark the staple as Running
+         Low instead — that adds it to the list under the staple's own
+         ID, so the pantry and the shopping list stay one source. */
+      if (t.list === "groceries") {
+        const staple = already(name, pantry);
+        if (staple) return {
+          type:"pantryStatus", id:staple.id, name:staple.name, status:"low",
+          label:`🔴 ${staple.name} → Running Low`,
+          verb:"סימון חוסר במלאי",
+          note:`"${staple.name}" הוא מוצר במלאי הבית — סימנתי אותו כנגמר, וכך הוא נכנס לרשימת הקניות בלי כפילות.`,
+          confidence:1
+        };
+      }
+
       return {
         type:"addList", list:t.list, name,
         label:`${t.list === "groceries" ? "🛒" : "🏠"} ${name} → ${
@@ -3093,6 +3172,13 @@ function parseCommand(raw, ctx = {}) {
     const hit = bestMatch(needle, pantry, "name", 0.5);
     if (hit) {
       const status = isLow ? "low" : "stock";
+      // Already in that state → say so instead of a pointless write
+      if ((hit.item.status || "stock") === status) return {
+        type:"duplicate", where:"pantry", name:hit.item.name,
+        label:`${PANTRY_EMOJI[status]} "${hit.item.name}" כבר מסומן כ${
+          status === "low" ? "נגמר" : "במלאי"}`,
+        note: status === "low" ? "והוא כבר ברשימת הקניות." : "אין מה לעדכן."
+      };
       return {
         type:"pantryStatus", id:hit.item.id, name:hit.item.name, status,
         label:`${PANTRY_EMOJI[status]} ${hit.item.name} → ${status === "low" ? "Running Low" : "In Stock"}`,
@@ -3102,12 +3188,20 @@ function parseCommand(raw, ctx = {}) {
         confidence:hit.score
       };
     }
-    // Shortage of something not tracked → offer the grocery list instead
-    if (needle && isLow) return {
-      type:"addList", list:"groceries", name:needle,
-      label:`🛒 ${needle} → רשימת קניות`,
-      verb:"הוספה לרשימת הקניות (הפריט לא נמצא במלאי)"
-    };
+    // Shortage of something not tracked in the pantry
+    if (needle && isLow) {
+      const onList = already(needle, groceryQueue);
+      if (onList) return {
+        type:"duplicate", where:"groceries", name:onList.name,
+        label:`🛒 "${onList.name}" כבר ברשימת הקניות`, note:"אין צורך להוסיף שוב."
+      };
+      return {
+        type:"addList", list:"groceries", name:needle,
+        label:`🛒 ${needle} → רשימת קניות`,
+        verb:"הוספה לרשימת הקניות",
+        note:`"${needle}" לא נמצא במלאי הבית — אם זה מוצר קבוע, שווה להוסיף אותו למלאי.`
+      };
+    }
   }
 
   /* ── 8. NEW TASK ──────────────────────────────────────── */
@@ -3116,10 +3210,16 @@ function parseCommand(raw, ctx = {}) {
    || text.match(/(?:תקלה)[:\s]+(.+)$/);
   if (m) {
     const title = clean(m[1]);
-    if (title) return {
-      type:"task", title,
-      label:`📋 ${title}`, verb:"הוספת משימה ליומן המשימות"
-    };
+    if (title) {
+      const dup = already(title, tasks, "title");
+      if (dup) return {
+        type:"duplicate", where:"tasks", name:dup.title,
+        label:`📋 "${dup.title}" כבר פתוחה ביומן`,
+        note:`אם סיימת אותה, אמור: "${dup.title} בוצע".`
+      };
+      return { type:"task", title,
+        label:`📋 ${title}`, verb:"הוספת משימה ליומן המשימות" };
+    }
   }
 
   return null;
@@ -3144,11 +3244,14 @@ async function _loadAsstContext() {
       }); return out;
     } catch { return []; }
   };
-  const [pantry, plants, tasks, rooms] = await Promise.all([
+  const [pantry, plants, tasks, rooms, groceryQueue, upgradeQueue] = await Promise.all([
     grab("pantry", "name"), grab("plants", "name"),
-    grab("maintenance", "title"), grab("cleaning_templates", "name")
+    grab("maintenance", "title"), grab("cleaning_templates", "name"),
+    grab("grocery_queue", "name"), grab("upgrade_queue", "name")
   ]);
-  _asstCtx = { pantry, plants, rooms,
+  // The two queues are what make duplicate detection possible — the
+  // parser checks them before creating anything new.
+  _asstCtx = { pantry, plants, rooms, groceryQueue, upgradeQueue,
                tasks: tasks.filter(t => (t.status || "open") !== "done") };
   return _asstCtx;
 }
@@ -3205,12 +3308,27 @@ window.assistantParse = async function() {
     return;
   }
 
+  /* Nothing to do — it already exists somewhere in the app */
+  if (intent.type === "duplicate") {
+    out.innerHTML = `
+      <div class="asst-dup">
+        <div class="asst-label" dir="auto">${esc(intent.label)}</div>
+        ${intent.note ? `<div class="asst-note">${esc(intent.note)}</div>` : ""}
+        <div class="asst-btns">
+          <button class="asst-cancel" style="flex:1" onclick="assistantReset()">הבנתי</button>
+        </div>
+      </div>`;
+    _asstPending = null;
+    return;
+  }
+
   _asstPending = intent;
   const lowConf = intent.confidence !== undefined && intent.confidence < 0.8;
   out.innerHTML = `
     <div class="asst-card ${lowConf ? "asst-low-conf" : ""}">
       <div class="asst-verb">${esc(intent.verb)}</div>
       <div class="asst-label" dir="auto">${esc(intent.label)}</div>
+      ${intent.note ? `<div class="asst-note">💡 ${esc(intent.note)}</div>` : ""}
       ${lowConf ? `<div class="asst-note">⚠️ התאמה לא מדויקת — ודא שזה הפריט הנכון</div>` : ""}
       ${intent.type === "bill" ? `<div class="asst-note">ייכנס גם להתחשבנות הזוגית${
           intent.payer ? "" : " — המשלם ייקבע לפי ברירת המחדל"}</div>` : ""}
