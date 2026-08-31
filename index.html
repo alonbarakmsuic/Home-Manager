@@ -113,6 +113,63 @@
     transform:scale(1.08);
     box-shadow:0 3px 12px rgba(0,0,0,.25)}
 
+  /* ═══ Assistant ═══════════════════════════════════════ */
+  #assistant-fab{position:fixed;bottom:96px;inset-inline-end:18px;z-index:150;
+    width:54px;height:54px;border-radius:50%;border:none;cursor:pointer;
+    background:linear-gradient(135deg,#6C63FF,#8B5CF6);color:#fff;font-size:1.45rem;
+    box-shadow:0 6px 22px rgba(108,99,255,.42);transition:var(--T);
+    display:flex;align-items:center;justify-content:center;
+    padding-bottom:env(safe-area-inset-bottom)}
+  #assistant-fab:active{transform:scale(.9)}
+  .asst-input-wrap{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+  /* No hardcoded direction — the input carries dir="auto", so the
+     browser picks RTL or LTR from the first letter you type. */
+  #asst-input{flex:1;padding:13px 15px;border:1.5px solid var(--border);
+    border-radius:var(--radius);font-size:.92rem;font-family:inherit;
+    background:var(--bg-surface);color:var(--text)}
+  #asst-input:focus{outline:none;border-color:#6C63FF;background:var(--bg-card)}
+  .asst-go{width:46px;height:46px;flex-shrink:0;border:none;border-radius:var(--radius);
+    background:linear-gradient(135deg,#6C63FF,#8B5CF6);color:#fff;font-size:1.1rem;
+    cursor:pointer;transition:var(--T)}
+  .asst-go:active{transform:scale(.92)}
+  .asst-card{border-radius:var(--radius);padding:16px;margin-bottom:12px;
+    background:var(--bg-surface);border:1.5px solid rgba(108,99,255,.28)}
+  .asst-verb{font-size:.72rem;font-weight:700;color:#6C63FF;text-transform:uppercase;
+    letter-spacing:.4px;margin-bottom:7px}
+  .asst-label{font-size:1.02rem;font-weight:700;color:var(--text);
+    line-height:1.5;margin-bottom:4px;word-break:break-word}
+  .asst-note{font-size:.76rem;color:var(--text-muted);line-height:1.55;margin-top:7px}
+  .asst-low-conf{background:rgba(255,149,0,.09);border-color:rgba(255,149,0,.4)}
+  .asst-low-conf .asst-verb{color:#9A5B00}
+  .asst-btns{display:flex;gap:9px;margin-top:14px}
+  .asst-confirm{flex:1;padding:13px;border:none;border-radius:var(--radius);
+    background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;
+    font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;transition:var(--T)}
+  .asst-confirm:active{transform:scale(.97)}
+  .asst-confirm:disabled{opacity:.55;cursor:default}
+  .asst-cancel{padding:13px 20px;border:1.5px solid var(--border);border-radius:var(--radius);
+    background:transparent;color:var(--text-muted);font-size:.9rem;font-weight:600;
+    cursor:pointer;font-family:inherit}
+  .asst-cancel:active{background:rgba(0,0,0,.05)}
+  .asst-fail{background:rgba(255,59,48,.07);border:1.5px solid rgba(255,59,48,.3);
+    border-radius:var(--radius);padding:15px;margin-bottom:12px;
+    font-size:.85rem;color:var(--text);line-height:1.6}
+  .asst-ok{background:rgba(52,199,123,.1);border:1.5px solid rgba(52,199,123,.4);
+    border-radius:var(--radius);padding:15px;margin-bottom:12px;
+    font-size:.9rem;font-weight:600;color:var(--primary-dark);line-height:1.55}
+  .asst-opts{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+  .asst-opt{padding:8px 13px;border:1.5px solid var(--border);border-radius:20px;
+    background:var(--bg-card);font-size:.8rem;font-weight:600;color:var(--text);
+    cursor:pointer;font-family:inherit}
+  .asst-opt:active{background:rgba(108,99,255,.1);border-color:#6C63FF}
+  #asst-examples{margin-top:6px}
+  .asst-ex-title{font-size:.73rem;color:var(--text-light);margin-bottom:9px;font-weight:600}
+  .asst-chips{display:flex;flex-wrap:wrap;gap:7px}
+  .asst-chip{padding:8px 13px;border:1px solid var(--border);border-radius:20px;
+    background:var(--bg-surface);font-size:.79rem;color:var(--text-muted);
+    cursor:pointer;font-family:inherit}
+  .asst-chip:active{background:rgba(108,99,255,.1);color:#6C63FF}
+
   /* ═══ Restore from backup ═════════════════════════════ */
   .restore-block{margin-top:18px;padding-top:16px;border-top:1px dashed var(--border)}
   .restore-title{font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:6px}
@@ -1578,6 +1635,51 @@
   </button>
 </nav>
 
+<!-- ═════════════════ ASSISTANT ═════════════════════════ -->
+<button id="assistant-fab" onclick="openAssistant()" title="עוזר">✨</button>
+
+<div id="assistant-modal" class="modal-bg" onclick="assistantBgClick(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✨ עוזר הבית</div>
+
+    <div class="asst-input-wrap">
+      <input type="text" id="asst-input" dir="auto" autocomplete="off"
+             autocapitalize="off" spellcheck="false"
+             placeholder="חלב נגמר / milk is running low"
+             onkeydown="if(event.key==='Enter') assistantParse()">
+      <button class="asst-go" onclick="assistantParse()">➤</button>
+    </div>
+
+    <div id="asst-result"></div>
+
+    <div id="asst-examples">
+      <p class="asst-ex-title">🇮🇱 עברית — לחץ כדי למלא</p>
+      <div class="asst-chips">
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">חלב נגמר</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">קניתי לחם</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">תוסיף לקניות שמפו</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">חשמל 320</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">טלי שילמה 180 על מסעדה</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">משימה לתקן את הדלת</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">השקיתי את הפיקוס</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">ניקיתי את המטבח</button>
+      </div>
+      <p class="asst-ex-title" style="margin-top:14px">🇬🇧 English</p>
+      <div class="asst-chips">
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">milk is running low</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">bought bread</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">add shampoo to groceries</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">add sofa to upgrades</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">electricity 320</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">Tali paid 180 for dinner</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">add task fix the door</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">watered the ficus</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- OFFLINE / PENDING-SYNC BANNER -->
 <div id="sync-banner" role="status">
   <span id="sync-banner-icon">📡</span>
@@ -2024,7 +2126,7 @@
   <div class="form-card" style="margin-bottom:22px">
     <div class="form-group">
       <label for="sw-name">שם ההוצאה</label>
-      <input type="text" id="sw-name" placeholder="למשל: סופרמרקט, אמזון…" style="direction:rtl">
+      <input type="text" id="sw-name" dir="auto" placeholder="למשל: סופרמרקט, אמזון…">
     </div>
     <div class="form-group">
       <label for="sw-amount">💰 סכום (₪)</label>
@@ -2758,6 +2860,504 @@ function _renderBackupStatus() {
     ? `⚠️ הגיבוי האחרון לפני ${days} ימים (${when})`
     : `✅ גיבוי אחרון: ${when}`;
   el.style.color = stale ? "#9A5B00" : "var(--primary-dark)";
+}
+
+/* ══════════════════════════════════════════════════════════
+   ✨ ASSISTANT — COMMAND PARSER
+   Rule-based and bilingual. No AI, no network, no API key:
+   commands have a fixed shape (action + target), and the target
+   is fuzzy-matched against the user's OWN data. Works offline.
+══════════════════════════════════════════════════════════ */
+
+
+function normText(s) {
+  return String(s || "").trim()
+    .replace(/[׳״''""`]/g, "")
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+}
+
+/* Levenshtein similarity 0..1 */
+function similarity(a, b) {
+  a = normText(a); b = normText(b);
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  if (a.length > 2 && b.length > 2 && (a.includes(b) || b.includes(a))) return 0.88;
+  const m = a.length, n = b.length;
+  let prev = Array.from({ length: n + 1 }, (_, i) => i);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++)
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1,
+                        prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return 1 - prev[n] / Math.max(m, n);
+}
+
+/* Returns {item,score} plus runners-up for disambiguation */
+function bestMatch(needle, list, field = "name", threshold = 0.5) {
+  if (!needle || !list?.length) return null;
+  const scored = list
+    .map(item => ({ item, score: similarity(needle, item[field]) }))
+    .sort((a, b) => b.score - a.score);
+  const top = scored[0];
+  if (!top || top.score < threshold) return null;
+  return { ...top, runnersUp: scored.slice(1, 4).filter(s => s.score > 0.3) };
+}
+
+/* Strip leading/trailing filler so captured names read cleanly */
+const FILLER = /^(?:the|a|an|my|our|some|של|את|ה|כל)\s+|\s+(?:the|a|an|my|our|של|את)$/gi;
+const clean = s => String(s || "")
+  .replace(/[₪$]/g, "")
+  .replace(/\d+(?:[.,]\d+)?/g, "")
+  .replace(FILLER, "")
+  .replace(/\s+/g, " ")
+  .replace(/^[\s,.\-–—]+|[\s,.\-–—]+$/g, "")
+  .trim();
+
+/* ── Bilingual word boundaries ──────────────────────────────
+   JS `\b` is defined over [A-Za-z0-9_], so `\bחשמל\b` can NEVER
+   match — Hebrew letters aren't "word characters". Every
+   Hebrew-only pattern using \b fails silently.
+   These build boundaries out of whitespace/punctuation instead,
+   which works for both scripts. Lookbehind is avoided for older
+   iOS Safari, so the leading boundary char is captured and
+   restored on replace.                                        */
+const BND_BEFORE = "(?:^|[\\s,.:;!?()\\[\\]\"'\\-–—])";
+const BND_AFTER  = "(?=$|[\\s,.:;!?()\\[\\]\"'\\-–—])";
+
+const wordRe   = (alts, flags = "i")  => new RegExp(BND_BEFORE + "(?:" + alts + ")" + BND_AFTER, flags);
+const hasWord  = (text, alts)         => wordRe(alts).test(text);
+/* Replace with a space; the consumed boundary char is harmless
+   because callers collapse whitespace afterwards. */
+const dropWord = (text, alts)         => text.replace(wordRe(alts, "gi"), " ");
+
+/* Person detection — boundary safe in both scripts, Tali first
+   (critical: "tali" contains the substring "i", which naive
+   matching mis-attributed to Alon) */
+function detectPerson(text) {
+  if (hasWord(text, "tali|טלי"))        return "Tali";
+  if (hasWord(text, "alon|אלון"))       return "Alon";
+  if (hasWord(text, "i|me|myself|אני")) return "Alon";
+  return null;
+}
+
+/* Returns a POSITIVE amount, or null. Zero is treated as absent so
+   "paid 0" can't create a meaningless ₪0 record. */
+function extractAmount(text) {
+  const m = String(text).match(/(\d+(?:[.,]\d+)?)/);
+  if (!m) return null;
+  const n = parseFloat(m[1].replace(",", "."));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+const BILLS = {
+  electricity: { alts:"electricity|electric|power|חשמל",          emoji:"⚡",  he:"חשמל" },
+  gas:         { alts:"gas|גז",                                    emoji:"🔥",  he:"גז" },
+  arnona:      { alts:"arnona|ארנונה|property tax|municipal",      emoji:"🏛️", he:"ארנונה" },
+  wifi:        { alts:"wifi|wi-fi|internet|אינטרנט|ויפי|וויפי",    emoji:"📶",  he:"אינטרנט" },
+  rent:        { alts:"rent|שכר דירה|שכירות|שכד",                  emoji:"🏠",  he:"שכר דירה" },
+  water:       { alts:"water bill|מים",                            emoji:"💧",  he:"מים" },
+};
+
+const PANTRY_EMOJI = { low:"🔴", stock:"🟢" };
+
+/* ══════════════════════════════════════════════════════════
+   PARSE
+══════════════════════════════════════════════════════════ */
+function parseCommand(raw, ctx = {}) {
+  const text = normText(raw);
+  if (!text) return null;
+  const { pantry = [], plants = [], tasks = [], rooms = [] } = ctx;
+  const amount = extractAmount(text);
+
+  const noMatch = (kind, needle, list, field) => ({
+    type: "ambiguous", kind, needle,
+    options: list.slice(0, 6).map(i => ({ id: i.id, name: i[field] }))
+  });
+
+  /* ── 1. BILLS: "<bill> 300" / "300 <bill>" ────────────── */
+  const PAID_ALTS = "paid|שילם|שילמה|שילמתי|שילמנו";
+  if (amount !== null && !hasWord(text, PAID_ALTS)) {
+    for (const [key, def] of Object.entries(BILLS)) {
+      if (!hasWord(text, def.alts)) continue;
+      // "water" only counts as a bill with a number and no watering verb
+      if (key === "water" && hasWord(text, "watered|השקיתי|השקתי|השקה")) continue;
+      const payer = detectPerson(text);
+      return {
+        type:"bill", key, amount, payer,
+        label:`${def.emoji} ${def.he} — ₪${amount}${payer ? ` · ${payer === "Tali" ? "טלי" : "אלון"}` : ""}`,
+        verb:"רישום חשבון חודשי"
+      };
+    }
+  }
+
+  /* ── 2. SHARED EXPENSE: "Tali paid 250 for pharmacy" ─── */
+  if (hasWord(text, PAID_ALTS) && amount !== null) {
+    const payer = detectPerson(text) || "Alon";
+    let name = dropWord(text, "tali|טלי|alon|אלון|i|me");
+    name = dropWord(name, PAID_ALTS);
+    name = dropWord(name, "for|on|about|על|עבור|בשביל");
+    name = clean(name) || "הוצאה משותפת";
+    return {
+      type:"splitwise", name, amount, payer,
+      label:`🤝 ${name} — ₪${amount} · ${payer === "Tali" ? "טלי" : "אלון"}`,
+      verb:"רישום הוצאה משותפת בהתחשבנות"
+    };
+  }
+
+  /* ── 3. WATERING ──────────────────────────────────────── */
+  let m = text.match(/(?:watered|water)\s+(.+)$/i)
+       || text.match(/(?:השקיתי|השקתי|השקה)\s+(.+)$/);
+  if (m) {
+    const needle = clean(m[1]);
+    const hit = bestMatch(needle, plants, "name", 0.5);
+    if (hit) return {
+      type:"water", id:hit.item.id, name:hit.item.name,
+      label:`💧 ${hit.item.name}`, verb:"סימון השקיה", confidence:hit.score
+    };
+    if (plants.length) return noMatch("plant", needle, plants, "name");
+  }
+
+  /* ── 4. CLEANING ──────────────────────────────────────── */
+  m = text.match(/(?:cleaned|clean)\s+(.+)$/i)
+   || text.match(/(?:ניקיתי|נוקה|ניקינו)\s+(.+)$/);
+  if (m) {
+    const needle = clean(m[1]);
+    const hit = bestMatch(needle, rooms, "name", 0.5);
+    if (hit) return {
+      type:"clean", id:hit.item.id, name:hit.item.name,
+      label:`🧼 ${hit.item.name}`, verb:"סימון ניקיון כבוצע", confidence:hit.score
+    };
+    if (rooms.length) return noMatch("room", needle, rooms, "name");
+  }
+
+  /* ── 5. TASK DONE ─────────────────────────────────────── */
+  m = text.match(/^(.+?)\s+(?:is\s+)?(?:done|completed|finished|fixed)$/i)
+   || text.match(/^(?:סיימתי|בוצע|תוקן|הושלם)\s+(.+)$/)
+   || text.match(/^(.+?)\s+(?:בוצע|בוצעה|הושלם|הושלמה|תוקן)$/);
+  if (m) {
+    const needle = clean(m[1]);
+    const hit = bestMatch(needle, tasks, "title", 0.5);
+    if (hit) return {
+      type:"taskDone", id:hit.item.id, name:hit.item.title,
+      label:`✅ ${hit.item.title}`, verb:"סגירת משימה", confidence:hit.score
+    };
+    if (tasks.length) return noMatch("task", needle, tasks, "title");
+  }
+
+  /* ── 6. ADD to an explicit list ───────────────────────── */
+  const listTargets = [
+    { re:/\b(?:to\s+)?(?:the\s+)?(?:groceries|grocery|shopping)(?:\s+list)?\b/i, list:"groceries" },
+    { re:/(?:ל|to\s+)?(?:רשימת\s+)?קניות/,                                       list:"groceries" },
+    { re:/\b(?:to\s+)?(?:the\s+)?(?:upgrades?|house\s+upgrades?)\b/i,             list:"upgrades" },
+    { re:/(?:ל)?שדרוגים/,                                                        list:"upgrades" },
+    { re:/\b(?:to\s+)?(?:the\s+)?pantry\b/i,                                      list:"pantry" },
+    { re:/(?:ל)?מלאי/,                                                            list:"pantry" },
+  ];
+  const addRe = /\b(?:add|put)\b/i;
+  const addHe = /(?:הוסף|תוסיף|הוסיפי|תוסיפי)/;
+  if (addRe.test(text) || addHe.test(text)) {
+    for (const t of listTargets) {
+      if (!t.re.test(text)) continue;
+      let name = text.replace(addRe, " ").replace(addHe, " ").replace(t.re, " ");
+      name = clean(name);
+      if (!name) continue;
+      if (t.list === "pantry") return {
+        type:"addPantry", name,
+        label:`🧺 ${name} → מלאי הבית`, verb:"הוספת מוצר חדש למלאי (In Stock)"
+      };
+      return {
+        type:"addList", list:t.list, name,
+        label:`${t.list === "groceries" ? "🛒" : "🏠"} ${name} → ${
+          t.list === "groceries" ? "רשימת קניות" : "שדרוגי הבית"}`,
+        verb:`הוספה ל${t.list === "groceries" ? "רשימת הקניות" : "רשימת השדרוגים"}`
+      };
+    }
+  }
+
+  /* ── 7. PANTRY status ─────────────────────────────────── */
+  const LOW_ALTS   = "running low|low|out of|ran out|finished|need more|" +
+                     "נגמר|נגמרה|נגמרו|חסר|חסרה|חסרים|אזל|אוזל|נגמרת";
+  const STOCK_ALTS = "in stock|back in stock|restocked|bought|" +
+                     "קניתי|קנינו|חזר|במלאי|יש";
+  const isLow   = hasWord(text, LOW_ALTS);
+  const isStock = hasWord(text, STOCK_ALTS);
+
+  if (isLow || isStock) {
+    let n = dropWord(text, "mark|set|is|as|are|am|im|i|we|the|a|an|on|of|we are");
+    n = dropWord(n, LOW_ALTS);
+    n = dropWord(n, STOCK_ALTS);
+    const needle = clean(n);
+    const hit = bestMatch(needle, pantry, "name", 0.5);
+    if (hit) {
+      const status = isLow ? "low" : "stock";
+      return {
+        type:"pantryStatus", id:hit.item.id, name:hit.item.name, status,
+        label:`${PANTRY_EMOJI[status]} ${hit.item.name} → ${status === "low" ? "Running Low" : "In Stock"}`,
+        verb: status === "low"
+          ? "סימון חוסר במלאי (יתווסף אוטומטית לרשימת הקניות)"
+          : "החזרה למלאי",
+        confidence:hit.score
+      };
+    }
+    // Shortage of something not tracked → offer the grocery list instead
+    if (needle && isLow) return {
+      type:"addList", list:"groceries", name:needle,
+      label:`🛒 ${needle} → רשימת קניות`,
+      verb:"הוספה לרשימת הקניות (הפריט לא נמצא במלאי)"
+    };
+  }
+
+  /* ── 8. NEW TASK ──────────────────────────────────────── */
+  m = text.match(/\b(?:add\s+)?(?:a\s+)?(?:new\s+)?task\b[:\s]*(.+)$/i)
+   || text.match(/(?:הוסף\s+|תוסיף\s+)?משימה[:\s]+(.+)$/)
+   || text.match(/(?:תקלה)[:\s]+(.+)$/);
+  if (m) {
+    const title = clean(m[1]);
+    if (title) return {
+      type:"task", title,
+      label:`📋 ${title}`, verb:"הוספת משימה ליומן המשימות"
+    };
+  }
+
+  return null;
+}
+
+/* ══════════════════════════════════════════════════════════
+   ✨ ASSISTANT — UI, CONTEXT & EXECUTORS
+══════════════════════════════════════════════════════════ */
+let _asstCtx = null, _asstPending = null;
+
+/* Escape before any innerHTML — parsed names come from free text */
+const esc = s => String(s ?? "").replace(/[&<>"']/g,
+  c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
+/* Pull the entities the parser matches against */
+async function _loadAsstContext() {
+  const grab = async (col, field) => {
+    try {
+      const snap = await getDocs(collection(db, col));
+      const out = []; snap.forEach(d => {
+        const v = d.data(); if (v?.[field]) out.push({ id: d.id, ...v });
+      }); return out;
+    } catch { return []; }
+  };
+  const [pantry, plants, tasks, rooms] = await Promise.all([
+    grab("pantry", "name"), grab("plants", "name"),
+    grab("maintenance", "title"), grab("cleaning_templates", "name")
+  ]);
+  _asstCtx = { pantry, plants, rooms,
+               tasks: tasks.filter(t => (t.status || "open") !== "done") };
+  return _asstCtx;
+}
+
+window.assistantBgClick = e => { if (e.target === e.currentTarget) closeAssistant(); };
+window.closeAssistant   = () => document.getElementById("assistant-modal").classList.remove("open");
+window.assistantFill    = btn => {
+  document.getElementById("asst-input").value = btn.textContent.trim();
+  assistantParse();
+};
+
+window.openAssistant = async function() {
+  document.getElementById("assistant-modal").classList.add("open");
+  document.getElementById("asst-input").value = "";
+  document.getElementById("asst-result").innerHTML = "";
+  document.getElementById("asst-examples").style.display = "";
+  setTimeout(() => document.getElementById("asst-input")?.focus(), 300);
+  _loadAsstContext();                      // refresh in the background
+};
+
+window.assistantParse = async function() {
+  const input = document.getElementById("asst-input");
+  const raw   = input.value.trim();
+  const out   = document.getElementById("asst-result");
+  if (!raw) { _shakeInput(input); return; }
+
+  if (!_asstCtx) { out.innerHTML = `<div class="asst-card">⏳ טוען נתונים…</div>`; await _loadAsstContext(); }
+  document.getElementById("asst-examples").style.display = "none";
+
+  const intent = parseCommand(raw, _asstCtx);
+
+  if (!intent) {
+    out.innerHTML = `<div class="asst-fail">
+      🤔 לא הבנתי את הפקודה.<br>
+      נסה למשל: <strong>חלב נגמר</strong> · <strong>חשמל 320</strong> ·
+      <strong>תוסיף לקניות שמפו</strong><br>
+      <span style="font-size:.76rem;color:var(--text-muted)">
+      (שאלות כמו "כמה הוצאנו החודש" עדיין לא נתמכות)</span></div>`;
+    return;
+  }
+
+  if (intent.type === "ambiguous") {
+    const kindHe = { plant:"צמח", room:"משימת ניקיון", task:"משימה" }[intent.kind] || "פריט";
+    out.innerHTML = `<div class="asst-fail">
+      🔍 לא מצאתי ${kindHe} בשם "<strong>${esc(intent.needle)}</strong>".
+      ${intent.options.length ? "<br>אולי התכוונת ל:" : ""}
+      <div class="asst-opts">${intent.options.map(o =>
+        `<button class="asst-opt" data-n="${esc(o.name)}">${esc(o.name)}</button>`).join("")}</div>
+    </div>`;
+    out.querySelectorAll(".asst-opt").forEach(b => b.onclick = () => {
+      input.value = raw.replace(new RegExp(intent.needle, "i"), b.dataset.n);
+      assistantParse();
+    });
+    return;
+  }
+
+  _asstPending = intent;
+  const lowConf = intent.confidence !== undefined && intent.confidence < 0.8;
+  out.innerHTML = `
+    <div class="asst-card ${lowConf ? "asst-low-conf" : ""}">
+      <div class="asst-verb">${esc(intent.verb)}</div>
+      <div class="asst-label" dir="auto">${esc(intent.label)}</div>
+      ${lowConf ? `<div class="asst-note">⚠️ התאמה לא מדויקת — ודא שזה הפריט הנכון</div>` : ""}
+      ${intent.type === "bill" ? `<div class="asst-note">ייכנס גם להתחשבנות הזוגית${
+          intent.payer ? "" : " — המשלם ייקבע לפי ברירת המחדל"}</div>` : ""}
+      <div class="asst-btns">
+        <button class="asst-confirm" id="asst-do">✅ בצע</button>
+        <button class="asst-cancel" onclick="assistantReset()">ביטול</button>
+      </div>
+    </div>`;
+  document.getElementById("asst-do").onclick = _assistantExecute;
+};
+
+window.assistantReset = function() {
+  _asstPending = null;
+  document.getElementById("asst-result").innerHTML = "";
+  document.getElementById("asst-input").value = "";
+  document.getElementById("asst-examples").style.display = "";
+  document.getElementById("asst-input")?.focus();
+};
+
+/* ── Execute the confirmed intent ─────────────────────────── */
+async function _assistantExecute() {
+  const i = _asstPending;
+  if (!i) return;
+  const btn = document.getElementById("asst-do");
+  btn.disabled = true; btn.textContent = "⏳ מבצע…";
+  const out = document.getElementById("asst-result");
+
+  try {
+    let done = "";
+
+    switch (i.type) {
+      case "pantryStatus": {
+        await setDoc(doc(db, "pantry", i.id), { status: i.status }, { merge: true });
+        if (i.status === "low") {
+          await setDoc(doc(db, "grocery_queue", i.id),
+            { name: i.name, fromPantry: true, addedAt: serverTimestamp() });
+          done = `🔴 ${i.name} סומן כנגמר ונוסף לרשימת הקניות`;
+        } else {
+          await deleteDoc(doc(db, "grocery_queue", i.id)).catch(() => {});
+          done = `🟢 ${i.name} חזר למלאי`;
+        }
+        _logActivity("🧺", `${i.name} → ${i.status === "low" ? "running low" : "in stock"}`);
+        break;
+      }
+      case "addList": {
+        const col = i.list === "groceries" ? "grocery_queue" : "upgrade_queue";
+        await addDoc(collection(db, col),
+          { name: i.name, fromPantry: false, addedAt: serverTimestamp() });
+        done = `${i.list === "groceries" ? "🛒" : "🏠"} ${i.name} נוסף ל${
+          i.list === "groceries" ? "רשימת הקניות" : "שדרוגי הבית"}`;
+        _logActivity(i.list === "groceries" ? "🛒" : "🏠", `added ${i.name}`);
+        break;
+      }
+      case "addPantry": {
+        const dup = (_asstCtx?.pantry || []).find(p =>
+          _normalizePantryName(p.name) === _normalizePantryName(i.name));
+        if (dup) { done = `ℹ️ "${dup.name}" כבר קיים במלאי`; break; }
+        await addDoc(collection(db, "pantry"),
+          { name: i.name, status: "stock", category: "pantry", createdAt: serverTimestamp() });
+        done = `🧺 ${i.name} נוסף למלאי`;
+        _logActivity("🧺", `added ${i.name} to pantry`);
+        break;
+      }
+      case "bill": {
+        const now = new Date();
+        const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+        const snap = await getDoc(doc(db, "bills", monthStr));
+        const cur  = snap.exists() ? snap.data() : {};
+        const patch = {};
+        if (i.key === "rent") {
+          const who = i.payer || "Alon";
+          patch[who === "Tali" ? "rentTali" : "rentAlon"] = i.amount;
+        } else {
+          patch[i.key] = i.amount;
+          const def = _BILL_DEFS.find(b => b.key === i.key);
+          patch[`${i.key}Payer`] = i.payer || cur[`${i.key}Payer`] || def?.defaultPayer || "Alon";
+        }
+        await setDoc(doc(db, "bills", monthStr), { ...patch, updatedAt: serverTimestamp() }, { merge: true });
+        const merged = { ...cur, ...patch };
+        await _syncBillsToSplitwise(monthStr, {
+          rentAlon: merged.rentAlon ?? merged.rent ?? 0,
+          rentTali: merged.rentTali ?? 0,
+          ..._BILL_DEFS.reduce((o, b) => {
+            o[b.key] = merged[b.key] || 0;
+            o[`${b.key}Payer`] = merged[`${b.key}Payer`] || b.defaultPayer;
+            return o;
+          }, {})
+        });
+        done = `${i.label} נרשם ל-${_monthLabel(monthStr)}`;
+        _logActivity("💳", `assistant logged ${i.key} ₪${i.amount}`);
+        break;
+      }
+      case "splitwise": {
+        await addDoc(collection(db, "splitwise_expenses"),
+          { name: i.name, amount: i.amount, paidBy: i.payer, createdAt: serverTimestamp() });
+        done = `🤝 ${i.name} — ₪${i.amount} נרשם על שם ${i.payer === "Tali" ? "טלי" : "אלון"}`;
+        _logActivity("🤝", `${i.name} ₪${i.amount} (${i.payer})`);
+        break;
+      }
+      case "task": {
+        await addDoc(collection(db, "maintenance"), {
+          title: i.title, status: "open", priority: "medium",
+          dateReported: new Date().toISOString().slice(0, 10),
+          createdAt: serverTimestamp()
+        });
+        done = `📋 המשימה "${i.title}" נוספה`;
+        _logActivity("📋", `logged a new task: ${i.title}`);
+        break;
+      }
+      case "taskDone": {
+        await setDoc(doc(db, "maintenance", i.id), { status: "done" }, { merge: true });
+        done = `✅ "${i.name}" סומנה כבוצעה`;
+        _logActivity("📋", `closed task: ${i.name}`);
+        break;
+      }
+      case "water": {
+        await setDoc(doc(db, "watering", "log"), { [i.id]: Date.now() }, { merge: true });
+        localStorage.removeItem(`plant_notified_${i.id}`);
+        done = `💧 ${i.name} סומן כמושקה`;
+        _logActivity("🌱", `watered ${i.name}`);
+        break;
+      }
+      case "clean": {
+        const key = _weekKey();
+        await setDoc(doc(db, "checklists", key), { [i.id]: true }, { merge: true });
+        done = `🧼 ${i.name} סומן כבוצע`;
+        _logActivity("🧼", `cleaned ${i.name}`);
+        break;
+      }
+      default:
+        throw new Error("פקודה לא נתמכת");
+    }
+
+    out.innerHTML = `<div class="asst-ok">${esc(done)}</div>`;
+    showToast(done, "success");
+    _asstPending = null;
+    _loadAsstContext();                     // keep matching data current
+    setTimeout(() => {
+      document.getElementById("asst-input").value = "";
+      document.getElementById("asst-input")?.focus();
+    }, 200);
+
+  } catch (err) {
+    out.innerHTML = `<div class="asst-fail">❌ ${esc(err.message)}</div>`;
+    showToast("שגיאה: " + err.message, "error");
+    btn.disabled = false; btn.textContent = "✅ בצע";
+  }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -4376,6 +4976,16 @@ async function initShopping(type) {
   // ── Restore saved items from this list's queue collection ──
   //    Applies to BOTH lists, so nothing is lost when navigating away.
   if (type === "groceries") _pantryQueueItems = {};
+
+  // Which queue IDs correspond to real pantry staples (for the 🧺 badge)
+  let _pantryIdSet = new Set();
+  if (type === "groceries") {
+    try {
+      const pSnap = await getDocs(collection(db, "pantry"));
+      pSnap.forEach(d => _pantryIdSet.add(d.id));
+    } catch { /* badge is cosmetic — never block the list on this */ }
+  }
+
   try {
     const qSnap = await getDocs(collection(db, _QUEUE_COL[type]));
     const rows  = [];
@@ -4386,9 +4996,13 @@ async function initShopping(type) {
       rows.forEach(r => {
         const name = r.name;
         if (!name) return;
-        // Pantry-sourced grocery items keep their 🧺 tag. Legacy docs (written
-        // before `fromPantry` existed) used the pantry doc ID, so default true.
-        const fromPantry = type === "groceries" ? (r.fromPantry !== false) : false;
+        // A grocery item counts as pantry-sourced only if a matching /pantry
+        // doc actually exists under the same ID (that's how _toggleStaple
+        // writes them). Items added by Siri or by hand get auto-IDs, so they
+        // correctly show no 🧺 badge even if the flag is missing.
+        const fromPantry = type === "groceries"
+          ? (r.fromPantry === true || _pantryIdSet.has(r.id))
+          : false;
         if (fromPantry) _pantryQueueItems[r.id] = { name, checked: false };
         _itemLists[type].push(name);
         _appendShopItem(ul, name, type, r.id, fromPantry);
@@ -5287,29 +5901,58 @@ async function _deleteSWExpense(id, isSettlement = false) {
    Console → Firestore Database → Rules, ensure:
      match /grocery_queue/{doc} { allow write: if true; }
 
-   ── ADD ITEM TO GROCERY LIST (grocery_queue) ────────────
+   COMMON TO ALL REQUESTS:
    Method:  POST
-   URL:     https://firestore.googleapis.com/v1/projects/home-manager-29a1a/databases/(default)/documents/grocery_queue
    Headers:
-     Content-Type:    application/json
+     Content-Type:   application/json
      x-goog-api-key: AIzaSyBeHKfDQkeXQwlx_ycE67Q19F1Ta2X6PtE
-   Body (JSON — replace ITEM_NAME):
+
+   NOTE ON TIMESTAMPS: in Shortcuts use a "Format Date" action with
+   the custom format  yyyy-MM-dd'T'HH:mm:ss'Z'  and insert it as the
+   timestampValue. A hardcoded date also works but sorts wrongly.
+
+   ── 1. ADD ITEM TO GROCERY LIST ─────────────────────────
+   URL: https://firestore.googleapis.com/v1/projects/home-manager-29a1a/databases/(default)/documents/grocery_queue
    {
      "fields": {
-       "name":    { "stringValue": "ITEM_NAME" },
-       "addedAt": { "timestampValue": "2025-01-01T00:00:00Z" }
+       "name":       { "stringValue": "ITEM_NAME" },
+       "fromPantry": { "booleanValue": false },
+       "addedAt":    { "timestampValue": "NOW_ISO" }
      }
    }
-   → The item appears instantly in the Groceries view (🧺 tag).
+   ⚠️ fromPantry MUST be false — omitting it makes the app show the
+      item with a 🧺 badge as if it came from the Pantry.
 
-   ── ADD ITEM TO PANTRY as In Stock ─────────────────────
-   URL:     https://firestore.googleapis.com/v1/projects/home-manager-29a1a/databases/(default)/documents/pantry
-   Body:
+   ── 2. ADD ITEM TO HOUSE UPGRADES ───────────────────────
+   URL: https://firestore.googleapis.com/v1/projects/home-manager-29a1a/databases/(default)/documents/upgrade_queue
+   {
+     "fields": {
+       "name":       { "stringValue": "ITEM_NAME" },
+       "fromPantry": { "booleanValue": false },
+       "addedAt":    { "timestampValue": "NOW_ISO" }
+     }
+   }
+
+   ── 3. ADD ITEM TO PANTRY as In Stock ───────────────────
+   URL: https://firestore.googleapis.com/v1/projects/home-manager-29a1a/databases/(default)/documents/pantry
    {
      "fields": {
        "name":      { "stringValue": "ITEM_NAME" },
        "status":    { "stringValue": "stock" },
-       "createdAt": { "timestampValue": "2025-01-01T00:00:00Z" }
+       "category":  { "stringValue": "pantry" },
+       "createdAt": { "timestampValue": "NOW_ISO" }
+     }
+   }
+
+   ── 4. LOG A TASK / ISSUE ───────────────────────────────
+   URL: https://firestore.googleapis.com/v1/projects/home-manager-29a1a/databases/(default)/documents/maintenance
+   {
+     "fields": {
+       "title":        { "stringValue": "TASK_TEXT" },
+       "status":       { "stringValue": "open" },
+       "priority":     { "stringValue": "medium" },
+       "dateReported": { "stringValue": "YYYY-MM-DD" },
+       "createdAt":    { "timestampValue": "NOW_ISO" }
      }
    }
 
