@@ -1789,62 +1789,104 @@
      in a small icon chip, so the grid reads as one calm system
      and the eye can actually scan it. Hues are kept for
      recognition; only their weight changes. */
+  /* Colour restored — but as a saturated *surface*, not a pastel
+     wash, and now carrying a live number so the density comes from
+     information rather than decoration. Tightened ~20% vs before. */
   .dash-card,
   .dash-card[data-view]{
-    background:var(--bg-card) !important;
-    border:1px solid var(--border) !important;
-    box-shadow:var(--shadow-card) !important;
-    min-height:104px;
-    /* extra leading padding so content clears the accent bar */
-    padding:16px 14px 14px 20px;
+    background:var(--ca,var(--primary)) !important;
+    border:none !important;
+    box-shadow:0 1px 2px rgba(18,20,24,.08) !important;
+    min-height:96px;
+    padding:13px 14px 12px;
     border-radius:var(--radius);
+    overflow:hidden;
   }
-  .dash-card::before{
-    /* Colour reduced to a hairline on the left edge.
-       NB: anchor with left/right only — mixing `inset-inline` with
-       `left:auto` cancels the anchor and drops the bar into the
-       content flow, where it overlaps the label. */
-    content:'';
-    position:absolute;
-    top:0;bottom:0;left:0;right:auto;
-    width:3px;height:auto;
-    background:var(--ca,var(--primary));
-    border-radius:var(--radius) 0 0 var(--radius);
-    opacity:.9;
-  }
-  .dash-card::after{display:none}          /* kill the decorative blob */
+  .dash-card::before,
+  .dash-card::after{display:none}   /* no bar, no decorative blob */
   .dash-card .card-emoji{
-    font-size:1.25rem;margin-bottom:8px;
-    width:34px;height:34px;border-radius:var(--radius-sm);
+    font-size:1.15rem;margin-bottom:6px;
+    width:30px;height:30px;border-radius:var(--radius-sm);
     display:flex;align-items:center;justify-content:center;
-    background:var(--bg-sunken);
+    background:rgba(255,255,255,.16);
   }
   .dash-card .card-label{
-    color:var(--text) !important;font-size:.92rem;font-weight:600;
-    letter-spacing:var(--tracking-tight);
+    color:#fff !important;font-size:.94rem;font-weight:650;
+    letter-spacing:var(--tracking-tight);line-height:1.2;
   }
   .dash-card .card-sub{
-    color:var(--text-muted) !important;font-size:.76rem;font-weight:450;
+    color:rgba(255,255,255,.72) !important;font-size:.72rem;font-weight:450;
+    line-height:1.3;
   }
-  .dash-card .card-arrow{color:var(--text-light) !important}
-  .dash-card:active{transform:none;background:var(--bg-surface) !important}
+  /* Arrow pinned to the corner so the stat pill gets the full width */
+  .dash-card .card-arrow{
+    color:rgba(255,255,255,.5) !important;
+    position:absolute;top:12px;inset-inline-end:12px;
+    font-size:1.1rem;line-height:1;
+  }
+  .dash-card.wide .card-arrow{top:50%;transform:translateY(-50%)}
+  .dash-card:active{transform:none;filter:brightness(.92)}
+
+  /* The live number — the thing that fixes "empty" */
+  .card-stat{
+    font-size:.74rem;font-weight:650;color:#fff;
+    margin-top:7px;padding:3px 8px;border-radius:var(--radius-xs);
+    background:rgba(255,255,255,.18);
+    display:none;align-self:flex-start;
+    font-variant-numeric:tabular-nums;
+    letter-spacing:0;white-space:nowrap;max-width:100%;
+    overflow:hidden;text-overflow:ellipsis;
+  }
+  .card-stat.has-value{display:inline-block}
+  .card-stat.alert{background:rgba(255,255,255,.28)}
+  .dash-card.wide .card-stat{margin-top:0;margin-inline-start:auto}
 
   /* Refined accent hues (recognition without shouting) */
-  .dash-card[data-view="chores"]     {--ca:#218358}
-  .dash-card[data-view="expenses"]   {--ca:#AB6400}
-  .dash-card[data-view="vault"]      {--ca:#5B5BD6}
-  .dash-card[data-view="shopping"]   {--ca:#CE2C31}
-  .dash-card[data-view="smart-house"]{--ca:#0D74CE}
-  .dash-card[data-view="calendar"]   {--ca:#0D74CE}
-  .dash-card[data-view="cooking"]    {--ca:#BD4B00}
+  .dash-card[data-view="chores"]     {--ca:#1B6E4A}
+  .dash-card[data-view="expenses"]   {--ca:#96591B}
+  .dash-card[data-view="vault"]      {--ca:#4F4BC4}
+  .dash-card[data-view="shopping"]   {--ca:#B3272C}
+  .dash-card[data-view="smart-house"]{--ca:#1265A8}
+  .dash-card[data-view="calendar"]   {--ca:#3A5169}
+  .dash-card[data-view="cooking"]    {--ca:#A24218}
 
-  /* ═══ Hero ════════════════════════════════════════════ */
+  /* ═══ Per-user theme ══════════════════════════════════
+     --user-* is set on <html> by _applyUserTheme(). Defaults
+     here so the page is correct before JS runs (no flash). */
+  :root{
+    --user-deep:#2A4A7F; --user-mid:#3A66AC;
+    --user-soft:#EAF0FA; --user-ink:#2A4A7F;
+  }
+
+  /* Hero: deep navy for Alon, deep plum for Tali — a modern
+     coloured surface rather than flat black, and an instant
+     read on whose session is active. */
   .dash-hero{
-    background:#12151A !important;
+    background:var(--user-deep) !important;
     border-radius:var(--radius-lg);
     padding:22px 20px 20px;
+    transition:background .28s var(--ease);
   }
   .dash-hero::before,.dash-hero::after{display:none}
+
+  /* Header follows the same hue, one step deeper */
+  #app-header{
+    background:var(--user-deep) !important;
+    transition:background .28s var(--ease);
+  }
+  #header-subtitle{color:rgba(255,255,255,.55) !important}
+
+  /* Active person chip picks up the accent */
+  #who-toggle{background:rgba(255,255,255,.10)}
+  .who-btn.active{
+    background:var(--user-mid) !important;
+    color:#fff !important;
+    box-shadow:none;
+  }
+
+  /* Assistant button matches the active user */
+  #assistant-fab{background:var(--user-deep)}
+  #assistant-fab:active{background:var(--user-mid)}
 
   /* ═══ Alert banner ════════════════════════════════════
      Full-width red slab was eating a third of the first screen.
@@ -2011,36 +2053,43 @@
     <div class="dash-card" data-view="chores"   onclick="navigateTo('chores')">
       <div class="card-emoji">🧹</div>
       <div><div class="card-label">Chores</div><div class="card-sub">Tasks &amp; Garden</div></div>
+      <div class="card-stat" data-stat="chores"></div>
       <span class="card-arrow">›</span>
     </div>
     <div class="dash-card" data-view="expenses" onclick="navigateTo('expenses')">
       <div class="card-emoji">💰</div>
       <div><div class="card-label">Expenses</div><div class="card-sub">Reports &amp; Status</div></div>
+      <div class="card-stat" data-stat="expenses"></div>
       <span class="card-arrow">›</span>
     </div>
     <div class="dash-card" data-view="vault"    onclick="navigateTo('vault')">
       <div class="card-emoji">🔐</div>
       <div><div class="card-label">The Vault</div><div class="card-sub">Documents</div></div>
+      <div class="card-stat" data-stat="vault"></div>
       <span class="card-arrow">›</span>
     </div>
     <div class="dash-card" data-view="shopping" onclick="navigateTo('shopping')">
       <div class="card-emoji">🛒</div>
       <div><div class="card-label">Shopping</div><div class="card-sub">Lists &amp; Pantry</div></div>
+      <div class="card-stat" data-stat="shopping"></div>
       <span class="card-arrow">›</span>
     </div>
     <div class="dash-card" data-view="smart-house" onclick="navigateTo('smart-house')">
       <div class="card-emoji">🏡</div>
       <div><div class="card-label">Smart House</div><div class="card-sub">טלוויזיה, מים, שואב</div></div>
+      <div class="card-stat" data-stat="smart-house"></div>
       <span class="card-arrow">›</span>
     </div>
     <div class="dash-card" data-view="cooking" onclick="navigateTo('cooking')">
       <div class="card-emoji">🍽️</div>
       <div><div class="card-label">ארוחות</div><div class="card-sub">גלגל ארוחות &amp; מתכונים</div></div>
+      <div class="card-stat" data-stat="cooking"></div>
       <span class="card-arrow">›</span>
     </div>
     <div class="dash-card wide" data-view="calendar" onclick="navigateTo('calendar')">
       <div class="card-emoji">🗓️</div>
       <div><div class="card-label">House Calendar</div><div class="card-sub">יומן הבית המשותף</div></div>
+      <div class="card-stat" data-stat="calendar"></div>
       <span class="card-arrow">›</span>
     </div>
   </div>
@@ -3641,6 +3690,81 @@ async function _loadAsstContext() {
 }
 
 /* ══════════════════════════════════════════════════════════
+   DASHBOARD LIVE STATS
+   The dashboard read as empty because the cards only said their
+   own name. Each now carries a real number, so the screen is
+   informative at a glance instead of decorative.
+   Fails silently — a card without data just shows its subtitle.
+══════════════════════════════════════════════════════════ */
+async function _loadDashStats() {
+  const set = (key, text, tone) => {
+    const el = document.querySelector(`.card-stat[data-stat="${key}"]`);
+    if (!el) return;
+    el.textContent = text || "";
+    el.classList.toggle("alert", tone === "alert");
+    el.classList.toggle("has-value", !!text);
+  };
+  const count = async col => {
+    try { const s = await getDocs(collection(db, col)); return s.size; }
+    catch { return null; }
+  };
+
+  // 🧹 Chores — open tasks + plants needing water
+  try {
+    const [mSnap, pSnap, wSnap] = await Promise.all([
+      getDocs(collection(db, "maintenance")),
+      getDocs(collection(db, "plants")),
+      getDoc(doc(db, "watering", "log"))
+    ]);
+    let open = 0; mSnap.forEach(d => { if ((d.data().status || "open") !== "done") open++; });
+    const log = wSnap.exists() ? wSnap.data() : {};
+    let thirsty = 0;
+    pSnap.forEach(d => {
+      const v = d.data(), last = log[d.id];
+      const days = (v.intervalDays || 3) * 86400000;
+      if (!last || Date.now() - last > days) thirsty++;
+    });
+    const bits = [];
+    if (open)    bits.push(`${open} משימות`);
+    if (thirsty) bits.push(`${thirsty} להשקות`);
+    set("chores", bits.join(" · ") || "הכל מעודכן", (open || thirsty) ? "alert" : "");
+  } catch { /* leave blank */ }
+
+  // 💰 Expenses — month to date, variable + fixed
+  try {
+    const d = new Date();
+    const month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const [eSnap, bSnap] = await Promise.all([
+      getDocs(collection(db, "expenses")),
+      getDoc(doc(db, "bills", month))
+    ]);
+    let v = 0; eSnap.forEach(x => { const e = x.data(); if (e.date?.startsWith(month)) v += e.amount || 0; });
+    const b = bSnap.exists() ? bSnap.data() : {};
+    const fixed = (b.rentAlon ?? b.rent ?? 0) + (b.rentTali ?? 0) +
+                  _BILL_DEFS.reduce((s, x) => s + (b[x.key] || 0), 0);
+    set("expenses", `₪${(v + fixed).toLocaleString("en-US", { maximumFractionDigits: 0 })} החודש`);
+  } catch { /* leave blank */ }
+
+  // 🛒 Shopping — items waiting + staples running low
+  try {
+    const [gq, uq, pantry] = await Promise.all([
+      getDocs(collection(db, "grocery_queue")),
+      getDocs(collection(db, "upgrade_queue")),
+      getDocs(collection(db, "pantry"))
+    ]);
+    let low = 0; pantry.forEach(d => { if (d.data().status === "low") low++; });
+    const total = gq.size + uq.size;
+    set("shopping", total ? `${total} פריטים · ${low} נגמרו` : (low ? `${low} נגמרו` : "הרשימה ריקה"),
+        total ? "alert" : "");
+  } catch { /* leave blank */ }
+
+  // 🔐 Vault / 🗓️ Calendar / 🍽️ Meals — counts where a collection exists
+  count("vault_docs").then(n => n && set("vault", `${n} מסמכים`));
+  count("calendar_events").then(n => n && set("calendar", `${n} אירועים`));
+  count("meal_wheels").then(n => n && set("cooking", `${n} גלגלים`));
+}
+
+/* ══════════════════════════════════════════════════════════
    RESTOCK PREDICTIONS
    Every grocery expense stores items[] and a date, which is a
    purchase log we already have. For each item, the gaps between
@@ -4272,7 +4396,7 @@ window.navigateTo = function(viewId) {
 };
 
 function _onEnter(id) {
-  if (id === "dashboard")          initActivityFeed();
+  if (id === "dashboard")        { initActivityFeed(); _loadDashStats(); }
   if (id === "activity-archive")   initActivityArchive();
   if (id === "chores-cleaning")    initCleaning();
   if (id === "chores-gardening")   initGardening();
@@ -4344,16 +4468,44 @@ function _currentUser() {
   return localStorage.getItem("currentUser") || "Alon";
 }
 
+/* ── Per-user theming ──────────────────────────────────────
+   Whoever is active tints the header, hero and accents, so it's
+   obvious at a glance whose session this is. Values are set as
+   CSS variables on <html>; every rule reads them, so switching
+   is one attribute change rather than a repaint of many nodes. */
+/* Chosen for colourfulness AND contrast: both read clearly as a
+   colour rather than near-black, while keeping white text at AAA
+   (8.8:1 / 8.2:1) and the muted sub-text at AA (5.6:1 / 5.5:1). */
+const USER_THEME = {
+  Alon: { deep:"#2A4A7F", mid:"#3A66AC", soft:"#EAF0FA", ink:"#2A4A7F" },
+  Tali: { deep:"#7A3570", mid:"#9A468C", soft:"#FAEDF7", ink:"#7A3570" },
+};
+
+function _applyUserTheme(name) {
+  const t = USER_THEME[name] || USER_THEME.Alon;
+  const r = document.documentElement;
+  r.style.setProperty("--user-deep", t.deep);
+  r.style.setProperty("--user-mid",  t.mid);
+  r.style.setProperty("--user-soft", t.soft);
+  r.style.setProperty("--user-ink",  t.ink);
+  r.setAttribute("data-user", name);
+  // keep the iOS status-bar / browser chrome in step
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", t.deep);
+}
+
 function _initWhoUI() {
   const user = _currentUser();
   document.getElementById("who-alon").classList.toggle("active", user === "Alon");
   document.getElementById("who-tali").classList.toggle("active", user === "Tali");
+  _applyUserTheme(user);
 }
 
 window.setUser = function(name) {
   localStorage.setItem("currentUser", name);
   document.getElementById("who-alon").classList.toggle("active", name === "Alon");
   document.getElementById("who-tali").classList.toggle("active", name === "Tali");
+  _applyUserTheme(name);
   _updateGreeting(true); // animate the name swap
   showToast(`Switched to ${name}`, "success");
 };
