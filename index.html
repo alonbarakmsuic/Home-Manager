@@ -141,6 +141,21 @@
   .asst-note{font-size:.76rem;color:var(--text-muted);line-height:1.55;margin-top:7px}
   .asst-dup{background:rgba(0,122,255,.07);border:1.5px solid rgba(0,122,255,.32);
     border-radius:var(--radius);padding:16px;margin-bottom:12px}
+  .asst-answer{background:var(--bg-surface);border:1.5px solid rgba(108,99,255,.28);
+    border-radius:var(--radius);padding:17px;margin-bottom:12px;
+    font-size:.92rem;color:var(--text);line-height:1.6;direction:rtl}
+  .asst-answer strong{font-size:1rem}
+  .asst-answer ul{list-style:none;padding-inline-start:0}
+  .asst-answer li{padding:5px 0;border-bottom:.5px solid var(--border)}
+  .asst-answer li:last-child{border-bottom:none}
+  .asst-batch-row{padding:9px 0;border-bottom:.5px solid var(--border);
+    font-size:.93rem;font-weight:600;color:var(--text)}
+  .asst-batch-row:last-of-type{border-bottom:none}
+  .asst-undo{width:100%;padding:11px;margin-bottom:12px;border-radius:var(--radius);
+    background:transparent;border:1.5px solid var(--border);color:var(--text-muted);
+    font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;transition:var(--T)}
+  .asst-undo:active{background:rgba(255,59,48,.08);border-color:var(--danger);color:var(--danger)}
+  .asst-undo:disabled{opacity:.5}
   .asst-low-conf{background:rgba(255,149,0,.09);border-color:rgba(255,149,0,.4)}
   .asst-low-conf .asst-verb{color:#9A5B00}
   .asst-btns{display:flex;gap:9px;margin-top:14px}
@@ -1656,7 +1671,17 @@
     <div id="asst-result"></div>
 
     <div id="asst-examples">
-      <p class="asst-ex-title">🇮🇱 עברית — לחץ כדי למלא</p>
+      <p class="asst-ex-title">❓ שאלות</p>
+      <div class="asst-chips">
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">כמה הוצאנו החודש</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">מי חייב למי</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">מה חסר בחשבונות</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">מה נגמר</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">מה ברשימת הקניות</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">מה המשימות</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">מה כדאי לקנות</button>
+      </div>
+      <p class="asst-ex-title" style="margin-top:14px">🇮🇱 פקודות — לחץ כדי למלא</p>
       <div class="asst-chips">
         <button class="asst-chip" dir="auto" onclick="assistantFill(this)">חלב נגמר</button>
         <button class="asst-chip" dir="auto" onclick="assistantFill(this)">קניתי לחם</button>
@@ -1666,6 +1691,7 @@
         <button class="asst-chip" dir="auto" onclick="assistantFill(this)">משימה לתקן את הדלת</button>
         <button class="asst-chip" dir="auto" onclick="assistantFill(this)">השקיתי את הפיקוס</button>
         <button class="asst-chip" dir="auto" onclick="assistantFill(this)">ניקיתי את המטבח</button>
+        <button class="asst-chip" dir="auto" onclick="assistantFill(this)">חלב ולחם נגמרו</button>
       </div>
       <p class="asst-ex-title" style="margin-top:14px">🇬🇧 English</p>
       <div class="asst-chips">
@@ -2867,8 +2893,9 @@ function _renderBackupStatus() {
 /* ══════════════════════════════════════════════════════════
    ✨ ASSISTANT — COMMAND PARSER
    Rule-based and bilingual. No AI, no network, no API key.
-   Cross-references the user's existing pantry, lists and tasks
-   so it redirects or refuses instead of creating duplicates.
+   Cross-references existing data so it redirects or refuses
+   instead of creating duplicates. Handles questions and
+   multi-item commands too.
 ══════════════════════════════════════════════════════════ */
 
 
@@ -2999,9 +3026,92 @@ const PANTRY_EMOJI = { low:"🔴", stock:"🟢" };
 /* ══════════════════════════════════════════════════════════
    PARSE
 ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════
+   QUESTIONS — answered by reading data, no AI required.
+   Each returns {type:"query", q:<id>, arg?} for the app to resolve.
+══════════════════════════════════════════════════════════ */
+const QUERIES = [
+  { q:"spend_month",  re:/(?:כמה\s+(?:הוצאנו|בזבזנו|שילמנו)|how much (?:did we |have we )?(?:spend|spent))/i },
+  { q:"balance",      re:/(?:מי\s+חייב|מה\s+ה?יתרה|כמה\s+אני\s+חייב|כמה\s+טלי\s+חייבת|who owes|what.?s the balance)/i },
+  { q:"bills_missing",re:/(?:מה\s+חסר\s+ב?ה?חשבונות|אילו\s+חשבונות|which bills|what bills|missing bills)/i },
+  { q:"grocery_list", re:/(?:מה\s+(?:יש\s+)?ב?רשימ[הת]\s*(?:ה?קניות)?|what.?s (?:on|in) the (?:shopping |grocery )?list)/i },
+  { q:"pantry_low",   re:/(?:מה\s+נגמר|מה\s+חסר(?!\s+ב?ה?חשבונות)|what.?s (?:running )?low|what.?s out)/i },
+  { q:"tasks_open",   re:/(?:מה\s+ה?משימות|אילו\s+משימות|משימות\s+פתוחות|what tasks|open tasks)/i },
+  { q:"upgrades_list",re:/(?:מה\s+ב?שדרוגים|what.?s (?:on|in) the upgrades)/i },
+  { q:"restock",      re:/(?:מה\s+(?:כדאי|צריך)\s+לקנות|מה\s+עומד\s+להיגמר|תחזית|מה\s+לקנות|what should (?:we|i) buy|what.?s (?:due|likely)|restock|predictions?)/i },
+];
+
+function parseQuery(text) {
+  /* Specific-bill questions are checked FIRST — "כמה שילמנו על חשמל"
+     also matches the general spending pattern, and the more specific
+     answer is the one the user wants. */
+  const m = text.match(/(?:כמה|how much).{0,20}?(חשמל|גז|מים|ארנונה|אינטרנט|שכר דירה|electricity|gas|water|arnona|wifi|rent)/i);
+  if (m) {
+    const map = { "חשמל":"electricity", "גז":"gas", "מים":"water", "ארנונה":"arnona",
+                  "אינטרנט":"wifi", "שכר דירה":"rent" };
+    const key = map[m[1]] || String(m[1]).toLowerCase();
+    return { type:"query", q:"bill_amount", arg:key };
+  }
+  for (const { q, re } of QUERIES) if (re.test(text)) return { type:"query", q };
+  return null;
+}
+
+/* ══════════════════════════════════════════════════════════
+   MULTI-ITEM — "חלב לחם וביצים נגמרו" / "milk and bread are low"
+   Splits the subject list, then re-runs the full command once per
+   item so every rule (incl. duplicate checks) still applies.
+══════════════════════════════════════════════════════════ */
+function parseMulti(raw, ctx) {
+  const text = normText(raw);
+  // Only worth splitting when a separator sits inside the subject.
+  // NB: no \b around ו — JS word boundaries don't apply to Hebrew.
+  if (!/(?:,|\s+ו[א-ת]|\sand\s|\+)/.test(text)) return null;
+
+  // Find the trailing verb phrase so it can be re-attached to each item
+  const TAIL = [
+    { re:/\s*(נגמרו|נגמרות|נגמרים|נגמר|נגמרה)\s*$/,               make:i => `${i} נגמר` },
+    { re:/\s*(are|is)\s+(running\s+low|low|out)\s*$/i,             make:i => `${i} is running low` },
+    { re:/\s*(קניתי|קנינו)\s*$/,                                    make:i => `קניתי ${i}` },
+  ];
+  const HEAD = [
+    { re:/^\s*(?:תוסיף|הוסף)\s+ל?קניות\s+/,                        make:i => `תוסיף לקניות ${i}` },
+    { re:/^\s*(?:תוסיף|הוסף)\s+ל?שדרוגים\s+/,                      make:i => `תוסיף לשדרוגים ${i}` },
+    { re:/^\s*(?:קניתי|קנינו)\s+/,                                  make:i => `קניתי ${i}` },
+    { re:/^\s*add\s+/i,                                             make:i => `add ${i} to groceries` },
+  ];
+
+  let body = null, make = null;
+  for (const t of TAIL) if (t.re.test(text)) { body = text.replace(t.re, ""); make = t.make; break; }
+  if (!make) for (const h of HEAD) if (h.re.test(text)) { body = text.replace(h.re, ""); make = h.make; break; }
+  if (!make) return null;
+
+  // "add X to groceries" — strip the trailing target before splitting
+  body = body.replace(/\s+to\s+(?:the\s+)?(?:groceries|grocery|shopping)(?:\s+list)?\s*$/i, "")
+             .replace(/\s+to\s+(?:the\s+)?upgrades?\s*$/i, "");
+
+  /* Split on comma, "and", "+", or the Hebrew prefix ו attached to the
+     next word. Note the letter range must be א-ת — the block
+     below that (֐-ֿ) is vowel points, not letters.
+     Bare spaces are NOT separators: "שמן זית" is one item, not two. */
+  const parts = body.split(/\s*,\s*|\s+and\s+|\s*\+\s*|\s+ו(?=[א-ת])/)
+    .map(s => clean(s)).filter(s => s && s.length > 1);
+  if (parts.length < 2) return null;
+
+  const items = [];
+  for (const p of parts) {
+    const sub = parseCommand(make(p), ctx);
+    if (sub && sub.type !== "ambiguous") items.push({ input:p, intent:sub });
+  }
+  if (items.length < 2) return null;
+  return { type:"batch", items };
+}
+
 function parseCommand(raw, ctx = {}) {
   const text = normText(raw);
   if (!text) return null;
+
+  const query = parseQuery(text);
+  if (query) return query;
   const { pantry = [], plants = [], tasks = [], rooms = [],
           groceryQueue = [], upgradeQueue = [] } = ctx;
   const amount = extractAmount(text);
@@ -3225,8 +3335,13 @@ function parseCommand(raw, ctx = {}) {
   return null;
 }
 
+/* Entry point: try a multi-item split first, then a single command. */
+function parseInput(raw, ctx = {}) {
+  return parseMulti(raw, ctx) || parseCommand(raw, ctx);
+}
+
 /* ══════════════════════════════════════════════════════════
-   ✨ ASSISTANT — UI, CONTEXT & EXECUTORS
+   ✨ ASSISTANT — STATE & CONTEXT
 ══════════════════════════════════════════════════════════ */
 let _asstCtx = null, _asstPending = null;
 
@@ -3234,7 +3349,9 @@ let _asstCtx = null, _asstPending = null;
 const esc = s => String(s ?? "").replace(/[&<>"']/g,
   c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 
-/* Pull the entities the parser matches against */
+/* Pull the entities the parser matches against. The two queues are
+   what make duplicate detection possible — the parser checks them
+   before creating anything new. */
 async function _loadAsstContext() {
   const grab = async (col, field) => {
     try {
@@ -3249,11 +3366,171 @@ async function _loadAsstContext() {
     grab("maintenance", "title"), grab("cleaning_templates", "name"),
     grab("grocery_queue", "name"), grab("upgrade_queue", "name")
   ]);
-  // The two queues are what make duplicate detection possible — the
-  // parser checks them before creating anything new.
   _asstCtx = { pantry, plants, rooms, groceryQueue, upgradeQueue,
                tasks: tasks.filter(t => (t.status || "open") !== "done") };
   return _asstCtx;
+}
+
+/* ══════════════════════════════════════════════════════════
+   RESTOCK PREDICTIONS
+   Every grocery expense stores items[] and a date, which is a
+   purchase log we already have. For each item, the gaps between
+   purchases give an average interval; if more than that has passed
+   since the last one, it's probably due.
+   Deliberately conservative: needs ≥3 purchases before predicting,
+   because two points can't distinguish a habit from a coincidence.
+══════════════════════════════════════════════════════════ */
+const _MIN_PURCHASES = 3;
+
+async function _restockPredictions() {
+  const snap = await getDocs(collection(db, "expenses"));
+  const byItem = new Map();                       // normalised name → [dates]
+  const display = new Map();                      // normalised name → original
+
+  snap.forEach(d => {
+    const e = d.data();
+    if (e.type !== "groceries" || !Array.isArray(e.items) || !e.date) return;
+    e.items.forEach(raw => {
+      const key = _normalizePantryName(raw);
+      if (!key) return;
+      if (!byItem.has(key)) { byItem.set(key, []); display.set(key, raw); }
+      byItem.get(key).push(e.date);
+    });
+  });
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const out = [];
+
+  for (const [key, dates] of byItem) {
+    const uniq = [...new Set(dates)].sort();
+    if (uniq.length < _MIN_PURCHASES) continue;
+
+    const gaps = [];
+    for (let n = 1; n < uniq.length; n++)
+      gaps.push((new Date(uniq[n]) - new Date(uniq[n - 1])) / 86400000);
+    const usable = gaps.filter(g => g >= 1 && g <= 180);   // ignore same-day + long gaps
+    if (usable.length < _MIN_PURCHASES - 1) continue;
+
+    const avg  = usable.reduce((a, b) => a + b, 0) / usable.length;
+    const last = new Date(uniq[uniq.length - 1]);
+    const since = Math.round((today - last) / 86400000);
+    if (since >= Math.round(avg)) {
+      out.push({ name: display.get(key), avg: Math.round(avg), since,
+                 overdue: since - Math.round(avg), purchases: uniq.length });
+    }
+  }
+  return out.sort((a, b) => b.overdue - a.overdue);
+}
+
+/* ══════════════════════════════════════════════════════════
+   QUERIES — answered by reading data, no AI
+══════════════════════════════════════════════════════════ */
+const _curMonth = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+};
+
+async function _answerQuery(q, arg) {
+  const month = _curMonth();
+  const li = rows => rows.length
+    ? `<ul style="margin:8px 0 0;padding-inline-start:20px;line-height:1.85">${
+        rows.map(r => `<li dir="auto">${esc(r)}</li>`).join("")}</ul>`
+    : `<div class="asst-note">אין פריטים.</div>`;
+
+  switch (q) {
+    case "spend_month": {
+      const snap = await getDocs(collection(db, "expenses"));
+      let g = 0, u = 0;
+      snap.forEach(d => {
+        const e = d.data();
+        if (!e.date?.startsWith(month)) return;
+        if (e.type === "groceries") g += e.amount || 0; else u += e.amount || 0;
+      });
+      const bSnap = await getDoc(doc(db, "bills", month));
+      const b = bSnap.exists() ? bSnap.data() : {};
+      const fixed = (b.rentAlon ?? b.rent ?? 0) + (b.rentTali ?? 0) +
+                    _BILL_DEFS.reduce((s, d) => s + (b[d.key] || 0), 0);
+      return `<strong>${_monthLabel(month)}</strong>
+        ${li([`🛒 קניות — ₪${g.toFixed(0)}`, `🏠 שדרוגים — ₪${u.toFixed(0)}`,
+              `💳 חשבונות — ₪${fixed.toFixed(0)}`])}
+        <div style="margin-top:10px;font-size:1.05rem;font-weight:800">
+          סה״כ ₪${(g + u + fixed).toFixed(0)}</div>`;
+    }
+    case "balance": {
+      const snap = await getDocs(collection(db, "splitwise_expenses"));
+      const items = []; snap.forEach(d => items.push(d.data()));
+      const { paidAlon, paidTali, net } = _swBalance(items);
+      const owed = Math.abs(net);
+      return owed < 0.01
+        ? `⚖️ <strong>אתם מאוזנים</strong>${li([`אלון שילם ₪${paidAlon.toFixed(0)}`, `טלי שילמה ₪${paidTali.toFixed(0)}`])}`
+        : `<strong>${net > 0 ? "טלי חייבת לאלון" : "אלון חייב לטלי"} ₪${owed.toFixed(0)}</strong>
+           ${li([`אלון שילם ₪${paidAlon.toFixed(0)}`, `טלי שילמה ₪${paidTali.toFixed(0)}`])}`;
+    }
+    case "bills_missing": {
+      const s = await getDoc(doc(db, "bills", month));
+      const b = s.exists() ? s.data() : {};
+      const miss = [];
+      if (!(b.rentAlon ?? b.rent ?? 0) && !(b.rentTali ?? 0)) miss.push("🏠 שכר דירה");
+      _BILL_DEFS.forEach(d => { if (!(b[d.key] || 0)) miss.push(`${d.emoji} ${d.he}`); });
+      return miss.length
+        ? `⚠️ <strong>חסר ב-${_monthLabel(month)}</strong>${li(miss)}`
+        : `✅ <strong>כל החשבונות של ${_monthLabel(month)} מולאו</strong>`;
+    }
+    case "bill_amount": {
+      const s = await getDoc(doc(db, "bills", month));
+      const b = s.exists() ? s.data() : {};
+      if (arg === "rent") {
+        const a = b.rentAlon ?? b.rent ?? 0, t = b.rentTali ?? 0;
+        return (a + t) ? `🏠 <strong>שכר דירה — ₪${(a + t).toFixed(0)}</strong>${
+          li([`אלון ₪${a.toFixed(0)}`, `טלי ₪${t.toFixed(0)}`])}`
+          : `לא נרשם שכר דירה ל-${_monthLabel(month)}.`;
+      }
+      const def = _BILL_DEFS.find(d => d.key === arg);
+      const amt = b[arg] || 0;
+      if (!def) return "לא זיהיתי את סוג החשבון.";
+      return amt
+        ? `${def.emoji} <strong>${def.he} — ₪${amt.toFixed(0)}</strong>
+           <div class="asst-note">שילם: ${(b[`${arg}Payer`] || def.defaultPayer) === "Tali" ? "טלי" : "אלון"} · ${_monthLabel(month)}</div>`
+        : `לא נרשם חשבון ${def.he} ל-${_monthLabel(month)}.`;
+    }
+    case "grocery_list": {
+      const c = await _loadAsstContext();
+      return `🛒 <strong>רשימת הקניות (${c.groceryQueue.length})</strong>${
+        li(c.groceryQueue.map(i => i.name))}`;
+    }
+    case "upgrades_list": {
+      const c = await _loadAsstContext();
+      return `🏠 <strong>שדרוגי הבית (${c.upgradeQueue.length})</strong>${
+        li(c.upgradeQueue.map(i => i.name))}`;
+    }
+    case "pantry_low": {
+      const c = await _loadAsstContext();
+      const low = c.pantry.filter(p => p.status === "low");
+      return low.length
+        ? `🔴 <strong>נגמרו (${low.length})</strong>${li(low.map(i => i.name))}`
+        : `✅ <strong>שום דבר לא מסומן כנגמר</strong>`;
+    }
+    case "tasks_open": {
+      const c = await _loadAsstContext();
+      return `📋 <strong>משימות פתוחות (${c.tasks.length})</strong>${
+        li(c.tasks.map(t => `${{high:"🔴",medium:"🟡",low:"🟢"}[t.priority || "medium"]} ${t.title}`))}`;
+    }
+    case "restock": {
+      const preds = await _restockPredictions();
+      if (!preds.length)
+        return `🔮 <strong>אין תחזיות עדיין</strong>
+          <div class="asst-note">התחזית נבנית מהיסטוריית הקניות — צריך לפחות
+          ${_MIN_PURCHASES} רכישות של אותו מוצר. ככל שתרשמו יותר קניות, זה ישתפר.</div>`;
+      const c = await _loadAsstContext();
+      const onList = new Set(c.groceryQueue.map(i => _normalizePantryName(i.name)));
+      return `🔮 <strong>כנראה נגמר או עומד להיגמר</strong>${
+        li(preds.slice(0, 10).map(p =>
+          `${p.name} — נקנה כל ~${p.avg} ימים, עברו ${p.since}${
+            onList.has(_normalizePantryName(p.name)) ? " ✅ כבר ברשימה" : ""}`))}
+        <div class="asst-note">מבוסס על ${preds[0].purchases}+ רכישות קודמות.</div>`;
+    }
+  }
+  return "לא הצלחתי לענות על זה.";
 }
 
 window.assistantBgClick = e => { if (e.target === e.currentTarget) closeAssistant(); };
@@ -3281,15 +3558,49 @@ window.assistantParse = async function() {
   if (!_asstCtx) { out.innerHTML = `<div class="asst-card">⏳ טוען נתונים…</div>`; await _loadAsstContext(); }
   document.getElementById("asst-examples").style.display = "none";
 
-  const intent = parseCommand(raw, _asstCtx);
+  const intent = parseInput(raw, _asstCtx);
 
   if (!intent) {
     out.innerHTML = `<div class="asst-fail">
-      🤔 לא הבנתי את הפקודה.<br>
-      נסה למשל: <strong>חלב נגמר</strong> · <strong>חשמל 320</strong> ·
+      🤔 לא הבנתי.<br>
+      פקודות: <strong>חלב נגמר</strong> · <strong>חשמל 320</strong> ·
       <strong>תוסיף לקניות שמפו</strong><br>
-      <span style="font-size:.76rem;color:var(--text-muted)">
-      (שאלות כמו "כמה הוצאנו החודש" עדיין לא נתמכות)</span></div>`;
+      שאלות: <strong>כמה הוצאנו החודש</strong> · <strong>מי חייב למי</strong> ·
+      <strong>מה נגמר</strong></div>`;
+    return;
+  }
+
+  /* ── Questions: answer straight away, nothing to confirm ── */
+  if (intent.type === "query") {
+    out.innerHTML = `<div class="asst-card">⏳ בודק…</div>`;
+    try {
+      const html = await _answerQuery(intent.q, intent.arg);
+      out.innerHTML = `<div class="asst-answer">${html}</div>`;
+    } catch (e) {
+      out.innerHTML = `<div class="asst-fail">❌ ${esc(e.message)}</div>`;
+    }
+    _asstPending = null;
+    return;
+  }
+
+  /* ── Several items in one sentence ── */
+  if (intent.type === "batch") {
+    const doable = intent.items.filter(i => i.intent.type !== "duplicate");
+    const skipped = intent.items.filter(i => i.intent.type === "duplicate");
+    _asstPending = doable.length ? { type:"batch", items:doable } : null;
+    out.innerHTML = `
+      <div class="asst-card">
+        <div class="asst-verb">${doable.length} פעולות</div>
+        ${doable.map(i => `<div class="asst-batch-row" dir="auto">${esc(i.intent.label)}</div>`).join("")}
+        ${skipped.length ? `<div class="asst-note">🚫 מדולג (כבר קיים): ${
+          skipped.map(i => esc(i.intent.name || i.input)).join(" · ")}</div>` : ""}
+        ${doable.length ? `<div class="asst-btns">
+          <button class="asst-confirm" id="asst-do">✅ בצע הכל</button>
+          <button class="asst-cancel" onclick="assistantReset()">ביטול</button>
+        </div>` : `<div class="asst-btns">
+          <button class="asst-cancel" style="flex:1" onclick="assistantReset()">הבנתי</button></div>`}
+      </div>`;
+    if (doable.length) document.getElementById("asst-do").onclick = _assistantExecute;
     return;
   }
 
@@ -3349,6 +3660,10 @@ window.assistantReset = function() {
 };
 
 /* ── Execute the confirmed intent ─────────────────────────── */
+/* Every action records how to reverse itself, so ↶ can undo it.
+   Undo entries are {label, fn} and live only for the session. */
+let _asstUndo = null;
+
 async function _assistantExecute() {
   const i = _asstPending;
   if (!i) return;
@@ -3357,11 +3672,85 @@ async function _assistantExecute() {
   const out = document.getElementById("asst-result");
 
   try {
-    let done = "";
+    if (i.type === "batch") {
+      const results = [], undos = [];
+      for (const it of i.items) {
+        const r = await _runIntent(it.intent);
+        results.push(r.done);
+        if (r.undo) undos.push(r.undo);
+      }
+      _asstUndo = undos.length ? {
+        label: `${undos.length} פעולות`,
+        fn: async () => { for (const u of undos.reverse()) await u(); }
+      } : null;
+      out.innerHTML = `<div class="asst-ok">${
+        results.map(r => `<div dir="auto">${esc(r)}</div>`).join("")}</div>${_undoBtnHtml()}`;
+      showToast(`✅ בוצעו ${results.length} פעולות`, "success");
+      _wireUndo(); _asstPending = null; _loadAsstContext();
+      setTimeout(() => { document.getElementById("asst-input").value = ""; }, 200);
+      return;
+    }
+
+    const { done, undo } = await _runIntent(i);
+    _asstUndo = undo ? { label: done, fn: undo } : null;
+    out.innerHTML = `<div class="asst-ok">${esc(done)}</div>${_undoBtnHtml()}`;
+    showToast(done, "success");
+    _wireUndo();
+    _asstPending = null;
+    _loadAsstContext();
+    setTimeout(() => {
+      document.getElementById("asst-input").value = "";
+      document.getElementById("asst-input")?.focus();
+    }, 200);
+
+  } catch (err) {
+    out.innerHTML = `<div class="asst-fail">❌ ${esc(err.message)}</div>`;
+    showToast("שגיאה: " + err.message, "error");
+    btn.disabled = false; btn.textContent = "✅ בצע";
+  }
+}
+
+const _undoBtnHtml = () => _asstUndo
+  ? `<button class="asst-undo" id="asst-undo">↶ בטל את הפעולה</button>` : "";
+
+function _wireUndo() {
+  const b = document.getElementById("asst-undo");
+  if (!b) return;
+  b.onclick = async () => {
+    if (!_asstUndo) return;
+    b.disabled = true; b.textContent = "⏳ מבטל…";
+    try {
+      await _asstUndo.fn();
+      _asstUndo = null;
+      document.getElementById("asst-result").innerHTML =
+        `<div class="asst-dup"><div class="asst-label">↶ הפעולה בוטלה</div></div>`;
+      showToast("↶ בוטל", "success");
+      _logActivity("↶", "ביטל פעולה של העוזר");
+      _loadAsstContext();
+    } catch (e) {
+      showToast("לא הצלחתי לבטל: " + e.message, "error");
+      b.disabled = false; b.textContent = "↶ בטל את הפעולה";
+    }
+  };
+}
+
+/* Runs ONE intent. Returns {done, undo} — undo is a function or null. */
+async function _runIntent(i) {
+  {
+    let done = "", undo = null;
 
     switch (i.type) {
       case "pantryStatus": {
+        const prevSnap = await getDoc(doc(db, "pantry", i.id));
+        const prev = prevSnap.exists() ? (prevSnap.data().status || "stock") : "stock";
         await setDoc(doc(db, "pantry", i.id), { status: i.status }, { merge: true });
+        undo = async () => {
+          await setDoc(doc(db, "pantry", i.id), { status: prev }, { merge: true });
+          if (prev === "low")
+            await setDoc(doc(db, "grocery_queue", i.id),
+              { name: i.name, fromPantry: true, addedAt: serverTimestamp() });
+          else await deleteDoc(doc(db, "grocery_queue", i.id)).catch(() => {});
+        };
         if (i.status === "low") {
           await setDoc(doc(db, "grocery_queue", i.id),
             { name: i.name, fromPantry: true, addedAt: serverTimestamp() });
@@ -3375,8 +3764,9 @@ async function _assistantExecute() {
       }
       case "addList": {
         const col = i.list === "groceries" ? "grocery_queue" : "upgrade_queue";
-        await addDoc(collection(db, col),
+        const ref = await addDoc(collection(db, col),
           { name: i.name, fromPantry: false, addedAt: serverTimestamp() });
+        undo = () => deleteDoc(doc(db, col, ref.id));
         done = `${i.list === "groceries" ? "🛒" : "🏠"} ${i.name} נוסף ל${
           i.list === "groceries" ? "רשימת הקניות" : "שדרוגי הבית"}`;
         _logActivity(i.list === "groceries" ? "🛒" : "🏠", `added ${i.name}`);
@@ -3386,8 +3776,9 @@ async function _assistantExecute() {
         const dup = (_asstCtx?.pantry || []).find(p =>
           _normalizePantryName(p.name) === _normalizePantryName(i.name));
         if (dup) { done = `ℹ️ "${dup.name}" כבר קיים במלאי`; break; }
-        await addDoc(collection(db, "pantry"),
+        const pref = await addDoc(collection(db, "pantry"),
           { name: i.name, status: "stock", category: "pantry", createdAt: serverTimestamp() });
+        undo = () => deleteDoc(doc(db, "pantry", pref.id));
         done = `🧺 ${i.name} נוסף למלאי`;
         _logActivity("🧺", `added ${i.name} to pantry`);
         break;
@@ -3407,6 +3798,24 @@ async function _assistantExecute() {
           patch[`${i.key}Payer`] = i.payer || cur[`${i.key}Payer`] || def?.defaultPayer || "Alon";
         }
         await setDoc(doc(db, "bills", monthStr), { ...patch, updatedAt: serverTimestamp() }, { merge: true });
+
+        // Undo restores the previous amounts AND re-syncs the balance
+        const restore = {};
+        Object.keys(patch).forEach(f => { restore[f] = cur[f] ?? 0; });
+        undo = async () => {
+          await setDoc(doc(db, "bills", monthStr), restore, { merge: true });
+          const back = { ...cur };
+          await _syncBillsToSplitwise(monthStr, {
+            rentAlon: back.rentAlon ?? back.rent ?? 0,
+            rentTali: back.rentTali ?? 0,
+            ..._BILL_DEFS.reduce((o, b) => {
+              o[b.key] = back[b.key] || 0;
+              o[`${b.key}Payer`] = back[`${b.key}Payer`] || b.defaultPayer;
+              return o;
+            }, {})
+          });
+        };
+
         const merged = { ...cur, ...patch };
         await _syncBillsToSplitwise(monthStr, {
           rentAlon: merged.rentAlon ?? merged.rent ?? 0,
@@ -3422,38 +3831,49 @@ async function _assistantExecute() {
         break;
       }
       case "splitwise": {
-        await addDoc(collection(db, "splitwise_expenses"),
+        const sref = await addDoc(collection(db, "splitwise_expenses"),
           { name: i.name, amount: i.amount, paidBy: i.payer, createdAt: serverTimestamp() });
+        undo = () => deleteDoc(doc(db, "splitwise_expenses", sref.id));
         done = `🤝 ${i.name} — ₪${i.amount} נרשם על שם ${i.payer === "Tali" ? "טלי" : "אלון"}`;
         _logActivity("🤝", `${i.name} ₪${i.amount} (${i.payer})`);
         break;
       }
       case "task": {
-        await addDoc(collection(db, "maintenance"), {
+        const tref = await addDoc(collection(db, "maintenance"), {
           title: i.title, status: "open", priority: "medium",
           dateReported: new Date().toISOString().slice(0, 10),
           createdAt: serverTimestamp()
         });
+        undo = () => deleteDoc(doc(db, "maintenance", tref.id));
         done = `📋 המשימה "${i.title}" נוספה`;
         _logActivity("📋", `logged a new task: ${i.title}`);
         break;
       }
       case "taskDone": {
+        const tSnap = await getDoc(doc(db, "maintenance", i.id));
+        const tPrev = tSnap.exists() ? (tSnap.data().status || "open") : "open";
         await setDoc(doc(db, "maintenance", i.id), { status: "done" }, { merge: true });
+        undo = () => setDoc(doc(db, "maintenance", i.id), { status: tPrev }, { merge: true });
         done = `✅ "${i.name}" סומנה כבוצעה`;
         _logActivity("📋", `closed task: ${i.name}`);
         break;
       }
       case "water": {
+        const wSnap = await getDoc(doc(db, "watering", "log"));
+        const wPrev = wSnap.exists() ? (wSnap.data()[i.id] ?? null) : null;
         await setDoc(doc(db, "watering", "log"), { [i.id]: Date.now() }, { merge: true });
         localStorage.removeItem(`plant_notified_${i.id}`);
+        undo = () => setDoc(doc(db, "watering", "log"), { [i.id]: wPrev }, { merge: true });
         done = `💧 ${i.name} סומן כמושקה`;
         _logActivity("🌱", `watered ${i.name}`);
         break;
       }
       case "clean": {
         const key = _weekKey();
+        const cSnap = await getDoc(doc(db, "checklists", key));
+        const cPrev = cSnap.exists() ? (cSnap.data()[i.id] ?? false) : false;
         await setDoc(doc(db, "checklists", key), { [i.id]: true }, { merge: true });
+        undo = () => setDoc(doc(db, "checklists", key), { [i.id]: cPrev }, { merge: true });
         done = `🧼 ${i.name} סומן כבוצע`;
         _logActivity("🧼", `cleaned ${i.name}`);
         break;
@@ -3462,19 +3882,7 @@ async function _assistantExecute() {
         throw new Error("פקודה לא נתמכת");
     }
 
-    out.innerHTML = `<div class="asst-ok">${esc(done)}</div>`;
-    showToast(done, "success");
-    _asstPending = null;
-    _loadAsstContext();                     // keep matching data current
-    setTimeout(() => {
-      document.getElementById("asst-input").value = "";
-      document.getElementById("asst-input")?.focus();
-    }, 200);
-
-  } catch (err) {
-    out.innerHTML = `<div class="asst-fail">❌ ${esc(err.message)}</div>`;
-    showToast("שגיאה: " + err.message, "error");
-    btn.disabled = false; btn.textContent = "✅ בצע";
+    return { done, undo };
   }
 }
 
