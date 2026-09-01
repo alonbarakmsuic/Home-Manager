@@ -1951,6 +1951,10 @@
     border-color:rgba(255,255,255,.34)}
   .hero-row-icon{font-size:.95rem;flex-shrink:0;line-height:1}
   .hero-row-text{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .hero-row-head{font-size:.46rem;font-weight:700;letter-spacing:0;
+    text-transform:uppercase;color:rgba(255,255,255,.58);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    direction:ltr;text-align:start;margin-bottom:1px}
   .hero-row-val{font-size:.86rem;font-weight:700;color:#fff;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     font-variant-numeric:tabular-nums;direction:rtl;unicode-bidi:isolate}
@@ -1965,7 +1969,7 @@
     .dash-hero{flex-direction:column}
     .hero-side{width:100%;max-width:none;flex-direction:row}
     .hero-row{flex:1}
-    .hero-row-sub{display:none}
+    .hero-row-sub,.hero-row-head{display:none}
   }
 
   /* ══ SHOPPING MODE ═══════════════════════════════════════
@@ -4253,11 +4257,13 @@ async function _renderHeroSide() {
   const nis = n => `₪${Math.round(n).toLocaleString("en-US")}`;
 
   try {
-    const [bSnap, swSnap, gq, mSnap] = await Promise.all([
+    const [bSnap, swSnap, gq, mSnap, eSnap] = await Promise.all([
       getDoc(doc(db, "bills", month)),
       getDocs(collection(db, "splitwise_expenses")),
       getDocs(collection(db, "grocery_queue")),
-      getDocs(collection(db, "maintenance"))
+      getDocs(collection(db, "maintenance")),
+      getDocs(collection(db, "expenses")),
+      _loadBudget()
     ]);
 
     /* 1. Bills still missing this month — the costliest thing to forget */
@@ -4274,14 +4280,32 @@ async function _renderHeroSide() {
     if (items.length) {
       const { net } = _swBalance(items);
       rows.push(Math.abs(net) < 1
-        ? { icon:"⚖️", val:"מאוזנים", sub:"התחשבנות", go:"expenses-splitwise" }
-        : { icon:"🤝", val:nis(Math.abs(net)),
+        ? { icon:"⚖️", head:"Split wise status", val:"מאוזנים", sub:"התחשבנות",
+            go:"expenses-splitwise" }
+        : { icon:"🤝", head:"Split wise status", val:nis(Math.abs(net)),
             sub:net > 0 ? "טלי חייבת לך" : "אתה חייב לטלי",
             go:"expenses-splitwise" });
     }
 
-    /* 3. Shopping list, or overdue tasks if there's nothing to buy */
-    if (gq.size)
+    /* 3. How much of the grocery budget is still available. A percentage is
+       meaningless without a target, so fall back to the list count when
+       no monthly target has been set. */
+    const tgt = _budget.groceries || 0;
+    if (tgt > 0) {
+      let spent = 0;
+      eSnap.forEach(x => { const e = x.data();
+        if (e.date?.startsWith(month) && e.type === "groceries")
+          spent += e.amount || 0;
+      });
+      const leftPct = Math.round((1 - spent / tgt) * 100);
+      rows.push(leftPct >= 0
+        ? { icon:"🛒", val:`${leftPct}% נשארו`,
+            sub:`${nis(Math.max(tgt - spent, 0))} מהתקציב`,
+            tone:leftPct <= 15 ? "warn" : "", go:"expenses-status" }
+        : { icon:"🛒", val:`חריגה ${nis(spent - tgt)}`,
+            sub:"מעל תקציב הקניות", tone:"warn", go:"expenses-status" });
+    }
+    else if (gq.size)
       rows.push({ icon:"🛒", val:`${gq.size} פריטים`, sub:"ברשימת קניות",
                   go:"shopping-groceries" });
     else {
@@ -4299,6 +4323,7 @@ async function _renderHeroSide() {
     <button class="hero-row ${r.tone || ""}" data-go="${r.go}">
       <span class="hero-row-icon">${r.icon}</span>
       <span class="hero-row-text">
+        ${r.head ? `<span class="hero-row-head">${esc(r.head)}</span>` : ""}
         <span class="hero-row-val">${esc(r.val)}</span>
         <span class="hero-row-sub">${esc(r.sub)}</span>
       </span>
