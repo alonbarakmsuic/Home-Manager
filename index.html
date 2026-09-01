@@ -752,9 +752,29 @@
     font-weight:700;top:50%;left:50%;transform:translate(-50%,-50%)}
   .item-label{flex:1;font-size:.86rem}
   .shop-item.checked .item-label{text-decoration:line-through;color:var(--text-muted)}
+  /* Department chip — sits between the item name and the delete button.
+     Replaces the old 🧺 badge: now that groceries can only come from the
+     Pantry, "is a staple" was always true and said nothing, whereas the
+     aisle is genuinely useful while shopping. */
+  .item-dept{font-size:.68rem;font-weight:600;flex-shrink:0;
+    padding:3px 8px;border-radius:var(--radius-xs);
+    background:var(--bg-sunken);color:var(--text-muted);
+    direction:rtl;unicode-bidi:isolate;white-space:nowrap;
+    margin-inline-start:auto}
+
+  /* Section heading between departments */
+  .shop-section{display:flex;align-items:center;gap:6px;
+    padding:12px 16px 6px;font-size:.69rem;font-weight:700;
+    color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;
+    direction:rtl;background:var(--bg-surface);
+    border-bottom:1px solid var(--border);list-style:none}
+
+  /* Trash pinned to the far end; the chip now carries the auto margin */
   .item-del{background:none;border:none;color:var(--text-light);cursor:pointer;
-    font-size:1.02rem;line-height:1;padding:6px;transition:var(--T);border-radius:5px;
-    flex-shrink:0;opacity:.62}
+    font-size:1.02rem;line-height:1;padding:8px;transition:var(--T);border-radius:6px;
+    flex-shrink:0;opacity:.62;margin-inline-start:10px;
+    min-width:38px;min-height:38px;
+    display:flex;align-items:center;justify-content:center}
   .item-del:active{background:rgba(255,59,48,.12);opacity:1;transform:scale(0.98)}
   .pantry-tag{font-size:.69rem;background:rgba(245,166,35,.12);color:#a05e00;
     padding:2px 8px;border-radius:6px;font-weight:700;flex-shrink:0}
@@ -7121,18 +7141,40 @@ window.confirmAddItem = async function() {
 
 // queueId: Firestore doc ID in the item's queue collection (null until saved)
 // fromPantry: true only for items auto-added by marking a staple "Running Low"
-function _appendShopItem(ul, name, type, queueId, fromPantry = false) {
-  const pantryId = fromPantry ? queueId : null;   // 🧺 tag shows only for pantry items
+/* Remove a department heading once its last item is gone, so the list
+   never shows an empty section. */
+function _pruneShopSections(listEl) {
+  if (!listEl) return;
+  [...listEl.querySelectorAll(".shop-section")].forEach(h => {
+    let n = h.nextElementSibling, hasItem = false;
+    while (n && !n.classList.contains("shop-section")) {
+      if (n.classList.contains("shop-item")) { hasItem = true; break; }
+      n = n.nextElementSibling;
+    }
+    if (!hasItem) h.remove();
+  });
+  if (!listEl.querySelector(".shop-item"))
+    listEl.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
+}
+
+function _appendShopItem(ul, name, type, queueId, fromPantry = false, cat = null) {
   ul.querySelector(".list-empty")?.remove();
   const li = document.createElement("li"); li.className = "shop-item";
   li.dataset.queueId = queueId || "";
+  if (cat) li.dataset.cat = cat;
 
-  // Single row: checkbox · name · pantry tag · delete (pinned to the end)
+  /* Row: checkbox · name · department · delete (pinned far right).
+     The department chip replaces the old 🧺 badge — now that groceries
+     can only come from the Pantry, "is a staple" is always true and
+     the badge said nothing, whereas the aisle is useful in the shop. */
+  const dept = (type === "groceries" && cat)
+    ? `<span class="item-dept">${_CAT_EMOJI[cat] || "🛒"} ${esc(_CAT_SHORT[cat] || "")}</span>`
+    : "";
   li.innerHTML = `
     <div class="shop-item-inner">
       <input type="checkbox" class="item-check">
       <span class="item-label" dir="auto">${esc(name)}</span>
-      ${pantryId ? `<span class="pantry-tag">🧺</span>` : ""}
+      ${dept}
       <button class="item-del" title="מחק פריט" aria-label="מחק פריט">🗑️</button>
     </div>`;
 
@@ -7147,9 +7189,8 @@ function _appendShopItem(ul, name, type, queueId, fromPantry = false) {
     li.style.opacity = "0"; li.style.maxHeight = "0"; li.style.marginBottom = "0";
     setTimeout(() => {
       li.remove();
-      const listEl = document.getElementById(type === "groceries" ? "grocery-list" : "upgrade-list");
-      if (!listEl.querySelector(".shop-item"))
-        listEl.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
+      _pruneShopSections(
+        document.getElementById(type === "groceries" ? "grocery-list" : "upgrade-list"));
     }, 260);
   };
 
@@ -7182,35 +7223,64 @@ async function initShopping(type) {
   //    Applies to BOTH lists, so nothing is lost when navigating away.
   if (type === "groceries") _pantryQueueItems = {};
 
-  // Which queue IDs correspond to real pantry staples (for the 🧺 badge)
-  let _pantryIdSet = new Set();
+  /* Map every pantry staple by id AND by normalised name, so a queue
+     row can find its department either way. Used for the row chip and
+     for grouping the list by section. */
+  let _pantryIdSet = new Set(), _catById = new Map(), _catByName = new Map();
   if (type === "groceries") {
     try {
       const pSnap = await getDocs(collection(db, "pantry"));
-      pSnap.forEach(d => _pantryIdSet.add(d.id));
-    } catch { /* badge is cosmetic — never block the list on this */ }
+      pSnap.forEach(d => {
+        const v = d.data() || {};
+        _pantryIdSet.add(d.id);
+        _catById.set(d.id, v.category || "pantry");
+        if (v.name) _catByName.set(_normalizePantryName(v.name), v.category || "pantry");
+      });
+    } catch { /* chips are cosmetic — never block the list on this */ }
   }
 
   try {
     const qSnap = await getDocs(collection(db, _QUEUE_COL[type]));
     const rows  = [];
     qSnap.forEach(d => rows.push({ id: d.id, ...d.data() }));
-    rows.sort((a, b) => _tsMs(a.addedAt) - _tsMs(b.addedAt));   // oldest first
+
+    // Attach each row's department, by id first then by name
+    if (type === "groceries")
+      rows.forEach(r => {
+        r.cat = _catById.get(r.id) ||
+                _catByName.get(_normalizePantryName(r.name || "")) || null;
+      });
+
+    /* Group by department so the list is walked section by section
+       in the shop; within a section keep the order things were added. */
+    rows.sort((a, b) =>
+      (type === "groceries" ? _catRank(a.cat) - _catRank(b.cat) : 0) ||
+      (_tsMs(a.addedAt) - _tsMs(b.addedAt)));
 
     if (rows.length) {
+      let lastCat = null;
       rows.forEach(r => {
         const name = r.name;
         if (!name) return;
-        // A grocery item counts as pantry-sourced only if a matching /pantry
-        // doc actually exists under the same ID (that's how _toggleStaple
-        // writes them). Items added by Siri or by hand get auto-IDs, so they
-        // correctly show no 🧺 badge even if the flag is missing.
+        // Pantry-sourced only if a matching /pantry doc exists under the
+        // same id; items added by Siri get auto-ids and correctly don't
+        // count, even when the flag is absent.
         const fromPantry = type === "groceries"
           ? (r.fromPantry === true || _pantryIdSet.has(r.id))
           : false;
         if (fromPantry) _pantryQueueItems[r.id] = { name, checked: false };
         _itemLists[type].push(name);
-        _appendShopItem(ul, name, type, r.id, fromPantry);
+
+        // Section heading whenever the department changes
+        if (type === "groceries" && r.cat !== lastCat) {
+          lastCat = r.cat;
+          const head = document.createElement("li");
+          head.className = "shop-section";
+          head.innerHTML = `<span>${_CAT_EMOJI[r.cat] || "🛒"}</span>` +
+            `<span>${esc(_CAT_SHORT[r.cat] || "אחר")}</span>`;
+          ul.appendChild(head);
+        }
+        _appendShopItem(ul, name, type, r.id, fromPantry, r.cat);
       });
     } else {
       ul.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
@@ -7383,8 +7453,7 @@ async function sendEntry(type) {
     listEl.querySelectorAll(".shop-item.checked").forEach(li => li.remove());
     _itemLists[type] = [...listEl.querySelectorAll(".shop-item .item-label")]
       .map(el => el.textContent.trim());
-    if (!listEl.querySelector(".shop-item"))
-      listEl.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
+    _pruneShopSections(listEl);
 
     dateEl.value = ""; amountEl.value = "";
   } catch(err) { showToast("Error: " + err.message, "error"); }
@@ -7416,6 +7485,22 @@ const _PANTRY_CAT_LIST = [
   { id:"cleaning", label:"🧴 פארם וניקיון"      },
 ];
 const _CAT_EMOJI = { fridge:"🧊", pantry:"🫙", produce:"🥦", freezer:"❄️", cleaning:"🧴" };
+
+/* Short labels for the shopping row chips — the full category names
+   are too long to sit beside an item name. */
+const _CAT_SHORT = { fridge:"מקרר", pantry:"מזווה", produce:"ירקות",
+                     freezer:"מקפיא", cleaning:"פארם" };
+
+/* Order the shopping list follows. Roughly how a supermarket is walked:
+   produce first, chilled and frozen last so they spend least time out. */
+const _CAT_ORDER = ["produce", "pantry", "cleaning", "fridge", "freezer"];
+const _catRank = c => {
+  // Uncategorised items sort LAST, not into מזווה — defaulting them to a
+  // real department wedges "אחר" between named sections.
+  if (!c) return _CAT_ORDER.length + 1;
+  const n = _CAT_ORDER.indexOf(c);
+  return n === -1 ? _CAT_ORDER.length : n;
+};
 
 window._openStapleMenu = function(id) {
   const target = document.getElementById("staple-menu-" + id);
