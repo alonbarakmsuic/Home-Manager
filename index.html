@@ -1878,6 +1878,56 @@
      same visual grammar as the rest of the app.
      ═══════════════════════════════════════════════════════ */
 
+  /* ── Grocery picker (type-ahead over the Pantry) ─────── */
+  .pick-search-wrap{display:flex;align-items:center;gap:8px;margin-bottom:12px;
+    border:1px solid var(--border-strong);border-radius:var(--radius-sm);
+    background:var(--bg-card);padding:0 11px}
+  .pick-search-wrap:focus-within{border-color:var(--user-mid,#3A66AC);
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--user-mid,#3A66AC) 15%,transparent)}
+  .pick-search-icon{font-size:.9rem;opacity:.6;flex-shrink:0}
+  #pick-search{flex:1;border:none;background:none;padding:12px 0;font-size:.95rem;
+    font-family:inherit;color:var(--text);outline:none;min-width:0}
+  .pick-clear{display:none;width:22px;height:22px;flex-shrink:0;border:none;
+    border-radius:50%;background:var(--bg-sunken);color:var(--text-muted);
+    font-size:.7rem;cursor:pointer;align-items:center;justify-content:center;font-family:inherit}
+
+  .pick-cats{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;
+    scrollbar-width:none;direction:rtl}
+  .pick-cats::-webkit-scrollbar{display:none}
+  .pick-cat{flex-shrink:0;padding:7px 12px;border-radius:var(--radius-sm);
+    border:1px solid var(--border-strong);background:var(--bg-card);
+    font-size:.76rem;font-weight:550;color:var(--text-muted);
+    cursor:pointer;font-family:inherit;white-space:nowrap;transition:var(--T)}
+  .pick-cat.on{background:var(--user-deep,#2A4A7F);border-color:transparent;
+    color:#fff;font-weight:650}
+
+  .pick-list{max-height:38vh;overflow-y:auto;display:flex;flex-direction:column;gap:5px;
+    border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px;
+    background:var(--bg-surface)}
+  .pick-row{display:flex;align-items:center;gap:10px;width:100%;
+    padding:11px 12px;border:none;border-radius:var(--radius-sm);
+    background:var(--bg-card);cursor:pointer;font-family:inherit;
+    text-align:start;direction:rtl;transition:var(--T)}
+  .pick-row:active{background:var(--user-soft,#EAF0FA)}
+  .pick-row.queued{opacity:.5;cursor:default}
+  .pick-emoji{font-size:1rem;flex-shrink:0}
+  .pick-name{flex:1;font-size:.9rem;font-weight:550;color:var(--text);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pick-flag{font-size:.66rem;font-weight:700;flex-shrink:0;
+    padding:2px 7px;border-radius:var(--radius-xs);
+    background:var(--bg-sunken);color:var(--text-light)}
+  .pick-flag.low{background:rgba(206,44,49,.12);color:#8C2318}
+  .pick-empty{padding:22px 12px;text-align:center;font-size:.84rem;
+    color:var(--text-muted);direction:rtl}
+
+  .pick-new{margin-top:11px}
+  .pick-add-new{width:100%;padding:11px;border-radius:var(--radius-sm);
+    border:1px dashed var(--border-strong);background:var(--bg-card);
+    font-size:.83rem;color:var(--text);cursor:pointer;font-family:inherit;direction:rtl}
+  .pick-add-new:active{background:var(--bg-sunken)}
+  .pick-hint{font-size:.73rem;color:var(--text-light);line-height:1.55;
+    text-align:center;direction:rtl;margin:0}
+
   /* ── Insights ─────────────────────────────────────────── */
   .fl-insight-cta{display:flex;align-items:center;gap:11px;width:100%;
     padding:13px;margin-bottom:18px;cursor:pointer;font-family:inherit;
@@ -3086,13 +3136,30 @@
 <div id="add-modal" class="modal-bg" onclick="modalBgClick(event)">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div class="modal-title">Add Item</div>
-    <div class="form-group">
-      <label for="new-item">Item Name</label>
-      <input type="text" id="new-item" placeholder="e.g. Milk, Paint roller…"
-             onkeydown="if(event.key==='Enter') confirmAddItem()">
+    <div class="modal-title" id="add-modal-title">הוספה לרשימה</div>
+
+    <!-- Groceries: pick from the Pantry only (type-ahead + sections) -->
+    <div id="add-pantry-mode">
+      <div class="pick-search-wrap">
+        <span class="pick-search-icon">🔍</span>
+        <input type="text" id="pick-search" dir="auto" autocomplete="off"
+               placeholder="התחל להקליד שם מוצר…">
+        <button class="pick-clear" id="pick-clear" onclick="pickClear()">✕</button>
+      </div>
+      <div class="pick-cats" id="pick-cats"></div>
+      <div class="pick-list" id="pick-list"></div>
+      <div class="pick-new" id="pick-new"></div>
     </div>
-    <button class="btn-send" onclick="confirmAddItem()" style="margin-top:4px">＋ Add to List</button>
+
+    <!-- Upgrades: free text, no catalogue exists -->
+    <div id="add-free-mode" style="display:none">
+      <div class="form-group">
+        <label for="new-item">שם הפריט</label>
+        <input type="text" id="new-item" dir="auto" placeholder="למשל: מנורה לסלון"
+               onkeydown="if(event.key==='Enter') confirmAddItem()">
+      </div>
+      <button class="btn-send" onclick="confirmAddItem()" style="margin-top:4px">＋ הוסף לרשימה</button>
+    </div>
   </div>
 </div>
 
@@ -5121,7 +5188,16 @@ async function _runIntent(i) {
       /* New product: create the staple AND queue it, so a first-time
          item enters the catalogue rather than becoming a loose string. */
       case "newStaple": {
-        const dupe = (_asstCtx?.pantry || []).find(p =>
+        /* Query the pantry directly rather than trusting a cached
+           context — this path is reachable from the shopping picker,
+           where that cache may never have been populated, and a missed
+           duplicate check is exactly what this feature exists to stop. */
+        let existing = [];
+        try {
+          const ps = await getDocs(collection(db, "pantry"));
+          ps.forEach(d => existing.push({ id:d.id, ...d.data() }));
+        } catch { existing = _asstCtx?.pantry || []; }
+        const dupe = existing.find(p =>
           _normalizePantryName(p.name) === _normalizePantryName(i.name));
         if (dupe) {
           await setDoc(doc(db, "pantry", dupe.id), { status:"low" }, { merge:true });
@@ -6863,11 +6939,142 @@ const _itemLists  = { groceries:[], upgrades:[] };
 // Tracks pantry items loaded into the grocery list: { pantryId: { name, checked } }
 let _pantryQueueItems = {};
 
-window.openAddModal = function(type) {
+/* ══════════════════════════════════════════════════════════
+   GROCERY PICKER — choose from the Pantry, never free text
+   ────────────────────────────────────────────────────────
+   Typing filters the staples you already keep; picking one marks
+   it Running Low, which is what puts it on the list. Free text is
+   not offered, because a typo creates a second "חלב" that never
+   matches the pantry item and quietly breaks restock tracking.
+   A genuinely new product is added to the Pantry first, so it
+   becomes part of the catalogue instead of a loose string.
+══════════════════════════════════════════════════════════ */
+let _pickCat = "all", _pickQuery = "", _pickItems = [], _pickQueued = new Set();
+
+window.openAddModal = async function(type) {
   _modalTarget = type;
-  document.getElementById("new-item").value = "";
+  const isGroceries = type === "groceries";
+  document.getElementById("add-modal-title").textContent =
+    isGroceries ? "הוספה לרשימת הקניות" : "הוספה לשדרוגים";
+  document.getElementById("add-pantry-mode").style.display = isGroceries ? "" : "none";
+  document.getElementById("add-free-mode").style.display   = isGroceries ? "none" : "";
   document.getElementById("add-modal").classList.add("open");
-  setTimeout(() => document.getElementById("new-item").focus(), 280);
+
+  if (!isGroceries) {
+    document.getElementById("new-item").value = "";
+    setTimeout(() => document.getElementById("new-item").focus(), 280);
+    return;
+  }
+
+  _pickCat = "all"; _pickQuery = "";
+  const si = document.getElementById("pick-search");
+  si.value = "";
+  si.oninput = e => { _pickQuery = e.target.value.trim(); _renderPick(); };
+  document.getElementById("pick-list").innerHTML =
+    `<div class="pick-empty">⏳ טוען את המלאי…</div>`;
+  _renderPickCats();
+
+  try {
+    const [pSnap, qSnap] = await Promise.all([
+      getDocs(collection(db, "pantry")),
+      getDocs(collection(db, "grocery_queue"))
+    ]);
+    _pickItems = []; pSnap.forEach(d => _pickItems.push({ id:d.id, ...d.data() }));
+    _pickQueued = new Set();
+    qSnap.forEach(d => _pickQueued.add(_normalizePantryName(d.data()?.name || "")));
+  } catch { _pickItems = []; }
+
+  _renderPick();
+  setTimeout(() => si.focus(), 280);
+};
+
+function _renderPickCats() {
+  const el = document.getElementById("pick-cats");
+  if (!el) return;
+  const cats = [{ id:"all", label:"הכל" }, ..._PANTRY_CAT_LIST];
+  el.innerHTML = cats.map(c =>
+    `<button class="pick-cat ${c.id === _pickCat ? "on" : ""}" data-cat="${c.id}">
+       ${esc(c.label)}</button>`).join("");
+  el.querySelectorAll(".pick-cat").forEach(b =>
+    b.addEventListener("click", () => {
+      _pickCat = b.dataset.cat; _renderPickCats(); _renderPick();
+    }));
+}
+
+function _renderPick() {
+  const list = document.getElementById("pick-list");
+  const newBox = document.getElementById("pick-new");
+  const clear = document.getElementById("pick-clear");
+  if (!list) return;
+  if (clear) clear.style.display = _pickQuery ? "flex" : "none";
+
+  const q = _normalizePantryName(_pickQuery);
+  let rows = _pickItems.filter(p => (_pickCat === "all") || ((p.category || "pantry") === _pickCat));
+  if (q) rows = rows.filter(p => _normalizePantryName(p.name).includes(q));
+  rows.sort((a, b) => (a.name || "").localeCompare(b.name || "", "he"));
+
+  list.innerHTML = rows.length
+    ? rows.map(p => {
+        const onList = _pickQueued.has(_normalizePantryName(p.name));
+        return `<button class="pick-row ${onList ? "queued" : ""}" data-id="${p.id}"
+                        ${onList ? "disabled" : ""}>
+          <span class="pick-emoji">${_CAT_EMOJI[p.category || "pantry"] || "🫙"}</span>
+          <span class="pick-name" dir="auto">${esc(p.name)}</span>
+          ${onList ? `<span class="pick-flag">כבר ברשימה</span>`
+                   : p.status === "low" ? `<span class="pick-flag low">נגמר</span>` : ""}
+        </button>`;
+      }).join("")
+    : `<div class="pick-empty">${q
+        ? `לא נמצא מוצר בשם "${esc(_pickQuery)}" במלאי`
+        : "אין מוצרים בקטגוריה הזו"}</div>`;
+
+  list.querySelectorAll(".pick-row:not([disabled])").forEach(b =>
+    b.addEventListener("click", () => _pickAdd(b.dataset.id)));
+
+  /* Escape hatch: add a product the pantry doesn't have yet — it is
+     created as a staple first so it joins the catalogue. */
+  newBox.innerHTML = _pickQuery
+    ? `<button class="pick-add-new" id="pick-add-new">
+         ➕ הוסף את "<strong>${esc(_pickQuery)}</strong>" כמוצר חדש למלאי
+       </button>`
+    : `<p class="pick-hint">בחר מוצר מהמלאי — כך נמנעות כפילויות.
+         מוצר חדש? הקלד את שמו וייווצר גם במלאי.</p>`;
+  newBox.querySelector("#pick-add-new")?.addEventListener("click", _pickAddNew);
+}
+
+async function _pickAdd(id) {
+  const p = _pickItems.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById("add-modal").classList.remove("open");
+  try {
+    const { done } = await _runIntent({
+      type:"pantryStatus", id:p.id, name:p.name, status:"low",
+      label:`🔴 ${p.name}`, verb:"סימון כנגמר"
+    });
+    showToast(done, "success");
+    initShopping("groceries");            // refresh the list in place
+  } catch (e) { showToast("שגיאה: " + e.message, "error"); }
+}
+
+async function _pickAddNew() {
+  const name = _pickQuery.trim();
+  if (!name) return;
+  document.getElementById("add-modal").classList.remove("open");
+  try {
+    const { done } = await _runIntent({
+      type:"newStaple", name,
+      label:`🛒 ${name}`, verb:"מוצר חדש למלאי + לרשימה"
+    });
+    showToast(done, "success");
+    initShopping("groceries");
+  } catch (e) { showToast("שגיאה: " + e.message, "error"); }
+}
+
+window.pickClear = function() {
+  _pickQuery = "";
+  const si = document.getElementById("pick-search");
+  if (si) { si.value = ""; si.focus(); }
+  _renderPick();
 };
 
 window.modalBgClick = function(e) {
