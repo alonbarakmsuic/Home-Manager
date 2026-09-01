@@ -1615,7 +1615,7 @@
 
   /* ══ SWIPE TO DELETE ═════════════════════════════════════ */
   .shop-item { position:relative; overflow:hidden; touch-action:pan-y }
-  .swipe-delete-bg {
+  .swipe-delete-bg { display:none; /* removed — see _appendShopItem */
     position:absolute;right:0;top:0;bottom:0;width:90px;
     background:var(--danger);
     display:flex;align-items:center;justify-content:center;
@@ -1632,7 +1632,7 @@
     border-bottom:.5px solid var(--border);
   }
   .shop-item:last-child .shop-item-inner { border-bottom:none }
-  .shop-item.swiped .shop-item-inner { transform:translateX(-90px) }
+  .shop-item.swiped .shop-item-inner { transform:none }
 
   /* ══ PANTRY iOS WIDGET STYLE ═════════════════════════════ */
   .pantry-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px }
@@ -4633,6 +4633,9 @@ const _flOpts = step =>
    One function paints the whole panel from state. No partial
    DOM updates to keep in sync, so the view can never drift
    from the data — the usual source of bugs in wizard UIs. */
+/* Exposed on window: inline onclick handlers resolve against the
+   global scope, so a module-scoped function is invisible to them —
+   that silently broke the back button in the insights panel. */
 function _flRender() {
   const host = document.getElementById("flow-host");
   const dock = document.getElementById("flow-dock");
@@ -4769,6 +4772,8 @@ function _flRender() {
 }
 
 /* Jump back to a specific answered step */
+window._flRender = _flRender;
+
 /* Count of items needing action, shown on the insights button */
 async function _insightBadge() {
   try {
@@ -6915,14 +6920,13 @@ function _appendShopItem(ul, name, type, queueId, fromPantry = false) {
   const li = document.createElement("li"); li.className = "shop-item";
   li.dataset.queueId = queueId || "";
 
-  // Wrap content in inner div for swipe transform
+  // Single row: checkbox · name · pantry tag · delete (pinned to the end)
   li.innerHTML = `
-    <div class="swipe-delete-bg"></div>
     <div class="shop-item-inner">
       <input type="checkbox" class="item-check">
-      <span class="item-label">${name}</span>
+      <span class="item-label" dir="auto">${esc(name)}</span>
       ${pantryId ? `<span class="pantry-tag">🧺</span>` : ""}
-      <button class="item-del" title="מחק פריט" aria-label="Delete item">🗑️</button>
+      <button class="item-del" title="מחק פריט" aria-label="מחק פריט">🗑️</button>
     </div>`;
 
   const doDelete = () => {
@@ -6950,36 +6954,9 @@ function _appendShopItem(ul, name, type, queueId, fromPantry = false) {
   });
   li.querySelector(".item-del").addEventListener("click", doDelete);
 
-  // ── Swipe-to-delete (touch + pointer) ─────────────────
-  let startX = 0, startY = 0, dx = 0, swiping = false;
-  const inner = li.querySelector(".shop-item-inner");
-
-  li.addEventListener("pointerdown", e => {
-    startX = e.clientX; startY = e.clientY; dx = 0; swiping = false;
-    inner.style.transition = "none";
-  }, { passive: true });
-
-  li.addEventListener("pointermove", e => {
-    dx = e.clientX - startX;
-    const dy = Math.abs(e.clientY - startY);
-    if (Math.abs(dx) < 8 && !swiping) return; // ignore tiny movements
-    if (dy > Math.abs(dx) && !swiping) return; // vertical scroll wins
-    swiping = true;
-    if (dx < 0) inner.style.transform = `translateX(${Math.max(dx, -90)}px)`;
-  }, { passive: true });
-
-  li.addEventListener("pointerup", () => {
-    inner.style.transition = "";
-    if (dx < -55) {
-      // crossed threshold — confirm delete
-      li.classList.add("swiped");
-      setTimeout(doDelete, 280);
-    } else {
-      inner.style.transform = "";
-      li.classList.remove("swiped");
-    }
-    swiping = false;
-  });
+  /* Swipe-to-delete removed: it rendered a second, unclickable
+     trash icon beside the real one, and deleted without confirmation.
+     The 🗑️ button below is now the single delete affordance. */
 
   ul.appendChild(li);
   return li;
