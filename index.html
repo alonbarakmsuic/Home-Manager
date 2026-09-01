@@ -1934,6 +1934,40 @@
      same visual grammar as the rest of the app.
      ═══════════════════════════════════════════════════════ */
 
+  /* ══ HERO PRIORITY PANEL ═════════════════════════════════
+     Fills the empty half of the hero with the few things that
+     actually need attention. Each row is tappable and goes
+     straight to the relevant screen. */
+  .dash-hero{display:flex;align-items:flex-start;gap:14px}
+  .hero-main{flex:1;min-width:0}
+  .hero-side{display:flex;flex-direction:column;gap:7px;
+    width:44%;max-width:190px;flex-shrink:0;direction:rtl}
+  .hero-row{display:flex;align-items:center;gap:9px;width:100%;
+    padding:9px 11px;border-radius:var(--radius-sm);cursor:pointer;
+    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.14);
+    font-family:inherit;text-align:start;transition:var(--T)}
+  .hero-row:active{background:rgba(255,255,255,.22)}
+  .hero-row.warn{background:rgba(255,255,255,.18);
+    border-color:rgba(255,255,255,.34)}
+  .hero-row-icon{font-size:.95rem;flex-shrink:0;line-height:1}
+  .hero-row-text{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .hero-row-val{font-size:.86rem;font-weight:700;color:#fff;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    font-variant-numeric:tabular-nums;direction:rtl;unicode-bidi:isolate}
+  .hero-row-sub{font-size:.66rem;color:rgba(255,255,255,.62);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hero-clear{display:flex;flex-direction:column;align-items:center;gap:5px;
+    padding:16px 8px;border-radius:var(--radius-sm);
+    background:rgba(255,255,255,.08);font-size:1.2rem}
+  .hero-clear span{font-size:.74rem;color:rgba(255,255,255,.7);font-weight:600}
+  /* Narrow phones: stack the panel under the greeting rather than squeeze it */
+  @media (max-width:360px){
+    .dash-hero{flex-direction:column}
+    .hero-side{width:100%;max-width:none;flex-direction:row}
+    .hero-row{flex:1}
+    .hero-row-sub{display:none}
+  }
+
   /* ══ SHOPPING MODE ═══════════════════════════════════════
      Sized for one hand, a trolley and a glance. Rows are 62px so
      they can be hit without looking; type is large enough to read
@@ -2452,13 +2486,17 @@
 <!-- ═════════════════ DASHBOARD ═════════════════════════ -->
 <main id="view-dashboard" class="view active">
   <div class="dash-hero">
-    <div class="dash-hero-phrase" id="greeting-phrase">Good morning ☀️</div>
-    <div class="dash-hero-name" id="greeting-name">Alon</div>
-    <div class="dash-hero-sub" id="greeting-sub">Have a great day ahead</div>
-    <div class="dash-hero-date" id="greeting-date">—</div>
-    <div class="dash-hero-badge">
-      <span>🏠 Home Manager</span>
+    <div class="hero-main">
+      <div class="dash-hero-phrase" id="greeting-phrase">Good morning ☀️</div>
+      <div class="dash-hero-name" id="greeting-name">Alon</div>
+      <div class="dash-hero-sub" id="greeting-sub">Have a great day ahead</div>
+      <div class="dash-hero-date" id="greeting-date">—</div>
+      <div class="dash-hero-badge">
+        <span>🏠 Home Manager</span>
+      </div>
     </div>
+    <!-- What needs you right now — fills the empty half of the hero -->
+    <div class="hero-side" id="hero-side"></div>
   </div>
 
   <!-- Laundry widget — hidden when idle, auto-shown when running/done -->
@@ -4198,6 +4236,77 @@ async function _loadAsstContext() {
    informative at a glance instead of decorative.
    Fails silently — a card without data just shows its subtitle.
 ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════
+   HERO PRIORITY PANEL
+   The empty half of the hero is the most-seen space in the app, so
+   it answers one question: what needs me right now?
+
+   Deliberately at most 3 rows. A panel that lists everything is a
+   panel nobody reads — items only appear when they're actionable,
+   and it stays empty when nothing needs doing.
+══════════════════════════════════════════════════════════ */
+async function _renderHeroSide() {
+  const el = document.getElementById("hero-side");
+  if (!el) return;
+  const rows = [];
+  const month = _curMonth();
+  const nis = n => `₪${Math.round(n).toLocaleString("en-US")}`;
+
+  try {
+    const [bSnap, swSnap, gq, mSnap] = await Promise.all([
+      getDoc(doc(db, "bills", month)),
+      getDocs(collection(db, "splitwise_expenses")),
+      getDocs(collection(db, "grocery_queue")),
+      getDocs(collection(db, "maintenance"))
+    ]);
+
+    /* 1. Bills still missing this month — the costliest thing to forget */
+    const b = bSnap.exists() ? bSnap.data() : {};
+    const missing = [];
+    if (!(b.rentAlon ?? b.rent ?? 0) && !(b.rentTali ?? 0)) missing.push("שכ״ד");
+    _BILL_DEFS.forEach(d => { if (!(b[d.key] || 0)) missing.push(d.he); });
+    if (missing.length)
+      rows.push({ icon:"💳", val:`${missing.length} חשבונות`, sub:"חסרים החודש",
+                  tone:"warn", go:"chores-payments" });
+
+    /* 2. Where the balance stands */
+    const items = []; swSnap.forEach(d => items.push(d.data()));
+    if (items.length) {
+      const { net } = _swBalance(items);
+      rows.push(Math.abs(net) < 1
+        ? { icon:"⚖️", val:"מאוזנים", sub:"התחשבנות", go:"expenses-splitwise" }
+        : { icon:"🤝", val:nis(Math.abs(net)),
+            sub:net > 0 ? "טלי חייבת לך" : "אתה חייב לטלי",
+            go:"expenses-splitwise" });
+    }
+
+    /* 3. Shopping list, or overdue tasks if there's nothing to buy */
+    if (gq.size)
+      rows.push({ icon:"🛒", val:`${gq.size} פריטים`, sub:"ברשימת קניות",
+                  go:"shopping-groceries" });
+    else {
+      let open = 0; mSnap.forEach(d => { if (_taskOpen(d.data())) open++; });
+      if (open) rows.push({ icon:"📋", val:`${open} משימות`, sub:"פתוחות",
+                            go:"chores-maintenance" });
+    }
+  } catch { /* hero is decoration if data fails — never block the page */ }
+
+  if (!rows.length) {
+    el.innerHTML = `<div class="hero-clear">✅<span>הכל מסודר</span></div>`;
+    return;
+  }
+  el.innerHTML = rows.slice(0, 3).map(r => `
+    <button class="hero-row ${r.tone || ""}" data-go="${r.go}">
+      <span class="hero-row-icon">${r.icon}</span>
+      <span class="hero-row-text">
+        <span class="hero-row-val">${esc(r.val)}</span>
+        <span class="hero-row-sub">${esc(r.sub)}</span>
+      </span>
+    </button>`).join("");
+  el.querySelectorAll(".hero-row").forEach(b =>
+    b.addEventListener("click", () => navigateTo(b.dataset.go)));
+}
+
 /* Each card holds a LIST of facts and cycles through them, so the
    dashboard surfaces far more than one number per section. */
 let _dashFacts = {}, _dashTimer = null;
@@ -4272,8 +4381,11 @@ async function _loadDashStats() {
     let high = 0;
     mSnap.forEach(d => { const v=d.data();
       if (_taskOpen(v) && v.priority==="high") high++; });
+    let closed = 0;
+    mSnap.forEach(d => { if (!_taskOpen(d.data())) closed++; });
     setFacts("chores", [
       open    ? { t:`${open} משימות פתוחות`, alert:true } : null,
+      closed  ? { t:`${closed} משימות הושלמו` } : null,
       high    ? { t:`${high} בעדיפות גבוהה`, alert:true } : null,
       thirsty ? { t:`${thirsty} צמחים להשקיה`, alert:true } : null,
       (!open && !thirsty) ? { t:"הכל מעודכן" } : null,
@@ -4289,7 +4401,12 @@ async function _loadDashStats() {
       getDocs(collection(db, "expenses")),
       getDoc(doc(db, "bills", month))
     ]);
-    let v = 0; eSnap.forEach(x => { const e = x.data(); if (e.date?.startsWith(month)) v += e.amount || 0; });
+    let v = 0, g = 0;
+    eSnap.forEach(x => { const e = x.data();
+      if (!e.date?.startsWith(month)) return;
+      v += e.amount || 0;
+      if (e.type === "groceries") g += e.amount || 0;   // budget tracks groceries
+    });
     const b = bSnap.exists() ? bSnap.data() : {};
     const fixed = (b.rentAlon ?? b.rent ?? 0) + (b.rentTali ?? 0) +
                   _BILL_DEFS.reduce((s, x) => s + (b[x.key] || 0), 0);
@@ -4303,8 +4420,11 @@ async function _loadDashStats() {
     const missing = [];
     if (!(b.rentAlon ?? b.rent ?? 0) && !(b.rentTali ?? 0)) missing.push("שכ״ד");
     _BILL_DEFS.forEach(x => { if (!(b[x.key] || 0)) missing.push(x.he); });
+    await _loadBudget();
+    const tgt = _budget.groceries;
     setFacts("expenses", [
       { t:`${nis(v + fixed)} החודש` },
+      tgt ? { t:`${nis(g)} מתוך ${nis(tgt)} יעד`, alert:g > tgt } : null,
       v      ? { t:`${nis(v)} הוצאות משתנות` } : null,
       fixed  ? { t:`${nis(fixed)} חשבונות` } : null,
       missing.length ? { t:`חסרים ${missing.length} חשבונות`, alert:true } : null,
@@ -5676,7 +5796,7 @@ window.navigateTo = function(viewId) {
 };
 
 function _onEnter(id) {
-  if (id === "dashboard")        { initActivityFeed(); _loadDashStats(); }
+  if (id === "dashboard")        { initActivityFeed(); _loadDashStats(); _renderHeroSide(); }
   if (id === "activity-archive")   initActivityArchive();
   if (id === "chores-cleaning")    initCleaning();
   if (id === "chores-gardening")   initGardening();
@@ -5735,6 +5855,7 @@ function initDashboard() {
      never fires for it on a cold start — the card stats have to be
      kicked off here, or they only appear after leaving and coming back. */
   _loadDashStats();
+  _renderHeroSide();
 }
 
 function _checkPaymentAlert() {
