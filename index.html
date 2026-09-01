@@ -1827,16 +1827,24 @@
   .dash-card.wide .card-arrow{top:50%;transform:translateY(-50%)}
   .dash-card:active{transform:none;filter:brightness(.92)}
 
-  /* The live number — the thing that fixes "empty" */
+  /* The live number — the thing that fixes "empty".
+     direction:rtl + isolate is required, not cosmetic: these strings
+     mix Hebrew with digits, and in an LTR container the bidi algorithm
+     reorders the runs — "8 משימות · 15 להשקות" renders as
+     "משימות 8 · להשקות 15", which reads as nonsense. Isolating the
+     element makes the numbers stay with the words they belong to. */
   .card-stat{
     font-size:.74rem;font-weight:650;color:#fff;
     margin-top:7px;padding:3px 8px;border-radius:var(--radius-xs);
     background:rgba(255,255,255,.18);
     display:none;align-self:flex-start;
+    direction:rtl;unicode-bidi:isolate;text-align:right;
     font-variant-numeric:tabular-nums;
     letter-spacing:0;white-space:nowrap;max-width:100%;
     overflow:hidden;text-overflow:ellipsis;
+    transition:opacity .22s var(--ease);
   }
+  .card-stat.swap{opacity:0}
   .card-stat.has-value{display:inline-block}
   .card-stat.alert{background:rgba(255,255,255,.28)}
   .dash-card.wide .card-stat{margin-top:0;margin-inline-start:auto}
@@ -1848,7 +1856,7 @@
   .dash-card[data-view="shopping"]   {--ca:#B3272C}
   .dash-card[data-view="smart-house"]{--ca:#1265A8}
   .dash-card[data-view="calendar"]   {--ca:#3A5169}
-  .dash-card[data-view="cooking"]    {--ca:#A24218}
+  .dash-card[data-view="cooking"]    {--ca:#87427E}
 
   /* ═══════════════════════════════════════════════════════
      GUIDED FLOWS
@@ -3890,14 +3898,49 @@ async function _loadAsstContext() {
    informative at a glance instead of decorative.
    Fails silently — a card without data just shows its subtitle.
 ══════════════════════════════════════════════════════════ */
+/* Each card holds a LIST of facts and cycles through them, so the
+   dashboard surfaces far more than one number per section. */
+let _dashFacts = {}, _dashTimer = null;
+
+function _dashRotate() {
+  clearInterval(_dashTimer);
+  const keys = Object.keys(_dashFacts).filter(k => _dashFacts[k].length > 1);
+  if (!keys.length) return;
+  let n = 0;
+  _dashTimer = setInterval(() => {
+    n++;
+    keys.forEach(k => {
+      const el = document.querySelector(`.card-stat[data-stat="${k}"]`);
+      const facts = _dashFacts[k];
+      if (!el || !facts.length) return;
+      const f = facts[n % facts.length];
+      el.classList.add("swap");
+      setTimeout(() => {
+        el.textContent = f.t;
+        el.classList.toggle("alert", !!f.alert);
+        el.classList.remove("swap");
+      }, 220);
+    });
+  }, 4200);
+}
+
+window.stopDashRotate = () => { clearInterval(_dashTimer); _dashTimer = null; };
+
 async function _loadDashStats() {
-  const set = (key, text, tone) => {
+  _dashFacts = {};
+  /* set(key, text, tone) keeps the original single-fact call sites
+     working; setFacts(key, [...]) adds the rotating list. */
+  const setFacts = (key, facts) => {
+    const clean = facts.filter(f => f && f.t);
+    if (!clean.length) return;
+    _dashFacts[key] = clean;
     const el = document.querySelector(`.card-stat[data-stat="${key}"]`);
     if (!el) return;
-    el.textContent = text || "";
-    el.classList.toggle("alert", tone === "alert");
-    el.classList.toggle("has-value", !!text);
+    el.textContent = clean[0].t;
+    el.classList.add("has-value");
+    el.classList.toggle("alert", !!clean[0].alert);
   };
+  const set = (key, text, tone) => setFacts(key, [{ t:text, alert:tone === "alert" }]);
   const count = async col => {
     try { const s = await getDocs(collection(db, col)); return s.size; }
     catch { return null; }
@@ -3918,10 +3961,17 @@ async function _loadDashStats() {
       const days = (v.intervalDays || 3) * 86400000;
       if (!last || Date.now() - last > days) thirsty++;
     });
-    const bits = [];
-    if (open)    bits.push(`${open} משימות`);
-    if (thirsty) bits.push(`${thirsty} להשקות`);
-    set("chores", bits.join(" · ") || "הכל מעודכן", (open || thirsty) ? "alert" : "");
+    // Separate facts rather than one crowded line
+    let high = 0;
+    mSnap.forEach(d => { const v=d.data();
+      if ((v.status||"open")!=="done" && v.priority==="high") high++; });
+    setFacts("chores", [
+      open    ? { t:`${open} משימות פתוחות`, alert:true } : null,
+      high    ? { t:`${high} בעדיפות גבוהה`, alert:true } : null,
+      thirsty ? { t:`${thirsty} צמחים להשקיה`, alert:true } : null,
+      (!open && !thirsty) ? { t:"הכל מעודכן" } : null,
+      { t:`${pSnap.size} צמחים בגינה` },
+    ]);
   } catch { /* leave blank */ }
 
   // 💰 Expenses — month to date, variable + fixed
@@ -3936,7 +3986,24 @@ async function _loadDashStats() {
     const b = bSnap.exists() ? bSnap.data() : {};
     const fixed = (b.rentAlon ?? b.rent ?? 0) + (b.rentTali ?? 0) +
                   _BILL_DEFS.reduce((s, x) => s + (b[x.key] || 0), 0);
-    set("expenses", `₪${(v + fixed).toLocaleString("en-US", { maximumFractionDigits: 0 })} החודש`);
+    const nis = n => `₪${Math.round(n).toLocaleString("en-US")}`;
+    let bal = null;
+    try {
+      const sSnap = await getDocs(collection(db, "splitwise_expenses"));
+      const items = []; sSnap.forEach(x => items.push(x.data()));
+      if (items.length) bal = _swBalance(items).net;
+    } catch {}
+    const missing = [];
+    if (!(b.rentAlon ?? b.rent ?? 0) && !(b.rentTali ?? 0)) missing.push("שכ״ד");
+    _BILL_DEFS.forEach(x => { if (!(b[x.key] || 0)) missing.push(x.he); });
+    setFacts("expenses", [
+      { t:`${nis(v + fixed)} החודש` },
+      v      ? { t:`${nis(v)} הוצאות משתנות` } : null,
+      fixed  ? { t:`${nis(fixed)} חשבונות` } : null,
+      missing.length ? { t:`חסרים ${missing.length} חשבונות`, alert:true } : null,
+      (bal !== null && Math.abs(bal) >= 1)
+        ? { t:`${bal > 0 ? "טלי חייבת" : "אלון חייב"} ${nis(Math.abs(bal))}` } : null,
+    ]);
   } catch { /* leave blank */ }
 
   // 🛒 Shopping — items waiting + staples running low
@@ -3947,15 +4014,21 @@ async function _loadDashStats() {
       getDocs(collection(db, "pantry"))
     ]);
     let low = 0; pantry.forEach(d => { if (d.data().status === "low") low++; });
-    const total = gq.size + uq.size;
-    set("shopping", total ? `${total} פריטים · ${low} נגמרו` : (low ? `${low} נגמרו` : "הרשימה ריקה"),
-        total ? "alert" : "");
+    setFacts("shopping", [
+      gq.size ? { t:`${gq.size} פריטים לקנות`, alert:true } : { t:"רשימת הקניות ריקה" },
+      low     ? { t:`${low} מוצרים נגמרו`, alert:true } : null,
+      uq.size ? { t:`${uq.size} שדרוגים ממתינים` } : null,
+      { t:`${pantry.size} מוצרים במלאי` },
+    ]);
   } catch { /* leave blank */ }
 
   // 🔐 Vault / 🗓️ Calendar / 🍽️ Meals — counts where a collection exists
-  count("vault_docs").then(n => n && set("vault", `${n} מסמכים`));
-  count("calendar_events").then(n => n && set("calendar", `${n} אירועים`));
-  count("meal_wheels").then(n => n && set("cooking", `${n} גלגלים`));
+  await Promise.all([
+    count("vault_docs").then(n => n && set("vault", `${n} מסמכים`)),
+    count("calendar_events").then(n => n && set("calendar", `${n} אירועים`)),
+    count("meal_wheels").then(n => n && set("cooking", `${n} גלגלים`)),
+  ]);
+  _dashRotate();
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -5194,7 +5267,7 @@ const _unsubs = {};
 function _unsub(key) { if (_unsubs[key]) { _unsubs[key](); delete _unsubs[key]; } }
 
 function _cleanupLeaving(id) {
-  if (id === "dashboard")           _unsub("activity");
+  if (id === "dashboard")         { _unsub("activity"); stopDashRotate(); }
   if (id === "expenses-status")   { _unsub("status"); _unsub("status-bills"); }
   if (id === "expenses-splitwise")  _unsub("splitwise");
   if (id === "shopping-groceries")  _unsub("hist-groceries");
