@@ -4150,14 +4150,44 @@ const FLOWS = [
     },
   },
   {
+    /* Groceries are chosen from the Pantry, never free-typed. Picking a
+       staple marks it Running Low, which is what puts it on the list —
+       so the pantry stays the single source and no duplicate row is
+       created. Items already queued are excluded from the options.
+       A genuinely new product is added to the Pantry first, so it
+       becomes canonical instead of a one-off string. */
     id:"groceries", icon:"🛒", label:"הוספה לקניות",
-    hint:"פריט לרשימת הקניות",
-    steps:[{ key:"name", type:"text", prompt:"מה להוסיף לרשימה?", placeholder:"למשל: שמפו" }],
-    summary:d => [["פריט", d.name], ["נכנס ל", "רשימת קניות"]],
-    intent:d => ({ type:"addList", list:"groceries", name:d.name,
-                   label:`🛒 ${d.name}`, verb:"הוספה לרשימת הקניות" }),
+    hint:"מתוך מלאי הבית",
+    steps:[
+      { key:"pick", type:"choice", prompt:"מה נגמר?", search:true,
+        options:ctx => {
+          const queued = new Set((ctx.groceryQueue || []).map(q => _normalizePantryName(q.name)));
+          return (ctx.pantry || [])
+            .filter(p => !queued.has(_normalizePantryName(p.name)))
+            .map(p => ({ v:p.id, l:p.name, meta:p.status === "low" ? "כבר נגמר" : "" }))
+            .concat([{ v:"__new", l:"➕ מוצר חדש" }]);
+        } },
+      { key:"newName", type:"text", prompt:"שם המוצר החדש?",
+        placeholder:"יתווסף גם למלאי הבית",
+        when:d => d.pick === "__new" },
+    ],
+    summary:(d,ctx) => d.pick === "__new"
+      ? [["מוצר חדש", d.newName], ["נוסף ל", "מלאי הבית + רשימת קניות"]]
+      : (() => { const p = (ctx.pantry || []).find(x => x.id === d.pick) || {};
+                 return [["מוצר", p.name || "—"], ["מסומן", "נגמר"],
+                         ["נכנס ל", "רשימת קניות (דרך המלאי)"]]; })(),
+    intent:(d,ctx) => {
+      if (d.pick === "__new")
+        return { type:"newStaple", name:d.newName,
+                 label:`🛒 ${d.newName}`, verb:"מוצר חדש למלאי + לרשימה" };
+      const p = (ctx.pantry || []).find(x => x.id === d.pick) || {};
+      return { type:"pantryStatus", id:d.pick, name:p.name, status:"low",
+               label:`🔴 ${p.name}`, verb:"סימון כנגמר" };
+    },
   },
   {
+    /* Upgrades have no canonical catalogue, so free text is right here —
+       but the executor still refuses a near-identical existing entry. */
     id:"upgrades", icon:"🏠", label:"שדרוג לבית",
     hint:"פריט לרשימת השדרוגים",
     steps:[{ key:"name", type:"text", prompt:"מה להוסיף לשדרוגים?", placeholder:"למשל: מנורה לסלון" }],
@@ -4247,19 +4277,32 @@ window.flowCancel = function() { _fl = null; _asstPending = null; _flRender(); }
 /* Step back one answer, so a mistake costs one tap not a restart */
 window.flowBack = function() {
   if (!_fl) return;
-  if (_fl.i === 0) return flowCancel();
-  _fl.i--;
-  _fl.turns.pop();
-  delete _fl.data[_fl.def.steps[_fl.i].key];
+  const last = _fl.turns.pop();
+  if (!last) return flowCancel();
+  _fl.i = last.at;                                  // return to the step actually asked
+  delete _fl.data[_fl.def.steps[last.at].key];
+  // clear anything a later, now-unreachable step had filled in
+  _fl.def.steps.forEach((s, n) => { if (n > last.at) delete _fl.data[s.key]; });
   _flRender();
 };
+
+/* A step may declare `when: d => bool`; if false it's skipped.
+   That's what lets one flow branch (e.g. "new item" asks for a name,
+   picking an existing one doesn't). */
+const _flActive = (step, data) => !step.when || step.when(data);
+
+function _flSkipForward() {
+  const s = _fl.def.steps;
+  while (_fl.i < s.length && !_flActive(s[_fl.i], _fl.data)) _fl.i++;
+}
 
 window.flowAnswer = function(rawValue, displayLabel) {
   if (!_fl) return;
   const step = _fl.def.steps[_fl.i];
   _fl.data[step.key] = rawValue;
-  _fl.turns.push({ prompt:step.prompt, answer:displayLabel ?? String(rawValue) });
+  _fl.turns.push({ at:_fl.i, prompt:step.prompt, answer:displayLabel ?? String(rawValue) });
   _fl.i++;
+  _flSkipForward();
   _flRender();
 };
 
@@ -4369,17 +4412,25 @@ function _flRender() {
         <button class="fl-btn ghost" onclick="flowCancel()">סגור</button></div>`;
       return;
     }
+    /* Values are carried on data-* and bound with real listeners.
+       An inline onclick would need the value JSON-quoted inside a
+       double-quoted attribute, which silently breaks the markup for
+       every value — that bug disabled all chip-based flows. */
     dock.innerHTML = `
       ${step.search && opts.length > 6
-        ? `<input class="fl-search" id="fl-search" placeholder="חפש…" dir="auto"
-             oninput="_flFilter(this.value)">` : ""}
+        ? `<input class="fl-search" id="fl-search" placeholder="חפש…" dir="auto">` : ""}
       <div class="fl-chips" id="fl-chips">
-        ${opts.map(o => `
-          <button class="fl-chip" data-l="${esc(o.l)}"
-            onclick="flowAnswer(${JSON.stringify(String(o.v))},${JSON.stringify(String(o.l))})">
+        ${opts.map((o, n) => `
+          <button class="fl-chip" data-idx="${n}" data-l="${esc(o.l)}">
             ${esc(o.l)}${o.meta ? `<span class="fl-chip-meta">${esc(o.meta)}</span>` : ""}
           </button>`).join("")}
       </div>`;
+    dock.querySelectorAll(".fl-chip").forEach(btn => {
+      const o = opts[+btn.dataset.idx];
+      btn.addEventListener("click", () => flowAnswer(o.v, o.l));
+    });
+    dock.querySelector("#fl-search")
+        ?.addEventListener("input", e => _flFilter(e.target.value));
     return;
   }
 
@@ -4400,13 +4451,14 @@ function _flRender() {
 }
 
 /* Jump back to a specific answered step */
+/* Jump back to the nth answered turn (index into turns, not steps —
+   they differ once a step has been skipped by a `when` guard) */
 window._flEdit = function(n) {
-  if (!_fl) return;
-  while (_fl.i > n) {
-    _fl.i--;
-    _fl.turns.pop();
-    delete _fl.data[_fl.def.steps[_fl.i].key];
-  }
+  if (!_fl || n < 0 || n >= _fl.turns.length) return;
+  const target = _fl.turns[n].at;
+  _fl.turns.length = n;
+  _fl.i = target;
+  _fl.def.steps.forEach((s, k) => { if (k >= target) delete _fl.data[s.key]; });
   _flRender();
 };
 
@@ -4685,6 +4737,34 @@ async function _runIntent(i) {
         done = `${i.list === "groceries" ? "🛒" : "🏠"} ${i.name} נוסף ל${
           i.list === "groceries" ? "רשימת הקניות" : "שדרוגי הבית"}`;
         _logActivity(i.list === "groceries" ? "🛒" : "🏠", `added ${i.name}`);
+        break;
+      }
+      /* New product: create the staple AND queue it, so a first-time
+         item enters the catalogue rather than becoming a loose string. */
+      case "newStaple": {
+        const dupe = (_asstCtx?.pantry || []).find(p =>
+          _normalizePantryName(p.name) === _normalizePantryName(i.name));
+        if (dupe) {
+          await setDoc(doc(db, "pantry", dupe.id), { status:"low" }, { merge:true });
+          await setDoc(doc(db, "grocery_queue", dupe.id),
+            { name:dupe.name, fromPantry:true, addedAt:serverTimestamp() });
+          undo = async () => {
+            await setDoc(doc(db, "pantry", dupe.id), { status:"stock" }, { merge:true });
+            await deleteDoc(doc(db, "grocery_queue", dupe.id)).catch(() => {});
+          };
+          done = `ℹ️ "${dupe.name}" כבר במלאי — סומן כנגמר`;
+          break;
+        }
+        const ref = await addDoc(collection(db, "pantry"),
+          { name:i.name, status:"low", category:"pantry", createdAt:serverTimestamp() });
+        await setDoc(doc(db, "grocery_queue", ref.id),
+          { name:i.name, fromPantry:true, addedAt:serverTimestamp() });
+        undo = async () => {
+          await deleteDoc(doc(db, "grocery_queue", ref.id)).catch(() => {});
+          await deleteDoc(doc(db, "pantry", ref.id)).catch(() => {});
+        };
+        done = `🛒 ${i.name} נוסף למלאי ולרשימת הקניות`;
+        _logActivity("🧺", `added new staple ${i.name} → running low`);
         break;
       }
       case "addPantry": {
@@ -8042,7 +8122,7 @@ function _showDishResult(dish) {
     <div class="ingr-result-row">
       <span class="ingr-result-name">${ing}</span>
       ${_ingrStatusBadge(ing)}
-      <button class="btn-ingr-shop" onclick="_addIngrToShop(${JSON.stringify(ing)})">➕</button>
+      <button class="btn-ingr-shop" data-ing="${esc(ing)}">➕</button>
     </div>`).join("");
 
   card.innerHTML = `
@@ -8051,9 +8131,14 @@ function _showDishResult(dish) {
       ${rows
         ? `<div class="ingr-result-list">${rows}</div>`
         : `<p style="color:#c0392b88;text-align:center;font-size:.85rem;margin-bottom:12px">אין מרכיבים שמורים</p>`}
-      <button class="btn-add-all-shop"
-        onclick="_addAllIngrToShop(${JSON.stringify(ingredients)})">🛒 הוסף הכל לרשימת קניות</button>
+      <button class="btn-add-all-shop" id="btn-add-all-shop">🛒 הוסף הכל לרשימת קניות</button>
     </div>`;
+
+  // Bind after render — values carry on data-* so quotes/Hebrew are safe
+  card.querySelectorAll(".btn-ingr-shop").forEach(b =>
+    b.addEventListener("click", () => _addIngrToShop(b.dataset.ing)));
+  card.querySelector("#btn-add-all-shop")
+      ?.addEventListener("click", () => _addAllIngrToShop(ingredients));
 
   card.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
@@ -8224,7 +8309,7 @@ function _renderDishList() {
       <div class="dish-ingr-item">
         <span class="dish-ingr-item-name">${ing}</span>
         ${_ingrStatusBadge(ing)}
-        <button class="btn-ingr-add-sm" onclick="_addIngrToShop(${JSON.stringify(ing)})">➕</button>
+        <button class="btn-ingr-add-sm" data-ing="${esc(ing)}">➕</button>
       </div>`).join("");
     const ingrToggle = ingr.length
       ? `<div id="ingr-list-${d.id}" class="dish-ingr-list" style="display:none;flex-direction:column">${ingrRows}</div>
@@ -8244,6 +8329,11 @@ function _renderDishList() {
       ${ingrToggle}
     </div>`;
   }).join("");
+
+  // Bind after render — ingredient names carry on data-* so quotes,
+  // apostrophes and Hebrew can't break the markup
+  el.querySelectorAll(".btn-ingr-add-sm").forEach(b =>
+    b.addEventListener("click", e => { e.stopPropagation(); _addIngrToShop(b.dataset.ing); }));
 }
 
 /* ══════════════════════════════════════════════════════════
