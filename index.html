@@ -543,6 +543,17 @@
     background:rgba(0,0,0,.05);padding:2px 7px;border-radius:5px}
   .bill-rent-total{margin-top:9px;font-size:.76rem;font-weight:700;color:var(--primary-dark);
     text-align:center}
+  .btn-rent-apply{width:100%;margin-top:10px;padding:9px;border-radius:var(--radius-sm);
+    border:1px solid var(--border-strong);background:var(--bg-card);color:var(--text);
+    font-size:.79rem;font-weight:600;cursor:pointer;font-family:inherit;direction:rtl}
+  .btn-rent-apply:active{background:var(--bg-sunken)}
+  .rent-note{margin-top:7px;font-size:.71rem;color:var(--text-light);text-align:center;
+    direction:rtl;unicode-bidi:isolate}
+  .rent-edit-btn{background:none;border:none;color:var(--info);font-size:.71rem;
+    font-weight:700;cursor:pointer;font-family:inherit;padding:0 4px;text-decoration:underline}
+  .rent-excluded{margin-top:9px;padding:8px 10px;border-radius:var(--radius-sm);
+    background:rgba(13,116,206,.07);border:1px solid rgba(13,116,206,.20);
+    font-size:.71rem;color:var(--text-muted);line-height:1.55;direction:rtl}
 
   /* ── Missing-bill warning ────────────────────────────── */
   .bill-missing{display:none;background:rgba(255,149,0,.1);
@@ -2492,6 +2503,14 @@
         </div>
       </div>
       <div class="bill-rent-total" id="bill-rent-total">סה״כ שכ״ד: ₪0</div>
+      <button type="button" class="btn-rent-apply" onclick="applyRentAgreement()">
+        ↺ מלא לפי ההסכם הקבוע
+      </button>
+      <div class="rent-note" id="rent-agreement-note"></div>
+      <div class="rent-excluded">
+        ℹ️ שכר הדירה <strong>לא נכנס להתחשבנות הזוגית</strong> — הסכומים כבר מוסכמים ביניכם.
+        הוא כן נספר בהוצאות החודשיות ובדוחות.
+      </div>
     </div>
 
     <!-- Other bills — each with its own payer -->
@@ -6357,10 +6376,74 @@ async function initPayments() {
   }
   _initBillPayerToggles();
   _renderBackupStatus();
+  await _loadRentAgreement();
+  _renderRentNote();
+  _purgeRentFromBalance();          // clears phantom rent debt, once
   sel.onchange = () => _loadBillInputs(sel.value);
   await _loadBillInputs(sel.value);
   document.getElementById("btn-save-bills").onclick = saveBills;
   await renderBillsHistory();
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENT — a standing agreement, not a shared expense
+   ────────────────────────────────────────────────────────
+   Alon and Tali each pay a fixed, pre-agreed share. Because the
+   split is already settled between them, rent must NOT enter the
+   couple's balance: the balance is (paidAlon − paidTali) / 2, so
+   a ₪300 difference would invent a ₪150 debt every month for
+   something neither party actually owes.
+
+   Rent therefore:
+     · IS counted in monthly expenses, reports and Current Status
+     · IS NOT synced to /splitwise_expenses
+   Amounts live in Firestore so both phones share one source and
+   they survive a rent change.
+══════════════════════════════════════════════════════════ */
+const RENT_FALLBACK = { alon: 1500, tali: 1200 };
+let _rentAgreement = { ...RENT_FALLBACK };
+
+async function _loadRentAgreement() {
+  try {
+    const s = await getDoc(doc(db, "settings", "rent"));
+    if (s.exists()) {
+      const d = s.data();
+      _rentAgreement = {
+        alon: Number.isFinite(+d.alon) ? +d.alon : RENT_FALLBACK.alon,
+        tali: Number.isFinite(+d.tali) ? +d.tali : RENT_FALLBACK.tali,
+      };
+    }
+  } catch { /* keep the fallback */ }
+  return _rentAgreement;
+}
+
+window.applyRentAgreement = function() {
+  const a = document.getElementById("bill-rent-alon");
+  const t = document.getElementById("bill-rent-tali");
+  if (a) a.value = _rentAgreement.alon;
+  if (t) t.value = _rentAgreement.tali;
+  _updateRentTotal(); _updateMissingHint();
+  showToast(`🏠 שכ״ד לפי ההסכם — אלון ₪${_rentAgreement.alon} · טלי ₪${_rentAgreement.tali}`, "success");
+};
+
+window.saveRentAgreement = async function() {
+  const a = parseFloat(prompt("כמה אלון משלם על שכר דירה?", _rentAgreement.alon));
+  if (!Number.isFinite(a) || a < 0) return;
+  const t = parseFloat(prompt("כמה טלי משלמת על שכר דירה?", _rentAgreement.tali));
+  if (!Number.isFinite(t) || t < 0) return;
+  try {
+    await setDoc(doc(db, "settings", "rent"), { alon:a, tali:t, updatedAt:serverTimestamp() });
+    _rentAgreement = { alon:a, tali:t };
+    _renderRentNote();
+    showToast("✅ ההסכם עודכן", "success");
+  } catch (e) { showToast("שגיאה: " + e.message, "error"); }
+};
+
+function _renderRentNote() {
+  const el = document.getElementById("rent-agreement-note");
+  if (el) el.innerHTML =
+    `לפי ההסכם: אלון ₪${_rentAgreement.alon} · טלי ₪${_rentAgreement.tali} ` +
+    `<button class="rent-edit-btn" onclick="saveRentAgreement()">שנה</button>`;
 }
 
 /* ── Bill definitions ──────────────────────────────────────
@@ -6441,9 +6524,14 @@ async function _loadBillInputs(monthStr) {
   const snap = await getDoc(doc(db, "bills", monthStr));
   const d    = snap.exists() ? snap.data() : {};
 
-  // Rent — falls back to the legacy single `rent` field on old docs
-  document.getElementById("bill-rent-alon").value = d.rentAlon ?? d.rent ?? "";
-  document.getElementById("bill-rent-tali").value = d.rentTali ?? "";
+  /* Rent: use what was saved, otherwise pre-fill from the standing
+     agreement so a normal month needs no typing at all. */
+  const savedA = d.rentAlon ?? d.rent;
+  const savedT = d.rentTali;
+  document.getElementById("bill-rent-alon").value =
+    (savedA !== undefined && savedA !== null && savedA !== "") ? savedA : _rentAgreement.alon;
+  document.getElementById("bill-rent-tali").value =
+    (savedT !== undefined && savedT !== null && savedT !== "") ? savedT : _rentAgreement.tali;
 
   _BILL_DEFS.forEach(b => {
     const el = document.getElementById(b.input);
@@ -6478,12 +6566,41 @@ async function _syncBillsToSplitwise(monthStr, data) {
     }
   };
 
-  push("rentAlon", `🏠 שכר דירה — ${label}`, data.rentAlon || 0, "Alon");
-  push("rentTali", `🏠 שכר דירה — ${label}`, data.rentTali || 0, "Tali");
+  /* Rent is deliberately NOT pushed — see the RENT block above.
+     Passing 0 also removes any rent rows written by earlier versions,
+     which were creating a recurring phantom debt. */
+  push("rentAlon", "", 0, "Alon");
+  push("rentTali", "", 0, "Tali");
+
   _BILL_DEFS.forEach(b =>
     push(b.key, `${b.emoji} ${b.he} — ${label}`, data[b.key] || 0, data[`${b.key}Payer`]));
 
   await Promise.all(ops);
+}
+
+/* One-time sweep: earlier versions pushed rent into the balance for
+   every saved month, each adding a phantom ₪150. Re-saving one month
+   only clears that month, so this clears them all. Runs once, then
+   records a flag so it costs nothing afterwards. */
+async function _purgeRentFromBalance() {
+  if (localStorage.getItem("rentPurged") === "2") return;
+  try {
+    const snap = await getDocs(collection(db, "splitwise_expenses"));
+    const kill = [];
+    snap.forEach(d => {
+      const v = d.data() || {};
+      const isRent = v.billKey === "rentAlon" || v.billKey === "rentTali" ||
+                     (v.source === "bill" && /שכר דירה/.test(v.name || ""));
+      if (isRent) kill.push(d.id);
+    });
+    await Promise.all(kill.map(id =>
+      deleteDoc(doc(db, "splitwise_expenses", id)).catch(() => {})));
+    localStorage.setItem("rentPurged", "2");
+    if (kill.length) {
+      showToast(`🏠 ${kill.length} רישומי שכ״ד הוסרו מההתחשבנות`, "success");
+      _logActivity("🏠", `שכר דירה הוצא מההתחשבנות (${kill.length} רישומים)`);
+    }
+  } catch (e) { console.warn("Rent purge:", e); }
 }
 
 /* Remove every Splitwise line generated from a given bill month. */
@@ -7526,6 +7643,10 @@ function _renderReport(container, monthStr, groceries, upgrades, bills) {
           <tr><td><strong>סה״כ חשבונות</strong></td><td><strong>₪${fixT.toFixed(2)}</strong></td></tr>
         </tfoot>
       </table>
+      <p style="font-size:.72rem;color:var(--text-muted);line-height:1.55;margin-top:10px;direction:rtl">
+        כולל שכר דירה (אלון ₪${(bills.rentAlon||0).toFixed(0)} · טלי ₪${(bills.rentTali||0).toFixed(0)}),
+        שאינו נכנס להתחשבנות הזוגית — הסכומים מוסכמים מראש.
+      </p>
     </div>`;
 
   _pieChart = new Chart(document.getElementById("expense-pie"), {
