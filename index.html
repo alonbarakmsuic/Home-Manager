@@ -9070,25 +9070,40 @@ window.spinWheel = function() {
   if (_wheelSpinning) return;
   if (meals.length === 0) { showToast("הוסף מנות תחילה 🍽️", "error"); return; }
 
-  _wheelSpinning = true;
   const wrap = document.getElementById("wheel-canvas-wrap");
   if (!wrap) return;
+  _wheelSpinning = true;
 
-  const extraRotations = 5 + Math.floor(Math.random() * 4);
-  const extraDeg       = Math.floor(Math.random() * 360);
-  const spinDeg        = extraRotations * 360 + extraDeg;
-  _wheelTotalAngle    += spinDeg;
+  /* ── Winner first, then the angle that lands on it ──────────
+     The old code spun to a random angle and then derived the winner
+     from it — with the sign inverted, so it read the segment mirrored
+     about the pointer and announced the wrong dish. It also had no
+     protection against stopping exactly on a segment boundary.
+
+     Choosing the winner up front and solving for the rotation makes
+     the two impossible to disagree, and lands mid-segment every time.
+
+     Geometry: segment i is drawn from -90° going CLOCKWISE, so its
+     centre sits at (i + 0.5) * segSize clockwise from the pointer at
+     12 o'clock. Rotating the wheel clockwise by A moves that centre to
+     (centre + A); to park it under the pointer we need A ≡ -centre.  */
+  const n        = meals.length;
+  const segSize  = 360 / n;
+  const winner   = Math.floor(Math.random() * n);
+  const centre   = (winner + 0.5) * segSize;
+  const target   = ((-centre % 360) + 360) % 360;
+  const current  = ((_wheelTotalAngle % 360) + 360) % 360;
+  const need     = ((target - current) % 360 + 360) % 360;
+  const spins    = 5 + Math.floor(Math.random() * 4);
+
+  _wheelTotalAngle += spins * 360 + need;
 
   wrap.style.transition = "transform 4s cubic-bezier(0.17,0.67,0.12,0.99)";
   wrap.style.transform  = `rotate(${_wheelTotalAngle}deg)`;
 
   setTimeout(() => {
     _wheelSpinning = false;
-    const n       = meals.length;
-    const segSize = 360 / n;
-    const landed  = _wheelTotalAngle % 360;
-    const idx     = Math.floor(landed / segSize) % n;
-    _showDishResult(meals[idx]);
+    _showDishResult(meals[winner]);          // exactly what the pointer shows
   }, 4300);
 };
 
