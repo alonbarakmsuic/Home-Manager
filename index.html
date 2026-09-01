@@ -615,6 +615,17 @@
   .maint-task-num{font-size:.72rem;font-weight:700;color:var(--text-light);
     background:var(--bg);border:1px solid var(--border);border-radius:6px;
     padding:2px 7px;flex-shrink:0;margin-top:1px}
+  /* One-tap done on a task row */
+  .btn-maint-done{width:30px;height:30px;border-radius:var(--radius-sm);
+    border:1px solid var(--border-strong);background:var(--bg-card);
+    color:var(--primary);font-size:.9rem;font-weight:800;cursor:pointer;
+    font-family:inherit;flex-shrink:0;transition:var(--T)}
+  .btn-maint-done:active{background:var(--primary);color:#fff;border-color:transparent}
+  .maint-item.task-done{opacity:.55}
+  .maint-item.task-done .maint-title-text{text-decoration:line-through}
+  .maint-item.task-done .btn-maint-done{background:var(--primary);color:#fff;
+    border-color:transparent}
+
   .maint-title-text{flex:1;font-size:.88rem;font-weight:600;line-height:1.4;color:var(--text)}
   .maint-actions{display:flex;gap:6px;flex-shrink:0}
   .btn-edit-maint{background:rgba(0,122,255,.1);color:var(--info);border:none;
@@ -752,6 +763,17 @@
     font-weight:700;top:50%;left:50%;transform:translate(-50%,-50%)}
   .item-label{flex:1;font-size:.86rem}
   .shop-item.checked .item-label{text-decoration:line-through;color:var(--text-muted)}
+  /* Upgrade "bought" action + modal */
+  .item-bought{background:none;border:1px solid rgba(33,131,88,.35);color:var(--primary);
+    cursor:pointer;font-size:.9rem;line-height:1;padding:6px 9px;border-radius:6px;
+    flex-shrink:0;margin-inline-start:auto;font-family:inherit;transition:var(--T)}
+  .item-bought:active{background:var(--primary);color:#fff;border-color:transparent}
+  .bought-item{background:var(--bg-surface);border:1px solid var(--border);
+    border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;
+    font-size:.98rem;font-weight:650;color:var(--text);text-align:center;direction:rtl}
+  .bought-note{font-size:.73rem;color:var(--text-muted);line-height:1.55;
+    margin:4px 0 14px;text-align:center;direction:rtl}
+
   /* Department chip — sits between the item name and the delete button.
      Replaces the old 🧺 badge: now that groceries can only come from the
      Pantry, "is a staple" was always true and said nothing, whereas the
@@ -2907,6 +2929,9 @@
     <button class="pantry-cat-btn"        data-cat="cleaning" onclick="setPantryCategory('cleaning')">🧴 פארם וניקיון</button>
   </div>
 
+  <!-- Prompt to categorise items that have no department yet -->
+  <div id="uncat-banner"></div>
+
   <div class="pantry-grid" id="pantry-grid">
     <div class="pantry-empty">
       <div class="empty-icon">🧺</div>
@@ -3180,6 +3205,34 @@
       </div>
       <button class="btn-send" onclick="confirmAddItem()" style="margin-top:4px">＋ הוסף לרשימה</button>
     </div>
+  </div>
+</div>
+
+<!-- ═════════════════ UPGRADE PURCHASED MODAL ═══════════ -->
+<div id="bought-modal" class="modal-bg" onclick="boughtBgClick(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💰 נקנה!</div>
+    <div class="bought-item" id="bought-item">—</div>
+    <div class="form-group">
+      <label for="bought-amount">כמה שילמתם? (₪)</label>
+      <input type="number" id="bought-amount" inputmode="decimal" step="0.01" min="0"
+             placeholder="0" onkeydown="if(event.key==='Enter') confirmBought()">
+    </div>
+    <div class="form-group">
+      <label for="bought-date">📅 תאריך</label>
+      <input type="date" id="bought-date">
+    </div>
+    <div class="form-group">
+      <label>מי שילם?</label>
+      <div class="sw-paidby-toggle">
+        <button class="sw-pb-btn active" id="bought-pb-alon" onclick="setBoughtPayer('Alon')">אלון</button>
+        <button class="sw-pb-btn"        id="bought-pb-tali" onclick="setBoughtPayer('Tali')">טלי</button>
+      </div>
+    </div>
+    <p class="bought-note">ייכנס להוצאות החודשיות ולהתחשבנות הזוגית, והפריט יוסר מרשימת השדרוגים.</p>
+    <button class="btn-send" id="btn-confirm-bought" onclick="confirmBought()">✅ רשום הוצאה</button>
+    <button class="btn-settle-cancel" onclick="closeBoughtModal()">ביטול</button>
   </div>
 </div>
 
@@ -3993,7 +4046,7 @@ async function _loadAsstContext() {
     grab("grocery_queue", "name"), grab("upgrade_queue", "name")
   ]);
   _asstCtx = { pantry, plants, rooms, groceryQueue, upgradeQueue,
-               tasks: tasks.filter(t => (t.status || "open") !== "done") };
+               tasks: tasks.filter(_taskOpen) };
   return _asstCtx;
 }
 
@@ -4059,7 +4112,7 @@ async function _loadDashStats() {
       getDocs(collection(db, "plants")),
       getDoc(doc(db, "watering", "log"))
     ]);
-    let open = 0; mSnap.forEach(d => { if ((d.data().status || "open") !== "done") open++; });
+    let open = 0; mSnap.forEach(d => { if (_taskOpen(d.data())) open++; });
     const log = wSnap.exists() ? wSnap.data() : {};
     let thirsty = 0;
     pSnap.forEach(d => {
@@ -4070,7 +4123,7 @@ async function _loadDashStats() {
     // Separate facts rather than one crowded line
     let high = 0;
     mSnap.forEach(d => { const v=d.data();
-      if ((v.status||"open")!=="done" && v.priority==="high") high++; });
+      if (_taskOpen(v) && v.priority==="high") high++; });
     setFacts("chores", [
       open    ? { t:`${open} משימות פתוחות`, alert:true } : null,
       high    ? { t:`${high} בעדיפות גבוהה`, alert:true } : null,
@@ -4301,7 +4354,7 @@ async function _computeInsights() {
   }
 
   /* ── 5. Tasks going stale ──────────────────────────────── */
-  const openTasks = tasks.filter(t => (t.status || "open") !== "done");
+  const openTasks = tasks.filter(_taskOpen);
   const old = openTasks.filter(t => t.dateReported &&
     _daysBetween(new Date(t.dateReported), now) >= 30);
   if (old.length)
@@ -5321,8 +5374,8 @@ async function _runIntent(i) {
       }
       case "taskDone": {
         const tSnap = await getDoc(doc(db, "maintenance", i.id));
-        const tPrev = tSnap.exists() ? (tSnap.data().status || "open") : "open";
-        await setDoc(doc(db, "maintenance", i.id), { status: "done" }, { merge: true });
+        const tPrev = tSnap.exists() ? (tSnap.data().status || "pending") : "pending";
+        await setDoc(doc(db, "maintenance", i.id), { status: "resolved" }, { merge: true });
         undo = () => setDoc(doc(db, "maintenance", i.id), { status: tPrev }, { merge: true });
         done = `✅ "${i.name}" סומנה כבוצעה`;
         _logActivity("📋", `closed task: ${i.name}`);
@@ -5388,6 +5441,8 @@ function _unsub(key) { if (_unsubs[key]) { _unsubs[key](); delete _unsubs[key]; 
 
 function _cleanupLeaving(id) {
   if (id === "dashboard")         { _unsub("activity"); stopDashRotate(); }
+  if (id === "shopping-groceries")  _unsub("queue-groceries");
+  if (id === "shopping-upgrades")   _unsub("queue-upgrades");
   if (id === "expenses-status")   { _unsub("status"); _unsub("status-bills"); }
   if (id === "expenses-splitwise")  _unsub("splitwise");
   if (id === "shopping-groceries")  _unsub("hist-groceries");
@@ -6805,6 +6860,12 @@ async function deleteBill(monthStr) {
 ══════════════════════════════════════════════════════════ */
 let _editingMaintId = null;  // null = adding new, string = editing existing
 
+/* The Task Log writes "resolved"; the assistant used to write "done".
+   Both mean closed — one helper so the dashboard, insights and
+   assistant can never disagree about what's open. */
+const TASK_CLOSED = new Set(["resolved", "done", "closed"]);
+const _taskOpen = t => !TASK_CLOSED.has((t && t.status) || "pending");
+
 const _PRIORITY_RANK = { high: 0, medium: 1, low: 2 };
 const _PRIORITY_PILL = {
   high:   `<span class="pill-priority-high">🔴 High</span>`,
@@ -6915,6 +6976,7 @@ function renderMaintList(items) {
         <span class="maint-task-num">#${idx + 1}</span>
         <span class="maint-title-text">${item.title}</span>
         <div class="maint-actions">
+          <button class="btn-maint-done" title="סמן כבוצע">✓</button>
           <button class="btn-edit-maint" title="Edit task">✏️</button>
           <button class="btn-trash" title="Delete">🗑️</button>
         </div>
@@ -6929,6 +6991,24 @@ function renderMaintList(items) {
         <option value="in-progress" ${item.status==="in-progress" ? "selected":""}>🔧 In Progress</option>
         <option value="resolved"    ${item.status==="resolved"    ? "selected":""}>✅ Resolved</option>
       </select>`;
+    /* One tap to close. The status dropdown already existed, but it takes
+       two interactions and sits below the fold — which is why 14 of 14
+       tasks had never been closed. */
+    div.querySelector(".btn-maint-done").addEventListener("click", async function() {
+      const wasOpen = _taskOpen(item);
+      this.disabled = true;
+      try {
+        const next = wasOpen ? "resolved" : "pending";
+        await setDoc(doc(db, "maintenance", item.id), { status: next }, { merge: true });
+        if (wasOpen) {
+          _logActivity("✅", `סגר משימה: ${item.title}`);
+          showToast(`✅ "${item.title}" בוצעה`, "success");
+        } else {
+          showToast("↩︎ הוחזרה לפתוחות", "success");
+        }
+      } catch(err) { showToast("Error: " + err.message, "error"); this.disabled = false; }
+    });
+    if (!_taskOpen(item)) div.classList.add("task-done");
     div.querySelector(".btn-edit-maint").addEventListener("click", () => startEditMaint(item));
     div.querySelector(".btn-trash").addEventListener("click", () => deleteMaintenance(item.id));
     div.querySelector(".maint-status-sel").addEventListener("change", async function() {
@@ -6958,6 +7038,64 @@ let _modalTarget = null;
 const _itemLists  = { groceries:[], upgrades:[] };
 // Tracks pantry items loaded into the grocery list: { pantryId: { name, checked } }
 let _pantryQueueItems = {};
+
+/* ══════════════════════════════════════════════════════════
+   UPGRADE PURCHASED → expense
+   Closes the loop on the house-upgrade list: record what was paid,
+   file it under Expenses and the couple's balance, and clear the
+   item. Without this, upgrades accumulate forever and none of the
+   spending shows up in reports.
+══════════════════════════════════════════════════════════ */
+let _boughtItem = null, _boughtPayer = "Alon";
+
+window.boughtBgClick = e => { if (e.target === e.currentTarget) closeBoughtModal(); };
+window.closeBoughtModal = () => document.getElementById("bought-modal").classList.remove("open");
+window.setBoughtPayer = p => {
+  _boughtPayer = p;
+  document.getElementById("bought-pb-alon").classList.toggle("active", p === "Alon");
+  document.getElementById("bought-pb-tali").classList.toggle("active", p === "Tali");
+};
+
+window.openBoughtModal = function(name, queueId) {
+  _boughtItem = { name, queueId };
+  document.getElementById("bought-item").textContent = name;
+  document.getElementById("bought-amount").value = "";
+  document.getElementById("bought-date").value = new Date().toISOString().slice(0, 10);
+  setBoughtPayer(_currentUser());
+  document.getElementById("bought-modal").classList.add("open");
+  setTimeout(() => document.getElementById("bought-amount")?.focus(), 280);
+};
+
+window.confirmBought = async function() {
+  if (!_boughtItem) return;
+  const amtEl = document.getElementById("bought-amount");
+  const amount = parseFloat(amtEl.value);
+  if (!Number.isFinite(amount) || amount <= 0) return _shakeInput(amtEl);
+  const date = document.getElementById("bought-date").value ||
+               new Date().toISOString().slice(0, 10);
+
+  const btn = document.getElementById("btn-confirm-bought");
+  btn.disabled = true; btn.textContent = "⏳ רושם…";
+  const { name, queueId } = _boughtItem;
+  try {
+    await addDoc(collection(db, "expenses"), {
+      type:"upgrades", date, amount, items:[name], createdAt:serverTimestamp()
+    });
+    await addDoc(collection(db, "splitwise_expenses"), {
+      name:`🏠 ${name}`, amount, paidBy:_boughtPayer, createdAt:serverTimestamp()
+    });
+    if (queueId) await deleteDoc(doc(db, "upgrade_queue", queueId)).catch(() => {});
+
+    closeBoughtModal();
+    showToast(`✅ ${name} — ₪${amount.toFixed(0)} נרשם בהוצאות`, "success");
+    _logActivity("🏠", `קנה ${name} — ₪${amount.toFixed(0)}`, [name]);
+    _boughtItem = null;
+  } catch (err) {
+    showToast("שגיאה: " + err.message, "error");
+  } finally {
+    btn.disabled = false; btn.textContent = "✅ רשום הוצאה";
+  }
+};
 
 /* ══════════════════════════════════════════════════════════
    GROCERY PICKER — choose from the Pantry, never free text
@@ -7170,11 +7308,16 @@ function _appendShopItem(ul, name, type, queueId, fromPantry = false, cat = null
   const dept = (type === "groceries" && cat)
     ? `<span class="item-dept">${_CAT_EMOJI[cat] || "🛒"} ${esc(_CAT_SHORT[cat] || "")}</span>`
     : "";
+  /* Upgrades get a "bought" action: they're one-off purchases, so the
+     natural end of the row is recording what was paid, not ticking it
+     for a weekly shop. */
+  const bought = type === "upgrades"
+    ? `<button class="item-bought" title="נקנה">💰</button>` : "";
   li.innerHTML = `
     <div class="shop-item-inner">
       <input type="checkbox" class="item-check">
       <span class="item-label" dir="auto">${esc(name)}</span>
-      ${dept}
+      ${dept}${bought}
       <button class="item-del" title="מחק פריט" aria-label="מחק פריט">🗑️</button>
     </div>`;
 
@@ -7197,9 +7340,15 @@ function _appendShopItem(ul, name, type, queueId, fromPantry = false, cat = null
   li.querySelector(".item-check").addEventListener("change", function() {
     li.classList.toggle("checked", this.checked);
     const qid = li.dataset.queueId;
-    if (qid && _pantryQueueItems[qid])
-      _pantryQueueItems[qid].checked = this.checked;
+    // Record outside the DOM so a live update from the other phone
+    // re-renders the list without clearing what you already ticked.
+    if (qid) {
+      this.checked ? _shopChecked[type].add(qid) : _shopChecked[type].delete(qid);
+      if (_pantryQueueItems[qid]) _pantryQueueItems[qid].checked = this.checked;
+    }
   });
+  li.querySelector(".item-bought")
+    ?.addEventListener("click", () => openBoughtModal(name, li.dataset.queueId));
   li.querySelector(".item-del").addEventListener("click", doDelete);
 
   /* Swipe-to-delete removed: it rendered a second, unclickable
@@ -7210,22 +7359,25 @@ function _appendShopItem(ul, name, type, queueId, fromPantry = false, cat = null
   return li;
 }
 
+/* Which queue rows are ticked right now. Held outside the DOM so a
+   live update from the other phone can re-render the list without
+   losing what you already ticked in the shop. */
+let _shopChecked = { groceries:new Set(), upgrades:new Set() };
+
 async function initShopping(type) {
   const prefix = type === "groceries" ? "grocery" : "upgrade";
   document.getElementById(`btn-send-${type}`).onclick = () => sendEntry(type);
   _itemLists[type] = [];
   const ul = document.getElementById(`${prefix}-list`);
   ul.innerHTML = "";
-  document.getElementById(`${prefix}-date`).value   = "";
+  const dateEl = document.getElementById(`${prefix}-date`);
+  // Default to today: the date picker was a required field with no value,
+  // which is friction at exactly the wrong moment (just home from the shop).
+  if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
   document.getElementById(`${prefix}-amount`).value = "";
+  _shopChecked[type] = new Set();
 
-  // ── Restore saved items from this list's queue collection ──
-  //    Applies to BOTH lists, so nothing is lost when navigating away.
-  if (type === "groceries") _pantryQueueItems = {};
-
-  /* Map every pantry staple by id AND by normalised name, so a queue
-     row can find its department either way. Used for the row chip and
-     for grouping the list by section. */
+  /* Pantry lookup for the department chips + grouping */
   let _pantryIdSet = new Set(), _catById = new Map(), _catByName = new Map();
   if (type === "groceries") {
     try {
@@ -7233,62 +7385,76 @@ async function initShopping(type) {
       pSnap.forEach(d => {
         const v = d.data() || {};
         _pantryIdSet.add(d.id);
-        _catById.set(d.id, v.category || "pantry");
-        if (v.name) _catByName.set(_normalizePantryName(v.name), v.category || "pantry");
+        _catById.set(d.id, v.category || null);
+        if (v.name) _catByName.set(_normalizePantryName(v.name), v.category || null);
       });
-    } catch { /* chips are cosmetic — never block the list on this */ }
+    } catch { /* chips are cosmetic — never block the list */ }
   }
 
-  try {
-    const qSnap = await getDocs(collection(db, _QUEUE_COL[type]));
-    const rows  = [];
-    qSnap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+  /* ── LIVE list ────────────────────────────────────────────
+     onSnapshot, not getDocs: while you're in the shop the other
+     phone's changes appear immediately, and neither of you can
+     overwrite the other by saving a stale copy.
+     Ticked boxes survive re-renders via _shopChecked.          */
+  _unsub(`queue-${type}`);
+  _unsubs[`queue-${type}`] = onSnapshot(collection(db, _QUEUE_COL[type]), qSnap => {
+    const rows = [];
+    qSnap.forEach(d => rows.push({ id:d.id, ...d.data() }));
 
-    // Attach each row's department, by id first then by name
     if (type === "groceries")
       rows.forEach(r => {
-        r.cat = _catById.get(r.id) ||
-                _catByName.get(_normalizePantryName(r.name || "")) || null;
+        r.cat = _catById.get(r.id) ??
+                _catByName.get(_normalizePantryName(r.name || "")) ?? null;
       });
 
-    /* Group by department so the list is walked section by section
-       in the shop; within a section keep the order things were added. */
     rows.sort((a, b) =>
       (type === "groceries" ? _catRank(a.cat) - _catRank(b.cat) : 0) ||
       (_tsMs(a.addedAt) - _tsMs(b.addedAt)));
 
-    if (rows.length) {
-      let lastCat = null;
-      rows.forEach(r => {
-        const name = r.name;
-        if (!name) return;
-        // Pantry-sourced only if a matching /pantry doc exists under the
-        // same id; items added by Siri get auto-ids and correctly don't
-        // count, even when the flag is absent.
-        const fromPantry = type === "groceries"
-          ? (r.fromPantry === true || _pantryIdSet.has(r.id))
-          : false;
-        if (fromPantry) _pantryQueueItems[r.id] = { name, checked: false };
-        _itemLists[type].push(name);
+    // drop ticks for rows that no longer exist
+    const live = new Set(rows.map(r => r.id));
+    [..._shopChecked[type]].forEach(id => { if (!live.has(id)) _shopChecked[type].delete(id); });
 
-        // Section heading whenever the department changes
-        if (type === "groceries" && r.cat !== lastCat) {
-          lastCat = r.cat;
-          const head = document.createElement("li");
-          head.className = "shop-section";
-          head.innerHTML = `<span>${_CAT_EMOJI[r.cat] || "🛒"}</span>` +
-            `<span>${esc(_CAT_SHORT[r.cat] || "אחר")}</span>`;
-          ul.appendChild(head);
-        }
-        _appendShopItem(ul, name, type, r.id, fromPantry, r.cat);
-      });
-    } else {
+    ul.innerHTML = "";
+    _itemLists[type] = [];
+    if (type === "groceries") _pantryQueueItems = {};
+
+    if (!rows.length) {
       ul.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
+      return;
     }
-  } catch (err) {
-    console.warn("Queue load failed:", err);
+
+    let lastCat = null;
+    rows.forEach(r => {
+      const name = r.name;
+      if (!name) return;
+      const fromPantry = type === "groceries"
+        ? (r.fromPantry === true || _pantryIdSet.has(r.id))
+        : false;
+      if (fromPantry) _pantryQueueItems[r.id] = { name, checked:_shopChecked[type].has(r.id) };
+      _itemLists[type].push(name);
+
+      if (type === "groceries" && r.cat !== lastCat) {
+        lastCat = r.cat;
+        const head = document.createElement("li");
+        head.className = "shop-section";
+        head.innerHTML = `<span>${_CAT_EMOJI[r.cat] || "🛒"}</span>` +
+          `<span>${esc(_CAT_SHORT[r.cat] || "אחר")}</span>`;
+        ul.appendChild(head);
+      }
+
+      const li = _appendShopItem(ul, name, type, r.id, fromPantry, r.cat);
+      // restore what was already ticked before this update arrived
+      if (li && _shopChecked[type].has(r.id)) {
+        li.classList.add("checked");
+        const cb = li.querySelector(".item-check");
+        if (cb) cb.checked = true;
+      }
+    });
+  }, err => {
+    console.warn("Queue listener:", err);
     ul.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
-  }
+  });
 
   // ✅ FLAT onSnapshot — filter by type in JS
   _unsub(`hist-${type}`);
@@ -7556,7 +7722,51 @@ window.setPantryCategory = function(cat) {
   _renderPantryGrid(_pantryAllItems);
 };
 
+/* Items with no department land in "אחר" in the shopping list, so this
+   surfaces them for one-tap assignment instead of leaving them silent. */
+function _renderUncatBanner(items) {
+  const el = document.getElementById("uncat-banner");
+  if (!el) return;
+  const missing = (items || []).filter(i => !i.category);
+  if (!missing.length) { el.innerHTML = ""; return; }
+  el.innerHTML = `
+    <div class="uncat-card">
+      <div class="uncat-head">
+        <span>🏷️</span>
+        <div>
+          <div class="uncat-title">${missing.length} מוצרים בלי מחלקה</div>
+          <div class="uncat-sub">בלי מחלקה הם יופיעו תחת "אחר" ברשימת הקניות</div>
+        </div>
+      </div>
+      <div class="uncat-item" id="uncat-item"></div>
+    </div>`;
+  _renderUncatOne(missing);
+}
+
+function _renderUncatOne(queue) {
+  const box = document.getElementById("uncat-item");
+  if (!box) return;
+  const item = queue[0];
+  if (!item) { document.getElementById("uncat-banner").innerHTML = ""; return; }
+  box.innerHTML = `
+    <div class="uncat-name" dir="auto">${esc(item.name)}</div>
+    <div class="uncat-cats">
+      ${_PANTRY_CAT_LIST.map(c =>
+        `<button class="uncat-cat" data-c="${c.id}">${esc(c.label)}</button>`).join("")}
+    </div>`;
+  box.querySelectorAll(".uncat-cat").forEach(b =>
+    b.addEventListener("click", async () => {
+      b.disabled = true;
+      try {
+        await setDoc(doc(db, "pantry", item.id), { category:b.dataset.c }, { merge:true });
+        item.category = b.dataset.c;                 // keep the cache in step
+        _renderUncatOne(queue.slice(1));             // straight to the next one
+      } catch (e) { showToast("שגיאה: " + e.message, "error"); b.disabled = false; }
+    }));
+}
+
 function _renderPantryGrid(items) {
+  _renderUncatBanner(items);
   // 1. Filter by active category (items with no category default to "pantry")
   const byCat = _pantryCategory === "all"
     ? items
