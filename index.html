@@ -1934,6 +1934,105 @@
      same visual grammar as the rest of the app.
      ═══════════════════════════════════════════════════════ */
 
+  /* ══ SHOPPING MODE ═══════════════════════════════════════
+     Sized for one hand, a trolley and a glance. Rows are 62px so
+     they can be hit without looking; type is large enough to read
+     at arm's length. */
+  .btn-shop-mode{width:100%;display:flex;align-items:center;gap:9px;
+    padding:14px 16px;margin-bottom:14px;border:none;
+    border-radius:var(--radius);background:var(--user-deep,#2A4A7F);
+    color:#fff;font-size:1rem;font-weight:650;cursor:pointer;
+    font-family:inherit;direction:rtl;
+    box-shadow:0 1px 3px rgba(18,20,24,.12)}
+  .btn-shop-mode small{margin-inline-start:auto;font-size:.72rem;
+    font-weight:450;opacity:.7}
+  .btn-shop-mode:active{filter:brightness(.93)}
+
+  #shop-mode{position:fixed;inset:0;z-index:500;background:var(--bg);
+    display:none;flex-direction:column;direction:rtl}
+  #shop-mode.open{display:flex;animation:smIn .24s var(--ease)}
+  @keyframes smIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  #shop-mode-bar{display:flex;align-items:center;gap:12px;flex-shrink:0;
+    padding:calc(12px + env(safe-area-inset-top)) 14px 12px;
+    background:var(--user-deep,#2A4A7F);color:#fff}
+  #shop-mode-exit,#shop-mode-hide{width:38px;height:38px;flex-shrink:0;
+    border:none;border-radius:var(--radius-sm);cursor:pointer;
+    background:rgba(255,255,255,.16);color:#fff;font-size:1rem;font-family:inherit}
+  #shop-mode-hide.on{background:#fff;color:var(--user-deep,#2A4A7F)}
+  #shop-mode-progress{flex:1;min-width:0}
+  #shop-mode-count{font-size:1.05rem;font-weight:750;margin-bottom:5px;
+    font-variant-numeric:tabular-nums;direction:ltr;text-align:start}
+  #shop-mode-track{height:6px;border-radius:3px;background:rgba(255,255,255,.22)}
+  #shop-mode-fill{height:100%;width:0;border-radius:3px;background:#fff;
+    transition:width .3s var(--ease)}
+
+  #shop-mode-list{flex:1;overflow-y:auto;padding:8px 12px 16px;
+    -webkit-overflow-scrolling:touch}
+  .sm-sec{font-size:.76rem;font-weight:800;color:var(--text-light);
+    text-transform:uppercase;letter-spacing:.06em;padding:16px 4px 7px}
+  .sm-row{display:flex;align-items:center;gap:14px;width:100%;
+    min-height:62px;padding:0 16px;margin-bottom:7px;
+    border:1px solid var(--border);border-radius:var(--radius);
+    background:var(--bg-card);cursor:pointer;font-family:inherit;
+    text-align:start;transition:background .12s var(--ease)}
+  .sm-row:active{background:var(--bg-sunken)}
+  .sm-box{width:30px;height:30px;flex-shrink:0;border-radius:8px;
+    border:2px solid var(--border-strong);display:flex;
+    align-items:center;justify-content:center;
+    font-size:1rem;font-weight:800;color:#fff}
+  .sm-name{font-size:1.08rem;font-weight:600;color:var(--text);
+    line-height:1.3;text-align:start}
+  .sm-row.on{background:var(--bg-surface);border-color:transparent}
+  .sm-row.on .sm-box{background:var(--primary);border-color:var(--primary)}
+  .sm-row.on .sm-name{text-decoration:line-through;color:var(--text-light)}
+  .sm-empty{padding:60px 20px;text-align:center;font-size:1.05rem;
+    font-weight:600;color:var(--text-muted)}
+
+  #shop-mode-foot{flex-shrink:0;padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--border);background:var(--bg-card)}
+  #shop-mode-finish{width:100%;padding:16px;border:none;
+    border-radius:var(--radius);background:var(--primary);color:#fff;
+    font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit}
+  #shop-mode-finish:disabled{background:var(--bg-sunken);color:var(--text-light);cursor:default}
+  #shop-mode-finish:not(:disabled):active{filter:brightness(.93)}
+
+  /* ── Monthly grocery budget ──────────────────────────── */
+  .budget-empty{width:100%;display:flex;flex-direction:column;gap:3px;
+    padding:15px;margin-bottom:16px;border-radius:var(--radius);
+    border:1px dashed var(--border-strong);background:var(--bg-card);
+    font-size:.9rem;font-weight:600;color:var(--text);cursor:pointer;
+    font-family:inherit;direction:rtl}
+  .budget-empty span{font-size:.73rem;font-weight:450;color:var(--text-light)}
+  .budget-empty:active{background:var(--bg-surface)}
+  .budget-card{padding:15px;margin-bottom:16px;border-radius:var(--radius);
+    border:1px solid var(--border);background:var(--bg-card);direction:rtl}
+  .budget-card.fast{border-color:rgba(171,100,0,.35);background:rgba(171,100,0,.04)}
+  .budget-card.over{border-color:rgba(206,44,49,.35);background:rgba(206,44,49,.04)}
+  .budget-head{display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:9px}
+  .budget-title{font-size:.76rem;font-weight:700;color:var(--text-muted);
+    text-transform:uppercase;letter-spacing:.05em}
+  .budget-edit{background:none;border:none;color:var(--info);font-size:.74rem;
+    font-weight:700;cursor:pointer;font-family:inherit;text-decoration:underline}
+  .budget-nums{display:flex;align-items:baseline;gap:7px;margin-bottom:10px;
+    font-variant-numeric:tabular-nums}
+  .budget-nums strong{font-size:1.5rem;font-weight:750;color:var(--text);
+    letter-spacing:var(--tracking-tighter)}
+  .budget-nums span{font-size:.84rem;color:var(--text-muted)}
+  .budget-bar{position:relative;height:8px;border-radius:4px;
+    background:var(--bg-sunken);overflow:visible}
+  .budget-fill{height:100%;border-radius:4px;background:var(--primary);
+    transition:width .45s var(--ease)}
+  .budget-card.fast .budget-fill{background:var(--accent)}
+  .budget-card.over .budget-fill{background:var(--danger)}
+  /* Marker for where you'd be if spending evenly — the reference that
+     turns a total into a judgement */
+  .budget-today{position:absolute;top:-3px;width:2px;height:14px;
+    background:var(--text);opacity:.45;border-radius:1px}
+  .budget-msg{margin-top:9px;font-size:.78rem;color:var(--text-muted);
+    font-variant-numeric:tabular-nums}
+
   /* ── Grocery picker (type-ahead over the Pantry) ─────── */
   .pick-search-wrap{display:flex;align-items:center;gap:8px;margin-bottom:12px;
     border:1px solid var(--border-strong);border-radius:var(--radius-sm);
@@ -2752,6 +2851,9 @@
 
 <!-- ═════════════════ CURRENT STATUS ════════════════════ -->
 <main id="view-expenses-status" class="view">
+  <!-- Monthly grocery budget -->
+  <div id="budget-card"></div>
+
   <div class="stat-cards">
     <div class="stat-card"><div class="stat-label">🛒 Groceries</div><div class="stat-value" id="stat-groceries">₪0</div></div>
     <div class="stat-card"><div class="stat-label">🏠 Upgrades</div><div class="stat-value accent" id="stat-upgrades">₪0</div></div>
@@ -2864,6 +2966,12 @@
 
 <!-- ═════════════════ GROCERIES ══════════════════════════ -->
 <main id="view-shopping-groceries" class="view">
+  <!-- Opt-in in-store view. The list below is unchanged. -->
+  <button class="btn-shop-mode" onclick="openShopMode()">
+    🛒 <span>מצב קנייה</span>
+    <small>תצוגה גדולה לסופר</small>
+  </button>
+
   <div class="list-wrap">
     <div class="list-header"><h4>🛒 Items</h4><button class="btn-add" onclick="openAddModal('groceries')">＋ Add</button></div>
     <ul class="items-list" id="grocery-list"><li class="list-empty">Tap "＋ Add" to start your list.</li></ul>
@@ -3219,6 +3327,25 @@
       </div>
       <button class="btn-send" onclick="confirmAddItem()" style="margin-top:4px">＋ הוסף לרשימה</button>
     </div>
+  </div>
+</div>
+
+<!-- ═════════════════ SHOPPING MODE ═════════════════════
+     A separate full-screen surface for use inside the shop.
+     Reads the same queue and shares tick state with the normal
+     list, which is left exactly as it was. -->
+<div id="shop-mode">
+  <div id="shop-mode-bar">
+    <button id="shop-mode-exit" onclick="closeShopMode()">✕</button>
+    <div id="shop-mode-progress">
+      <div id="shop-mode-count">0 / 0</div>
+      <div id="shop-mode-track"><div id="shop-mode-fill"></div></div>
+    </div>
+    <button id="shop-mode-hide" onclick="toggleShopDone()" title="הסתר שנאספו">👁</button>
+  </div>
+  <div id="shop-mode-list"></div>
+  <div id="shop-mode-foot">
+    <button id="shop-mode-finish" onclick="finishShopMode()">סיימתי — רשום הוצאה</button>
   </div>
 </div>
 
@@ -7065,6 +7192,132 @@ const _itemLists  = { groceries:[], upgrades:[] };
 let _pantryQueueItems = {};
 
 /* ══════════════════════════════════════════════════════════
+   🛒 SHOPPING MODE
+   A second, opt-in surface over the same data — the existing list
+   is untouched, so you can compare them and keep whichever wins.
+
+   Built for one-handed use in a shop: large rows, department
+   headings, a progress bar, and the screen kept awake. Tick state
+   is the shared _shopChecked set, so anything ticked here is
+   already ticked when you go back to the normal list.
+══════════════════════════════════════════════════════════ */
+let _shopModeRows = [], _shopModeUnsub = null,
+    _shopHideDone = false, _wakeLock = null;
+
+window.openShopMode = async function() {
+  const host = document.getElementById("shop-mode");
+  host.classList.add("open");
+  document.body.style.overflow = "hidden";
+
+  // Keep the screen on — a list that blacks out mid-aisle is useless
+  try {
+    if ("wakeLock" in navigator) _wakeLock = await navigator.wakeLock.request("screen");
+  } catch { /* unsupported or denied — not fatal */ }
+
+  // Department lookup, same as the normal list
+  const catById = new Map(), catByName = new Map();
+  try {
+    const p = await getDocs(collection(db, "pantry"));
+    p.forEach(d => {
+      const v = d.data() || {};
+      catById.set(d.id, v.category || null);
+      if (v.name) catByName.set(_normalizePantryName(v.name), v.category || null);
+    });
+  } catch {}
+
+  _shopModeUnsub?.();
+  _shopModeUnsub = onSnapshot(collection(db, "grocery_queue"), snap => {
+    const rows = [];
+    snap.forEach(d => rows.push({ id:d.id, ...d.data() }));
+    rows.forEach(r => {
+      r.cat = catById.get(r.id) ??
+              catByName.get(_normalizePantryName(r.name || "")) ?? null;
+    });
+    rows.sort((a, b) => _catRank(a.cat) - _catRank(b.cat) ||
+                        _tsMs(a.addedAt) - _tsMs(b.addedAt));
+    _shopModeRows = rows;
+    _renderShopMode();
+  });
+};
+
+window.closeShopMode = function() {
+  document.getElementById("shop-mode").classList.remove("open");
+  document.body.style.overflow = "";
+  _shopModeUnsub?.(); _shopModeUnsub = null;
+  try { _wakeLock?.release(); } catch {}
+  _wakeLock = null;
+  // reflect anything ticked in here back onto the normal list
+  if (document.getElementById("view-shopping-groceries")?.classList.contains("active"))
+    initShopping("groceries");
+};
+
+window.toggleShopDone = function() {
+  _shopHideDone = !_shopHideDone;
+  document.getElementById("shop-mode-hide").classList.toggle("on", _shopHideDone);
+  _renderShopMode();
+};
+
+function _renderShopMode() {
+  const list = document.getElementById("shop-mode-list");
+  if (!list) return;
+  const checked = _shopChecked.groceries;
+  const total = _shopModeRows.length;
+  const got   = _shopModeRows.filter(r => checked.has(r.id)).length;
+
+  document.getElementById("shop-mode-count").textContent = `${got} / ${total}`;
+  document.getElementById("shop-mode-fill").style.width =
+    total ? `${(got / total) * 100}%` : "0%";
+  const finish = document.getElementById("shop-mode-finish");
+  finish.disabled = got === 0;
+  finish.textContent = got ? `סיימתי — ${got} פריטים` : "סמן מה שלקחת";
+
+  const rows = _shopHideDone
+    ? _shopModeRows.filter(r => !checked.has(r.id))
+    : _shopModeRows;
+
+  if (!rows.length) {
+    list.innerHTML = `<div class="sm-empty">${
+      total ? "✅ אספתם הכל!" : "הרשימה ריקה"}</div>`;
+    return;
+  }
+
+  let lastCat = null, html = "";
+  rows.forEach(r => {
+    if (r.cat !== lastCat) {
+      lastCat = r.cat;
+      html += `<div class="sm-sec">${_CAT_EMOJI[r.cat] || "🛒"} ${
+        esc(_CAT_SHORT[r.cat] || "אחר")}</div>`;
+    }
+    const on = checked.has(r.id);
+    html += `<button class="sm-row ${on ? "on" : ""}" data-id="${r.id}">
+       <span class="sm-box">${on ? "✓" : ""}</span>
+       <span class="sm-name" dir="auto">${esc(r.name)}</span>
+     </button>`;
+  });
+  list.innerHTML = html;
+
+  list.querySelectorAll(".sm-row").forEach(b =>
+    b.addEventListener("click", () => {
+      const id = b.dataset.id;
+      checked.has(id) ? checked.delete(id) : checked.add(id);
+      if (_pantryQueueItems[id]) _pantryQueueItems[id].checked = checked.has(id);
+      if (navigator.vibrate) navigator.vibrate(8);
+      _renderShopMode();
+    }));
+}
+
+/* Hand off to the existing expense form with everything pre-ticked */
+window.finishShopMode = function() {
+  closeShopMode();
+  navigateTo("shopping-groceries");
+  setTimeout(() => {
+    document.getElementById("grocery-amount")?.focus();
+    document.getElementById("grocery-amount")
+      ?.scrollIntoView({ behavior:"smooth", block:"center" });
+  }, 500);
+};
+
+/* ══════════════════════════════════════════════════════════
    UPGRADE PURCHASED → expense
    Closes the loop on the house-upgrade list: record what was paid,
    file it under Expenses and the couple's balance, and clear the
@@ -7923,8 +8176,92 @@ window.deleteExpense = async function(id) {
   } catch(err) { showToast("Error: " + err.message, "error"); }
 };
 
+/* ══════════════════════════════════════════════════════════
+   MONTHLY GROCERY BUDGET
+   Stored in Firestore so both phones share one target. Shown as
+   pace, not just a total: knowing you're 60% through the money on
+   day 12 is actionable, whereas the same number on day 28 is fine.
+══════════════════════════════════════════════════════════ */
+let _budget = { groceries: 0 };
+
+async function _loadBudget() {
+  try {
+    const s = await getDoc(doc(db, "settings", "budget"));
+    if (s.exists()) {
+      const v = +s.data().groceries;
+      _budget.groceries = Number.isFinite(v) && v > 0 ? v : 0;
+    }
+  } catch { /* keep 0 = no target set */ }
+  return _budget;
+}
+
+window.setGroceryBudget = async function() {
+  const cur = _budget.groceries || "";
+  const raw = prompt("יעד חודשי לקניות (₪) — השאר ריק כדי לבטל:", cur);
+  if (raw === null) return;
+  const n = parseFloat(raw);
+  const val = Number.isFinite(n) && n > 0 ? n : 0;
+  try {
+    await setDoc(doc(db, "settings", "budget"),
+      { groceries: val, updatedAt: serverTimestamp() }, { merge: true });
+    _budget.groceries = val;
+    _renderBudget();
+    showToast(val ? `🎯 יעד חודשי: ₪${val.toFixed(0)}` : "היעד בוטל", "success");
+  } catch (e) { showToast("שגיאה: " + e.message, "error"); }
+};
+
+function _renderBudget() {
+  const el = document.getElementById("budget-card");
+  if (!el) return;
+  const target = _budget.groceries;
+  const spent  = _statusGroceries;
+
+  if (!target) {
+    el.innerHTML = `
+      <button class="budget-empty" onclick="setGroceryBudget()">
+        🎯 הגדר יעד חודשי לקניות
+        <span>כדי לראות איפה אתם עומדים באמצע החודש</span>
+      </button>`;
+    return;
+  }
+
+  const pct   = Math.min(100, (spent / target) * 100);
+  const left  = target - spent;
+  const now   = new Date();
+  const day   = now.getDate();
+  const days  = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const dayPct = (day / days) * 100;
+  // Pace: spending evenly would put you at dayPct of the budget by now
+  const ahead = pct - dayPct;
+
+  const tone = spent > target ? "over" : ahead > 12 ? "fast" : "ok";
+  const msg  = spent > target
+    ? `חריגה של ₪${Math.abs(left).toFixed(0)}`
+    : ahead > 12
+      ? `בקצב מהיר — נותרו ₪${left.toFixed(0)} ל-${days - day} ימים`
+      : `נותרו ₪${left.toFixed(0)} ל-${days - day} ימים`;
+
+  el.innerHTML = `
+    <div class="budget-card ${tone}">
+      <div class="budget-head">
+        <span class="budget-title">🎯 יעד קניות חודשי</span>
+        <button class="budget-edit" onclick="setGroceryBudget()">שנה</button>
+      </div>
+      <div class="budget-nums">
+        <strong>₪${spent.toFixed(0)}</strong>
+        <span>מתוך ₪${target.toFixed(0)}</span>
+      </div>
+      <div class="budget-bar">
+        <div class="budget-fill" style="width:${pct}%"></div>
+        <div class="budget-today" style="inset-inline-start:${Math.min(100, dayPct)}%"
+             title="היום בחודש"></div>
+      </div>
+      <div class="budget-msg">${esc(msg)}</div>
+    </div>`;
+}
+
 // Month-to-date running totals, shared between the two live listeners below
-let _statusVar = 0, _statusFix = 0;
+let _statusVar = 0, _statusFix = 0, _statusGroceries = 0;
 
 function _paintStatusTotals() {
   const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
@@ -7933,6 +8270,7 @@ function _paintStatusTotals() {
 }
 
 function initExpensesStatus() {
+  _loadBudget().then(_renderBudget);
   const now  = new Date();
   const yyyy = now.getFullYear();
   const mm   = String(now.getMonth() + 1).padStart(2, "0");
@@ -8007,7 +8345,9 @@ function initExpensesStatus() {
     document.getElementById("stat-groceries").textContent = `₪${g.toFixed(0)}`;
     document.getElementById("stat-upgrades").textContent  = `₪${u.toFixed(0)}`;
     _statusVar = g + u;
+    _statusGroceries = g;            // budget tracks groceries only
     _paintStatusTotals();
+    _renderBudget();
   });
 }
 
