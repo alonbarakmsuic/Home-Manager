@@ -1295,11 +1295,12 @@
     margin:4px 0 10px;direction:rtl;unicode-bidi:isolate;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .vac-btns{display:flex;flex-direction:column;gap:6px}
+  .vac-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
   .btn-vac{padding:9px 4px;border:none;border-radius:6px;font-size:.72rem;font-weight:700;
     cursor:pointer;transition:var(--T);font-family:inherit;width:100%}
   .btn-vac.start{background:#218358;color:#fff}
-  .btn-vac.stop{background:#CE2C31;color:#fff}
-  .btn-vac.dock{background:var(--bg-surface);color:var(--text);border:.5px solid rgba(0,0,0,.1)}
+  .btn-vac.sub{background:var(--bg-surface);color:var(--text);
+    border:.5px solid rgba(0,0,0,.1);font-size:.66rem;padding:8px 2px}
   .btn-vac:active{transform:scale(0.98);opacity:.88}
   /* TV */
   .tv-btns{display:grid;grid-template-columns:1fr 1fr;gap:5px}
@@ -3103,16 +3104,24 @@
       צריך לעשות זאת פעם אחת בכל טלפון.
     </p>
     <div class="sh-field">
-      <label>▶ שואב — קיצור "התחל"</label>
-      <input type="text" id="sh-vac-start" placeholder="Vacuum Start">
+      <label>▶ שואב — Clean</label>
+      <input type="text" id="sh-vac-clean" placeholder="Vacuum Clean">
     </div>
     <div class="sh-field">
-      <label>🏠 שואב — קיצור "חזור לעמדה"</label>
-      <input type="text" id="sh-vac-dock" placeholder="Vacuum Dock">
+      <label>⏸ שואב — Pause</label>
+      <input type="text" id="sh-vac-pause" placeholder="Vacuum Pause">
     </div>
     <div class="sh-field">
-      <label>⏹ שואב — קיצור "עצור"</label>
-      <input type="text" id="sh-vac-stop" placeholder="Vacuum Stop">
+      <label>⏵ שואב — Resume</label>
+      <input type="text" id="sh-vac-resume" placeholder="Vacuum Resume">
+    </div>
+    <div class="sh-field">
+      <label>🔌 שואב — Recharge</label>
+      <input type="text" id="sh-vac-recharge" placeholder="Vacuum Recharge">
+    </div>
+    <div class="sh-field">
+      <label>📍 שואב — Locate</label>
+      <input type="text" id="sh-vac-locate" placeholder="Vacuum Locate">
     </div>
     <button class="btn-send" onclick="saveShSettings()" style="width:100%;margin-top:4px">💾 שמור</button>
   </div>
@@ -3156,9 +3165,13 @@
            The app has no way to read the vacuum back, so it doesn't pretend to. -->
       <div class="vac-last" id="vac-last">אין פקודה אחרונה</div>
       <div class="vac-btns">
-        <button class="btn-vac start" onclick="vacuumCmd('start')">▶ התחל ניקוי</button>
-        <button class="btn-vac dock"  onclick="vacuumCmd('dock')">🏠 חזור לעמדה</button>
-        <button class="btn-vac stop"  onclick="vacuumCmd('stop')">⏹ עצור</button>
+        <button class="btn-vac start" onclick="vacuumCmd('clean')">▶ התחל ניקוי</button>
+        <div class="vac-grid">
+          <button class="btn-vac sub" onclick="vacuumCmd('pause')">⏸ השהה</button>
+          <button class="btn-vac sub" onclick="vacuumCmd('resume')">⏵ המשך</button>
+          <button class="btn-vac sub" onclick="vacuumCmd('recharge')">🔌 לעמדה</button>
+          <button class="btn-vac sub" onclick="vacuumCmd('locate')">📍 איפה הוא</button>
+        </div>
       </div>
       <div class="sh-send-indicator" id="vac-indicator"></div>
     </div>
@@ -9064,7 +9077,8 @@ window.cancelLaundry = async function() {
 /* ══════════════════════════════════════════════════════════
    SMART HOUSE
    State:  /smart_home/state  → { vacuum:{ action, at, by } }
-   Config: /smart_home/config → { vacStart, vacDock, vacStop }
+   Config: /smart_home/config → { vacClean, vacPause, vacResume,
+                                  vacRecharge, vacLocate }
 
    Both devices run through iOS Shortcuts. That is a deliberate
    choice, not a stopgap: a web page cannot open raw sockets, cannot
@@ -9077,12 +9091,17 @@ window.cancelLaundry = async function() {
    and never claims to know what the device is actually doing.
 ══════════════════════════════════════════════════════════ */
 let _shState  = { vacuum: { action: null, at: null, by: null } };
-let _shConfig = { vacStart:"", vacDock:"", vacStop:"" };
+let _shConfig = { vacClean:"", vacPause:"", vacResume:"", vacRecharge:"", vacLocate:"" };
 
 const _SH_STATE_DOC  = () => doc(db, "smart_home", "state");
 const _SH_CONFIG_DOC = () => doc(db, "smart_home", "config");
 
-const _VAC_LABEL = { start:"התחל ניקוי", dock:"חזור לעמדה", stop:"עצור" };
+/* Matches the five Siri Shortcuts the eureka app publishes:
+   Clean · Pause · Resume · Recharge · Locate my device */
+const _VAC_LABEL = { clean:"התחל ניקוי", pause:"השהה", resume:"המשך",
+                     recharge:"חזרה לעמדה", locate:"איתור השואב" };
+const _VAC_KEY   = { clean:"vacClean", pause:"vacPause", resume:"vacResume",
+                     recharge:"vacRecharge", locate:"vacLocate" };
 
 /* Build a Shortcuts URL that comes BACK here when it's done.
    Without x-success the phone strands you inside the Shortcuts app
@@ -9101,9 +9120,11 @@ async function initSmartHouse() {
     const cfg = await getDoc(_SH_CONFIG_DOC());
     if (cfg.exists()) Object.assign(_shConfig, cfg.data());
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ""; };
-    set("sh-vac-start", _shConfig.vacStart);
-    set("sh-vac-dock",  _shConfig.vacDock);
-    set("sh-vac-stop",  _shConfig.vacStop);
+    set("sh-vac-clean",    _shConfig.vacClean);
+    set("sh-vac-pause",    _shConfig.vacPause);
+    set("sh-vac-resume",   _shConfig.vacResume);
+    set("sh-vac-recharge", _shConfig.vacRecharge);
+    set("sh-vac-locate",   _shConfig.vacLocate);
   } catch (e) { console.warn("SH config:", e); }
 
   _unsub("smart-house");
@@ -9127,8 +9148,7 @@ function _renderShState() {
 
 /* ── Vacuum — via iOS Shortcuts, same path as the TV ─────── */
 window.vacuumCmd = async function(action) {
-  const key  = { start:"vacStart", dock:"vacDock", stop:"vacStop" }[action];
-  const name = (_shConfig[key] || "").trim();
+  const name = (_shConfig[_VAC_KEY[action]] || "").trim();
   const ind  = document.getElementById("vac-indicator");
 
   if (!name) {
@@ -9171,9 +9191,11 @@ window.toggleShSettings = function() {
 
 window.saveShSettings = async function() {
   const get = id => document.getElementById(id)?.value.trim() || "";
-  _shConfig.vacStart = get("sh-vac-start");
-  _shConfig.vacDock  = get("sh-vac-dock");
-  _shConfig.vacStop  = get("sh-vac-stop");
+  _shConfig.vacClean    = get("sh-vac-clean");
+  _shConfig.vacPause    = get("sh-vac-pause");
+  _shConfig.vacResume   = get("sh-vac-resume");
+  _shConfig.vacRecharge = get("sh-vac-recharge");
+  _shConfig.vacLocate   = get("sh-vac-locate");
   try {
     await setDoc(_SH_CONFIG_DOC(), _shConfig, { merge:true });
     showToast("✅ נשמר!", "success");
