@@ -1850,6 +1850,124 @@
   .dash-card[data-view="calendar"]   {--ca:#3A5169}
   .dash-card[data-view="cooking"]    {--ca:#A24218}
 
+  /* ═══════════════════════════════════════════════════════
+     GUIDED FLOWS
+     Deliberately NOT chat bubbles. Rounded opposing blobs read
+     as a messaging toy; this is a form that reveals itself one
+     field at a time. Prompts are quiet labels, answers are
+     compact chips, and the record is a definition list — the
+     same visual grammar as the rest of the app.
+     ═══════════════════════════════════════════════════════ */
+
+  /* ── Launcher ─────────────────────────────────────────── */
+  .fl-launch-title{font-size:.74rem;font-weight:600;color:var(--text-light);
+    text-transform:uppercase;letter-spacing:.06em;margin:2px 0 10px}
+  .fl-launch{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .fl-cat{display:flex;align-items:center;gap:10px;text-align:start;
+    padding:11px 12px;border:1px solid var(--border);border-radius:var(--radius);
+    background:var(--bg-card);cursor:pointer;font-family:inherit;
+    transition:border-color .12s var(--ease),background .12s var(--ease)}
+  .fl-cat:active{background:var(--bg-surface);border-color:var(--border-strong)}
+  .fl-cat-icon{font-size:1.05rem;width:28px;height:28px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--bg-sunken);border-radius:var(--radius-sm)}
+  .fl-cat-text{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .fl-cat-label{font-size:.83rem;font-weight:600;color:var(--text);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fl-cat-hint{font-size:.68rem;color:var(--text-light);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* ── Flow header ──────────────────────────────────────── */
+  .fl-head{display:flex;align-items:center;gap:8px;padding-bottom:12px;
+    border-bottom:1px solid var(--border);margin-bottom:14px}
+  .fl-back{width:28px;height:28px;flex-shrink:0;border:1px solid var(--border);
+    background:var(--bg-card);border-radius:var(--radius-sm);cursor:pointer;
+    font-size:1.05rem;line-height:1;color:var(--text-muted);font-family:inherit}
+  .fl-back:active{background:var(--bg-sunken)}
+  .fl-head-icon{font-size:1rem}
+  .fl-head-label{font-size:.88rem;font-weight:650;color:var(--text);flex:1}
+  .fl-progress{font-size:.7rem;font-weight:600;color:var(--text-light);
+    font-variant-numeric:tabular-nums;background:var(--bg-sunken);
+    padding:2px 7px;border-radius:var(--radius-xs)}
+
+  /* ── Thread: answered turns + the live prompt ─────────── */
+  .fl-thread{display:flex;flex-direction:column;gap:2px}
+  .fl-turn{display:flex;align-items:center;gap:10px;padding:7px 0;
+    border-bottom:1px solid var(--border)}
+  .fl-turn:last-child{border-bottom:none}
+  .fl-q{font-size:.8rem;color:var(--text-muted);flex:1;line-height:1.35}
+  .fl-turn.current .fl-q{color:var(--text);font-weight:600;font-size:.95rem;
+    padding:6px 0 2px}
+  .fl-a{display:inline-flex;align-items:center;gap:7px;flex-shrink:0;
+    padding:5px 9px;border-radius:var(--radius-sm);cursor:pointer;
+    background:var(--user-soft,#EAF0FA);border:1px solid transparent;
+    color:var(--user-ink,#2A4A7F);font-size:.8rem;font-weight:600;
+    font-family:inherit;max-width:62%;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fl-a:active{border-color:var(--user-mid,#3A66AC)}
+  .fl-a-edit{font-size:.63rem;font-weight:600;opacity:.5;flex-shrink:0}
+
+  /* ── Summary: a record, not a sentence ────────────────── */
+  .fl-summary{margin-top:14px;border:1px solid var(--border);
+    border-radius:var(--radius);overflow:hidden;background:var(--bg-card)}
+  .fl-summary-title{font-size:.68rem;font-weight:600;color:var(--text-light);
+    text-transform:uppercase;letter-spacing:.06em;
+    padding:9px 13px;background:var(--bg-surface);
+    border-bottom:1px solid var(--border)}
+  .fl-rows{margin:0}
+  .fl-row{display:flex;align-items:baseline;gap:12px;padding:9px 13px;
+    border-bottom:1px solid var(--border)}
+  .fl-row:last-child{border-bottom:none}
+  .fl-row dt{font-size:.76rem;color:var(--text-muted);width:78px;flex-shrink:0}
+  .fl-row dd{margin:0;font-size:.88rem;font-weight:600;color:var(--text);
+    flex:1;text-align:start;word-break:break-word;
+    font-variant-numeric:tabular-nums}
+
+  /* ── Dock: the input surface ──────────────────────────── */
+  #flow-dock{margin-top:12px}
+  #flow-dock.open{padding-top:12px;border-top:1px solid var(--border)}
+  .fl-chips{display:flex;flex-wrap:wrap;gap:7px;max-height:190px;overflow-y:auto}
+  .fl-chip{display:inline-flex;align-items:center;gap:6px;
+    padding:9px 13px;border:1px solid var(--border-strong);
+    border-radius:var(--radius-sm);background:var(--bg-card);
+    font-size:.85rem;font-weight:550;color:var(--text);
+    cursor:pointer;font-family:inherit;transition:var(--T)}
+  .fl-chip:active{background:var(--user-soft,#EAF0FA);
+    border-color:var(--user-mid,#3A66AC);color:var(--user-ink,#2A4A7F)}
+  .fl-chip-meta{font-size:.66rem;color:var(--text-light);font-weight:500}
+  .fl-search{width:100%;margin-bottom:9px;padding:9px 12px;
+    border:1px solid var(--border-strong);border-radius:var(--radius-sm);
+    font-size:.85rem;font-family:inherit;background:var(--bg-card);color:var(--text)}
+  .fl-input-row{display:flex;align-items:center;gap:8px}
+  .fl-unit{font-size:.95rem;font-weight:650;color:var(--text-muted);flex-shrink:0}
+  .fl-input{flex:1;padding:12px 13px;border:1px solid var(--border-strong);
+    border-radius:var(--radius-sm);font-size:1rem;font-family:inherit;
+    background:var(--bg-card);color:var(--text);min-width:0}
+  .fl-input:focus{outline:none;border-color:var(--user-mid,#3A66AC);
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--user-mid,#3A66AC) 16%,transparent)}
+  .fl-send{width:42px;height:42px;flex-shrink:0;border:none;
+    border-radius:var(--radius-sm);background:var(--user-deep,#2A4A7F);
+    color:#fff;font-size:.95rem;cursor:pointer;font-family:inherit}
+  .fl-send:active{filter:brightness(.92)}
+  .fl-actions{display:flex;gap:8px}
+  .fl-btn{flex:1;padding:12px;border-radius:var(--radius-sm);
+    font-size:.88rem;font-weight:600;cursor:pointer;font-family:inherit;
+    border:1px solid var(--border-strong);background:var(--bg-card);color:var(--text)}
+  .fl-btn.primary{background:var(--user-deep,#2A4A7F);color:#fff;border-color:transparent;flex:2}
+  .fl-btn.primary:active{filter:brightness(.92)}
+  .fl-btn.ghost:active{background:var(--bg-sunken)}
+  .fl-btn:disabled{opacity:.55;cursor:default}
+  .fl-empty{font-size:.83rem;color:var(--text-muted);text-align:center;
+    padding:14px 0;display:flex;flex-direction:column;gap:10px;align-items:center}
+
+  /* ── Typed fallback, collapsed by default ─────────────── */
+  #asst-typed{margin-top:16px;border-top:1px solid var(--border);padding-top:12px}
+  .asst-typed-toggle{font-size:.76rem;color:var(--text-light);cursor:pointer;
+    list-style:none;font-weight:550;padding:4px 0}
+  .asst-typed-toggle::-webkit-details-marker{display:none}
+  .asst-typed-toggle::before{content:'⌨ ';opacity:.7}
+  #asst-typed[open] .asst-typed-toggle{margin-bottom:10px;color:var(--text-muted)}
+
   /* ═══ Page background ═════════════════════════════════
      A flat white page reads as unfinished. This lays a soft
      wash of the active user's colour behind everything —
@@ -2006,6 +2124,15 @@
     <div class="modal-handle"></div>
     <div class="modal-title">✨ עוזר הבית</div>
 
+    <!-- Guided flows: the primary path -->
+    <div id="flow-host"></div>
+    <div id="flow-dock"></div>
+
+    <!-- Free text kept as a shortcut for anyone who prefers typing,
+         and as the only way to ask questions -->
+    <details id="asst-typed">
+      <summary class="asst-typed-toggle">או הקלד פקודה / שאלה</summary>
+
     <div class="asst-input-wrap">
       <input type="text" id="asst-input" dir="auto" autocomplete="off"
              autocapitalize="off" spellcheck="false"
@@ -2051,6 +2178,7 @@
         <button class="asst-chip" dir="auto" onclick="assistantFill(this)">watered the ficus</button>
       </div>
     </div>
+    </details>
   </div>
 </div>
 
@@ -3961,6 +4089,362 @@ async function _answerQuery(q, arg) {
   return "לא הצלחתי לענות על זה.";
 }
 
+/* ══════════════════════════════════════════════════════════
+   ✨ GUIDED FLOWS — declarative conversation
+   ────────────────────────────────────────────────────────
+   A flow is DATA, not code: an ordered list of steps, each
+   naming the key it fills. The engine renders whatever the
+   step's `type` calls for and collects answers into a plain
+   object. Adding a flow costs one entry here and no new UI.
+
+   Each flow ends by returning an INTENT — the exact shape the
+   text parser produces — which is handed to _runIntent(). So
+   writes, activity logging and undo are shared with the typed
+   path rather than reimplemented.
+
+   Step types:  choice (chips) · number (numpad) · text (keyboard)
+══════════════════════════════════════════════════════════ */
+const PERSON_OPTS = [{ v:"Alon", l:"אלון" }, { v:"Tali", l:"טלי" }];
+
+const FLOWS = [
+  {
+    id:"splitwise", icon:"🤝", label:"הוצאה משותפת",
+    hint:"מי שילם · כמה · על מה",
+    steps:[
+      { key:"payer",  type:"choice", prompt:"מי שילם?", options:PERSON_OPTS },
+      { key:"amount", type:"number", prompt:"כמה שילמתם?", unit:"₪" },
+      { key:"name",   type:"text",   prompt:"על מה זה היה?", placeholder:"למשל: מסעדה, בית מרקחת" },
+    ],
+    summary:d => [
+      ["מי שילם", d.payer === "Tali" ? "טלי" : "אלון"],
+      ["סכום",    `₪${(+d.amount).toFixed(2)}`],
+      ["תיאור",   d.name],
+      ["נכנס ל",  "התחשבנות זוגית"],
+    ],
+    intent:d => ({ type:"splitwise", name:d.name, amount:+d.amount, payer:d.payer,
+                   label:`🤝 ${d.name} — ₪${d.amount}`, verb:"רישום הוצאה משותפת" }),
+  },
+  {
+    id:"bill", icon:"💳", label:"חשבון חודשי",
+    hint:"חשמל · גז · מים · ארנונה",
+    steps:[
+      { key:"which",  type:"choice", prompt:"איזה חשבון?",
+        options:() => _BILL_DEFS.map(b => ({ v:b.key, l:`${b.emoji} ${b.he}` }))
+                        .concat([{ v:"rent", l:"🏠 שכר דירה" }]) },
+      { key:"amount", type:"number", prompt:"כמה?", unit:"₪" },
+      { key:"payer",  type:"choice", prompt:"מי שילם?", options:PERSON_OPTS },
+    ],
+    summary:d => {
+      const def = _BILL_DEFS.find(b => b.key === d.which);
+      return [["חשבון", def ? `${def.emoji} ${def.he}` : "🏠 שכר דירה"],
+              ["סכום",  `₪${(+d.amount).toFixed(2)}`],
+              ["שילם",  d.payer === "Tali" ? "טלי" : "אלון"],
+              ["חודש",  _monthLabel(_curMonth())],
+              ["נכנס ל","חשבונות + התחשבנות"]];
+    },
+    intent:d => {
+      const def = _BILL_DEFS.find(b => b.key === d.which);
+      return { type:"bill", key:d.which, amount:+d.amount, payer:d.payer,
+               label:`${def ? def.emoji + " " + def.he : "🏠 שכר דירה"} — ₪${d.amount}`,
+               verb:"רישום חשבון חודשי" };
+    },
+  },
+  {
+    id:"groceries", icon:"🛒", label:"הוספה לקניות",
+    hint:"פריט לרשימת הקניות",
+    steps:[{ key:"name", type:"text", prompt:"מה להוסיף לרשימה?", placeholder:"למשל: שמפו" }],
+    summary:d => [["פריט", d.name], ["נכנס ל", "רשימת קניות"]],
+    intent:d => ({ type:"addList", list:"groceries", name:d.name,
+                   label:`🛒 ${d.name}`, verb:"הוספה לרשימת הקניות" }),
+  },
+  {
+    id:"upgrades", icon:"🏠", label:"שדרוג לבית",
+    hint:"פריט לרשימת השדרוגים",
+    steps:[{ key:"name", type:"text", prompt:"מה להוסיף לשדרוגים?", placeholder:"למשל: מנורה לסלון" }],
+    summary:d => [["פריט", d.name], ["נכנס ל", "שדרוגי הבית"]],
+    intent:d => ({ type:"addList", list:"upgrades", name:d.name,
+                   label:`🏠 ${d.name}`, verb:"הוספה לשדרוגים" }),
+  },
+  {
+    id:"pantry", icon:"🧺", label:"עדכון מלאי",
+    hint:"סמן מוצר כנגמר או שחזר",
+    steps:[
+      { key:"id", type:"choice", prompt:"איזה מוצר?", search:true,
+        options:ctx => (ctx.pantry || []).map(p => ({ v:p.id, l:p.name,
+          meta:p.status === "low" ? "נגמר" : "במלאי" })),
+        empty:"אין מוצרים במלאי עדיין." },
+      { key:"status", type:"choice", prompt:"מה המצב?",
+        options:[{ v:"low", l:"🔴 נגמר" }, { v:"stock", l:"🟢 חזר למלאי" }] },
+    ],
+    summary:(d,ctx) => {
+      const p = (ctx.pantry || []).find(x => x.id === d.id) || {};
+      return [["מוצר", p.name || "—"],
+              ["מצב חדש", d.status === "low" ? "נגמר" : "במלאי"],
+              ["נכנס ל", d.status === "low" ? "רשימת קניות (אוטומטי)" : "מלאי הבית"]];
+    },
+    intent:(d,ctx) => {
+      const p = (ctx.pantry || []).find(x => x.id === d.id) || {};
+      return { type:"pantryStatus", id:d.id, name:p.name, status:d.status,
+               label:`${d.status === "low" ? "🔴" : "🟢"} ${p.name}`, verb:"עדכון מלאי" };
+    },
+  },
+  {
+    id:"task", icon:"📋", label:"משימה חדשה",
+    hint:"תקלה או משימה ליומן",
+    steps:[{ key:"title", type:"text", prompt:"מה המשימה?", placeholder:"למשל: לתקן את הדלת" }],
+    summary:d => [["משימה", d.title], ["עדיפות", "רגילה"], ["נכנס ל", "יומן המשימות"]],
+    intent:d => ({ type:"task", title:d.title, label:`📋 ${d.title}`, verb:"הוספת משימה" }),
+  },
+  {
+    id:"water", icon:"💧", label:"השקיית צמח",
+    hint:"סמן צמח כמושקה",
+    steps:[{ key:"id", type:"choice", prompt:"איזה צמח השקית?",
+      options:ctx => (ctx.plants || []).map(p => ({ v:p.id, l:p.name })),
+      empty:"אין צמחים רשומים." }],
+    summary:(d,ctx) => {
+      const p = (ctx.plants || []).find(x => x.id === d.id) || {};
+      return [["צמח", p.name || "—"], ["סומן", "מושקה עכשיו"]];
+    },
+    intent:(d,ctx) => {
+      const p = (ctx.plants || []).find(x => x.id === d.id) || {};
+      return { type:"water", id:d.id, name:p.name, label:`💧 ${p.name}`, verb:"סימון השקיה" };
+    },
+  },
+  {
+    id:"clean", icon:"🧼", label:"ניקיון",
+    hint:"סמן משימת ניקיון כבוצעה",
+    steps:[{ key:"id", type:"choice", prompt:"מה ניקית?", search:true,
+      options:ctx => (ctx.rooms || []).map(r => ({ v:r.id, l:r.name })),
+      empty:"אין משימות ניקיון מוגדרות." }],
+    summary:(d,ctx) => {
+      const r = (ctx.rooms || []).find(x => x.id === d.id) || {};
+      return [["משימה", r.name || "—"], ["סומן", "בוצע השבוע"]];
+    },
+    intent:(d,ctx) => {
+      const r = (ctx.rooms || []).find(x => x.id === d.id) || {};
+      return { type:"clean", id:d.id, name:r.name, label:`🧼 ${r.name}`, verb:"סימון ניקיון" };
+    },
+  },
+];
+
+/* ── Conversation state ────────────────────────────────────
+   One object holds the whole conversation. `data` is built up
+   step by step and is the single source of truth for both the
+   summary and the resulting intent — no text parsing involved. */
+let _fl = null;   // { def, i, data:{}, turns:[] }
+
+window.flowStart = async function(id) {
+  const def = FLOWS.find(f => f.id === id);
+  if (!def) return;
+  if (!_asstCtx) await _loadAsstContext();
+  _fl = { def, i:0, data:{}, turns:[] };
+  _asstPending = null;
+  _flRender();
+};
+
+window.flowCancel = function() { _fl = null; _asstPending = null; _flRender(); };
+
+/* Step back one answer, so a mistake costs one tap not a restart */
+window.flowBack = function() {
+  if (!_fl) return;
+  if (_fl.i === 0) return flowCancel();
+  _fl.i--;
+  _fl.turns.pop();
+  delete _fl.data[_fl.def.steps[_fl.i].key];
+  _flRender();
+};
+
+window.flowAnswer = function(rawValue, displayLabel) {
+  if (!_fl) return;
+  const step = _fl.def.steps[_fl.i];
+  _fl.data[step.key] = rawValue;
+  _fl.turns.push({ prompt:step.prompt, answer:displayLabel ?? String(rawValue) });
+  _fl.i++;
+  _flRender();
+};
+
+window.flowSubmitInput = function() {
+  if (!_fl) return;
+  const step = _fl.def.steps[_fl.i];
+  const el = document.getElementById("flow-input");
+  const raw = (el?.value || "").trim();
+  if (!raw) return _shakeInput(el);
+  if (step.type === "number") {
+    const n = parseFloat(raw.replace(",", "."));
+    if (!Number.isFinite(n) || n <= 0) return _shakeInput(el);
+    flowAnswer(n, `₪${n.toFixed(2)}`);
+  } else flowAnswer(raw, raw);
+};
+
+/* Options may be static or derived from live data */
+const _flOpts = step =>
+  (typeof step.options === "function" ? step.options(_asstCtx || {}) : step.options) || [];
+
+/* ── Renderer ──────────────────────────────────────────────
+   One function paints the whole panel from state. No partial
+   DOM updates to keep in sync, so the view can never drift
+   from the data — the usual source of bugs in wizard UIs. */
+function _flRender() {
+  const host = document.getElementById("flow-host");
+  const dock = document.getElementById("flow-dock");
+  if (!host || !dock) return;
+
+  /* Idle — show the category launcher */
+  if (!_fl) {
+    host.innerHTML = `
+      <div class="fl-launch-title">מה תרצה לרשום?</div>
+      <div class="fl-launch">
+        ${FLOWS.map(f => `
+          <button class="fl-cat" onclick="flowStart('${f.id}')">
+            <span class="fl-cat-icon">${f.icon}</span>
+            <span class="fl-cat-text">
+              <span class="fl-cat-label">${esc(f.label)}</span>
+              <span class="fl-cat-hint">${esc(f.hint)}</span>
+            </span>
+          </button>`).join("")}
+      </div>`;
+    dock.innerHTML = "";
+    dock.classList.remove("open");
+    return;
+  }
+
+  const { def, i, data, turns } = _fl;
+  const done = i >= def.steps.length;
+
+  /* Thread: answered turns, then either the live prompt or the summary */
+  let html = `
+    <div class="fl-head">
+      <button class="fl-back" onclick="flowBack()" aria-label="חזור">‹</button>
+      <span class="fl-head-icon">${def.icon}</span>
+      <span class="fl-head-label">${esc(def.label)}</span>
+      <span class="fl-progress">${Math.min(i + 1, def.steps.length)}/${def.steps.length}</span>
+    </div>
+    <div class="fl-thread">`;
+
+  turns.forEach((t, n) => {
+    html += `
+      <div class="fl-turn">
+        <div class="fl-q">${esc(t.prompt)}</div>
+        <button class="fl-a" onclick="_flEdit(${n})" title="ערוך">
+          ${esc(t.answer)}<span class="fl-a-edit">ערוך</span>
+        </button>
+      </div>`;
+  });
+
+  if (!done) {
+    html += `<div class="fl-turn current"><div class="fl-q">${esc(def.steps[i].prompt)}</div></div>`;
+  }
+  html += `</div>`;
+
+  /* Summary — structured, not a sentence */
+  if (done) {
+    const rows = def.summary(data, _asstCtx || {});
+    html += `
+      <div class="fl-summary">
+        <div class="fl-summary-title">סיכום</div>
+        <dl class="fl-rows">
+          ${rows.map(([k, v]) => `
+            <div class="fl-row"><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}
+        </dl>
+      </div>`;
+  }
+  host.innerHTML = html;
+
+  /* Dock: the input surface for the current step */
+  dock.classList.add("open");
+  if (done) {
+    dock.innerHTML = `
+      <div class="fl-actions">
+        <button class="fl-btn ghost" onclick="flowCancel()">ביטול</button>
+        <button class="fl-btn primary" id="fl-save" onclick="flowCommit()">שמור</button>
+      </div>`;
+    return;
+  }
+
+  const step = def.steps[i];
+  if (step.type === "choice") {
+    const opts = _flOpts(step);
+    if (!opts.length) {
+      dock.innerHTML = `<div class="fl-empty">${esc(step.empty || "אין אפשרויות זמינות.")}
+        <button class="fl-btn ghost" onclick="flowCancel()">סגור</button></div>`;
+      return;
+    }
+    dock.innerHTML = `
+      ${step.search && opts.length > 6
+        ? `<input class="fl-search" id="fl-search" placeholder="חפש…" dir="auto"
+             oninput="_flFilter(this.value)">` : ""}
+      <div class="fl-chips" id="fl-chips">
+        ${opts.map(o => `
+          <button class="fl-chip" data-l="${esc(o.l)}"
+            onclick="flowAnswer(${JSON.stringify(String(o.v))},${JSON.stringify(String(o.l))})">
+            ${esc(o.l)}${o.meta ? `<span class="fl-chip-meta">${esc(o.meta)}</span>` : ""}
+          </button>`).join("")}
+      </div>`;
+    return;
+  }
+
+  /* number / text */
+  const numeric = step.type === "number";
+  dock.innerHTML = `
+    <div class="fl-input-row">
+      ${numeric && step.unit ? `<span class="fl-unit">${esc(step.unit)}</span>` : ""}
+      <input id="flow-input" class="fl-input"
+             type="${numeric ? "number" : "text"}"
+             inputmode="${numeric ? "decimal" : "text"}"
+             ${numeric ? 'step="0.01" min="0"' : 'dir="auto"'}
+             placeholder="${esc(step.placeholder || "")}"
+             onkeydown="if(event.key==='Enter')flowSubmitInput()">
+      <button class="fl-send" onclick="flowSubmitInput()" aria-label="המשך">➤</button>
+    </div>`;
+  setTimeout(() => document.getElementById("flow-input")?.focus(), 60);
+}
+
+/* Jump back to a specific answered step */
+window._flEdit = function(n) {
+  if (!_fl) return;
+  while (_fl.i > n) {
+    _fl.i--;
+    _fl.turns.pop();
+    delete _fl.data[_fl.def.steps[_fl.i].key];
+  }
+  _flRender();
+};
+
+/* Client-side filter for long option lists */
+window._flFilter = function(q) {
+  const norm = normText(q);
+  document.querySelectorAll("#fl-chips .fl-chip").forEach(b => {
+    b.style.display = !norm || normText(b.dataset.l).includes(norm) ? "" : "none";
+  });
+};
+
+/* Commit — hands the assembled intent to the shared executor,
+   so writes, activity log and undo behave exactly as the typed
+   path does. Nothing is written before this point. */
+window.flowCommit = async function() {
+  if (!_fl) return;
+  const btn = document.getElementById("fl-save");
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ שומר…"; }
+  const host = document.getElementById("flow-host");
+  try {
+    const intent = _fl.def.intent(_fl.data, _asstCtx || {});
+    const { done, undo } = await _runIntent(intent);
+    _asstUndo = undo ? { label:done, fn:undo } : null;
+    _fl = null;
+    document.getElementById("flow-dock").innerHTML = "";
+    host.innerHTML = `<div class="asst-ok">${esc(done)}</div>${_undoBtnHtml()}
+      <button class="fl-btn ghost" style="width:100%;margin-top:10px"
+              onclick="_flRender()">רישום נוסף</button>`;
+    _wireUndo();
+    showToast(done, "success");
+    _loadAsstContext();
+  } catch (err) {
+    if (btn) { btn.disabled = false; btn.textContent = "שמור"; }
+    showToast("שגיאה: " + err.message, "error");
+    host.insertAdjacentHTML("beforeend", `<div class="asst-fail">❌ ${esc(err.message)}</div>`);
+  }
+};
+
 window.assistantBgClick = e => { if (e.target === e.currentTarget) closeAssistant(); };
 window.closeAssistant   = () => document.getElementById("assistant-modal").classList.remove("open");
 window.assistantFill    = btn => {
@@ -3973,8 +4457,11 @@ window.openAssistant = async function() {
   document.getElementById("asst-input").value = "";
   document.getElementById("asst-result").innerHTML = "";
   document.getElementById("asst-examples").style.display = "";
-  setTimeout(() => document.getElementById("asst-input")?.focus(), 300);
-  _loadAsstContext();                      // refresh in the background
+  document.getElementById("asst-typed")?.removeAttribute("open");
+  _fl = null;
+  _flRender();                             // show the category launcher
+  await _loadAsstContext();                // so option lists are populated
+  if (!_fl) _flRender();
 };
 
 window.assistantParse = async function() {
