@@ -1859,6 +1859,36 @@
      same visual grammar as the rest of the app.
      ═══════════════════════════════════════════════════════ */
 
+  /* ── Insights ─────────────────────────────────────────── */
+  .fl-insight-cta{display:flex;align-items:center;gap:11px;width:100%;
+    padding:13px;margin-bottom:18px;cursor:pointer;font-family:inherit;
+    border:1px solid var(--border);border-radius:var(--radius);
+    background:var(--bg-card);text-align:start;transition:var(--T)}
+  .fl-insight-cta:active{background:var(--bg-surface)}
+  .fl-insight-icon{font-size:1.1rem;width:32px;height:32px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--user-soft,#EAF0FA);border-radius:var(--radius-sm)}
+  .fl-insight-text{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0}
+  .fl-insight-title{font-size:.86rem;font-weight:650;color:var(--text)}
+  .fl-insight-hint{font-size:.7rem;color:var(--text-light)}
+  .fl-insight-badge{display:none;min-width:20px;height:20px;padding:0 6px;
+    border-radius:10px;background:var(--danger);color:#fff;
+    font-size:.7rem;font-weight:700;align-items:center;justify-content:center;
+    font-variant-numeric:tabular-nums;flex-shrink:0}
+  .fl-insight-badge.on{display:flex}
+
+  .ins-list{display:flex;flex-direction:column;gap:8px}
+  .ins{display:flex;gap:11px;padding:12px 13px;border-radius:var(--radius);
+    border:1px solid var(--border);background:var(--bg-card)}
+  .ins.alert{border-color:rgba(206,44,49,.30);background:rgba(206,44,49,.04)}
+  .ins.watch{border-color:rgba(171,100,0,.28);background:rgba(171,100,0,.04)}
+  .ins-icon{font-size:1.05rem;line-height:1.3;flex-shrink:0}
+  .ins-body{min-width:0}
+  .ins-title{font-size:.88rem;font-weight:650;color:var(--text);
+    line-height:1.35;margin-bottom:3px}
+  .ins-detail{font-size:.78rem;color:var(--text-muted);line-height:1.55;
+    font-variant-numeric:tabular-nums}
+
   /* ── Launcher ─────────────────────────────────────────── */
   .fl-launch-title{font-size:.74rem;font-weight:600;color:var(--text-light);
     text-transform:uppercase;letter-spacing:.06em;margin:2px 0 10px}
@@ -3520,6 +3550,7 @@ const QUERIES = [
   { q:"tasks_open",   re:/(?:מה\s+ה?משימות|אילו\s+משימות|משימות\s+פתוחות|what tasks|open tasks)/i },
   { q:"upgrades_list",re:/(?:מה\s+ב?שדרוגים|what.?s (?:on|in) the upgrades)/i },
   { q:"restock",      re:/(?:מה\s+(?:כדאי|צריך)\s+לקנות|מה\s+עומד\s+להיגמר|תחזית|מה\s+לקנות|what should (?:we|i) buy|what.?s (?:due|likely)|restock|predictions?)/i },
+  { q:"insights",     re:/(?:מה\s+כדאי\s+לדעת|תובנות|מה\s+חדש|סיכום|insights?|what should i know|anything (?:i should know|important))/i },
 ];
 
 function parseQuery(text) {
@@ -3979,6 +4010,181 @@ async function _restockPredictions() {
 }
 
 /* ══════════════════════════════════════════════════════════
+   💡 INSIGHTS ENGINE
+   Derives what's worth knowing from data the app already has.
+   No AI — these are statistics over your own history.
+
+   Two rules kept throughout:
+     · Every insight states the evidence behind it, so you can
+       judge it rather than trust it.
+     · Nothing is claimed below a minimum sample. With three
+       data points you cannot tell a habit from a coincidence,
+       so the engine stays quiet instead of inventing patterns.
+
+   Each insight: { icon, title, detail, sev, score }
+     sev: "alert" (act now) · "watch" · "info"
+══════════════════════════════════════════════════════════ */
+const _DAY = 86400000;
+const _daysBetween = (a, b) => Math.round((b - a) / _DAY);
+
+async function _computeInsights() {
+  const out = [];
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  const month = _curMonth();
+
+  const grab = async c => {
+    try { const s = await getDocs(collection(db, c)); const r = [];
+          s.forEach(d => r.push({ id:d.id, ...d.data() })); return r; }
+    catch { return []; }
+  };
+  const [expenses, bills, pantry, gq, tasks, plants, sw] = await Promise.all([
+    grab("expenses"), grab("bills"), grab("pantry"),
+    grab("grocery_queue"), grab("maintenance"), grab("plants"), grab("splitwise_expenses")
+  ]);
+  let waterLog = {};
+  try { const w = await getDoc(doc(db, "watering", "log")); if (w.exists()) waterLog = w.data(); } catch {}
+
+  /* ── 1. Which product empties fastest ──────────────────
+     Purchase dates per item → average gap. Needs 3+ buys. */
+  const buys = new Map(), shown = new Map();
+  expenses.forEach(e => {
+    if (e.type !== "groceries" || !Array.isArray(e.items) || !e.date) return;
+    e.items.forEach(raw => {
+      const k = _normalizePantryName(raw);
+      if (!k) return;
+      if (!buys.has(k)) { buys.set(k, new Set()); shown.set(k, raw); }
+      buys.get(k).add(e.date);
+    });
+  });
+  const cadence = [];
+  for (const [k, set] of buys) {
+    const ds = [...set].sort();
+    if (ds.length < 3) continue;
+    const gaps = [];
+    for (let n = 1; n < ds.length; n++)
+      gaps.push(_daysBetween(new Date(ds[n - 1]), new Date(ds[n])));
+    const usable = gaps.filter(g => g >= 1 && g <= 120);
+    if (usable.length < 2) continue;
+    cadence.push({ name:shown.get(k), avg:usable.reduce((a,b)=>a+b,0)/usable.length,
+                   n:ds.length, last:ds[ds.length-1] });
+  }
+  cadence.sort((a, b) => a.avg - b.avg);
+  if (cadence.length) {
+    const f = cadence[0];
+    out.push({ icon:"⚡", sev:"info", score:60,
+      title:`${f.name} נגמר הכי מהר`,
+      detail:`נקנה כל ~${Math.round(f.avg)} ימים בממוצע, על סמך ${f.n} רכישות. ` +
+             (cadence[1] ? `אחריו ${cadence[1].name} (~${Math.round(cadence[1].avg)} ימים).` : "") });
+  }
+
+  /* ── 2. A bill that jumped ─────────────────────────────
+     Compares this month against the average of earlier months.
+     This is the one that finds real money — a leak, a tariff
+     change, or a billing error. */
+  const past = bills.filter(b => b.id < month).sort((a, b) => b.id.localeCompare(a.id));
+  const cur  = bills.find(b => b.id === month);
+  if (cur && past.length >= 2) {
+    _BILL_DEFS.forEach(def => {
+      const nowVal = cur[def.key] || 0;
+      if (!nowVal) return;
+      const hist = past.map(b => b[def.key] || 0).filter(v => v > 0).slice(0, 6);
+      if (hist.length < 2) return;
+      const avg = hist.reduce((a, b) => a + b, 0) / hist.length;
+      const pct = Math.round(((nowVal - avg) / avg) * 100);
+      if (pct >= 25)
+        out.push({ icon:def.emoji, sev:"alert", score:95,
+          title:`${def.he} גבוה ב-${pct}% מהרגיל`,
+          detail:`₪${nowVal.toFixed(0)} החודש מול ממוצע ₪${avg.toFixed(0)} ב-${hist.length} החודשים הקודמים. שווה לבדוק.` });
+      else if (pct <= -25)
+        out.push({ icon:def.emoji, sev:"info", score:40,
+          title:`${def.he} נמוך ב-${Math.abs(pct)}%`,
+          detail:`₪${nowVal.toFixed(0)} מול ממוצע ₪${avg.toFixed(0)}.` });
+    });
+  }
+
+  /* ── 3. Items stuck on the list ────────────────────────── */
+  const stale = gq.filter(q => {
+    const ms = _tsMs(q.addedAt);
+    return ms && _daysBetween(new Date(ms), now) >= 21;
+  });
+  if (stale.length)
+    out.push({ icon:"🛒", sev:"watch", score:70,
+      title:`${stale.length} פריטים ברשימה מעל 3 שבועות`,
+      detail:`${stale.slice(0,4).map(s => s.name).join(" · ")}${stale.length>4?"…":""} — אולי כבר נקנו, או שלא באמת צריך אותם.` });
+
+  /* ── 4. Balance drifting ───────────────────────────────── */
+  if (sw.length) {
+    const { net } = _swBalance(sw);
+    if (Math.abs(net) >= 300)
+      out.push({ icon:"🤝", sev:"watch", score:75,
+        title:`יתרה של ₪${Math.abs(net).toFixed(0)} בהתחשבנות`,
+        detail:`${net > 0 ? "טלי חייבת לאלון" : "אלון חייב לטלי"}. כשהסכום מצטבר קל לשכוח — אפשר לסגור חשבון מהמסך של ההתחשבנות.` });
+  }
+
+  /* ── 5. Tasks going stale ──────────────────────────────── */
+  const openTasks = tasks.filter(t => (t.status || "open") !== "done");
+  const old = openTasks.filter(t => t.dateReported &&
+    _daysBetween(new Date(t.dateReported), now) >= 30);
+  if (old.length)
+    out.push({ icon:"📋", sev:"watch", score:65,
+      title:`${old.length} משימות פתוחות מעל חודש`,
+      detail:`${old.slice(0,3).map(t => t.title).join(" · ")}${old.length>3?"…":""}` });
+
+  /* ── 6. Spending pace vs typical ───────────────────────── */
+  const byMonth = {};
+  expenses.forEach(e => {
+    if (!e.date) return;
+    const m = e.date.slice(0, 7);
+    byMonth[m] = (byMonth[m] || 0) + (e.amount || 0);
+  });
+  const prevMonths = Object.keys(byMonth).filter(m => m < month).sort().slice(-3);
+  if (prevMonths.length >= 2 && byMonth[month]) {
+    const avg = prevMonths.reduce((s, m) => s + byMonth[m], 0) / prevMonths.length;
+    const dayOfMonth = now.getDate();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const projected = byMonth[month] / dayOfMonth * daysInMonth;
+    const pct = Math.round(((projected - avg) / avg) * 100);
+    if (Math.abs(pct) >= 20)
+      out.push({ icon:pct > 0 ? "📈" : "📉", sev:pct > 0 ? "watch" : "info", score:pct > 0 ? 72 : 35,
+        title:`הוצאות משתנות ${pct > 0 ? "בקצב גבוה" : "בקצב נמוך"} מהרגיל`,
+        detail:`₪${byMonth[month].toFixed(0)} עד היום. בקצב הזה החודש ייגמר על ~₪${projected.toFixed(0)}, מול ממוצע ₪${avg.toFixed(0)} ב-${prevMonths.length} החודשים הקודמים.` });
+  }
+
+  /* ── 7. Plants overdue ─────────────────────────────────── */
+  const thirsty = plants.filter(p => {
+    const last = waterLog[p.id];
+    return !last || _daysBetween(new Date(last), now) > (p.intervalDays || 3);
+  });
+  if (thirsty.length)
+    out.push({ icon:"🪴", sev:thirsty.length > 2 ? "watch" : "info", score:55,
+      title:`${thirsty.length} צמחים צריכים השקיה`,
+      detail:thirsty.slice(0,4).map(p => p.name).join(" · ") });
+
+  /* ── 8. Staples that never appear in a shop ────────────── */
+  const neverBought = pantry.filter(p => !buys.has(_normalizePantryName(p.name)));
+  if (expenses.length >= 5 && neverBought.length >= 3)
+    out.push({ icon:"🧺", sev:"info", score:25,
+      title:`${neverBought.length} מוצרים במלאי לא הופיעו באף קנייה`,
+      detail:`${neverBought.slice(0,4).map(p=>p.name).join(" · ")}${neverBought.length>4?"…":""} — או שהם נדירים, או ששמם ברשימת הקניות נכתב אחרת.` });
+
+  /* ── 9. Bills not yet filled ───────────────────────────── */
+  const missing = [];
+  if (cur) {
+    if (!(cur.rentAlon ?? cur.rent ?? 0) && !(cur.rentTali ?? 0)) missing.push("שכר דירה");
+    _BILL_DEFS.forEach(d => { if (!(cur[d.key] || 0)) missing.push(d.he); });
+  }
+  if (!cur || missing.length)
+    out.push({ icon:"💳", sev:"alert", score:88,
+      title:`חסרים חשבונות ל-${_monthLabel(month)}`,
+      detail:cur ? missing.join(" · ") : "עדיין לא נרשם אף חשבון החודש." });
+
+  const rank = { alert:0, watch:1, info:2 };
+  return { list: out.sort((a, b) => rank[a.sev] - rank[b.sev] || b.score - a.score),
+           dataPoints: { expenses:expenses.length, months:Object.keys(byMonth).length,
+                         tracked:cadence.length } };
+}
+
+/* ══════════════════════════════════════════════════════════
    QUERIES — answered by reading data, no AI
 ══════════════════════════════════════════════════════════ */
 const _curMonth = () => {
@@ -4070,6 +4276,14 @@ async function _answerQuery(q, arg) {
       const c = await _loadAsstContext();
       return `📋 <strong>משימות פתוחות (${c.tasks.length})</strong>${
         li(c.tasks.map(t => `${{high:"🔴",medium:"🟡",low:"🟢"}[t.priority || "medium"]} ${t.title}`))}`;
+    }
+    case "insights": {
+      const { list, dataPoints } = await _computeInsights();
+      if (!list.length)
+        return `✅ <strong>הכל נראה תקין</strong>
+          <div class="asst-note">${dataPoints.expenses} רכישות · ${dataPoints.months} חודשים במעקב.</div>`;
+      return `💡 <strong>מה כדאי לדעת (${list.length})</strong>
+        ${li(list.slice(0,6).map(i => `${i.icon} ${i.title} — ${i.detail}`))}`;
     }
     case "restock": {
       const preds = await _restockPredictions();
@@ -4332,13 +4546,21 @@ function _flRender() {
   const dock = document.getElementById("flow-dock");
   if (!host || !dock) return;
 
-  /* Idle — show the category launcher */
+  /* Idle — show the insights banner + category launcher */
   if (!_fl) {
     host.innerHTML = `
+      <button class="fl-insight-cta" id="fl-insights" >
+        <span class="fl-insight-icon">💡</span>
+        <span class="fl-insight-text">
+          <span class="fl-insight-title">מה כדאי לדעת</span>
+          <span class="fl-insight-hint">תובנות מהנתונים שלכם</span>
+        </span>
+        <span class="fl-insight-badge" id="fl-insight-badge"></span>
+      </button>
       <div class="fl-launch-title">מה תרצה לרשום?</div>
       <div class="fl-launch">
         ${FLOWS.map(f => `
-          <button class="fl-cat" onclick="flowStart('${f.id}')">
+          <button class="fl-cat" data-flow="${f.id}">
             <span class="fl-cat-icon">${f.icon}</span>
             <span class="fl-cat-text">
               <span class="fl-cat-label">${esc(f.label)}</span>
@@ -4346,8 +4568,12 @@ function _flRender() {
             </span>
           </button>`).join("")}
       </div>`;
+    host.querySelectorAll(".fl-cat").forEach(b =>
+      b.addEventListener("click", () => flowStart(b.dataset.flow)));
+    host.querySelector("#fl-insights").addEventListener("click", showInsights);
     dock.innerHTML = "";
     dock.classList.remove("open");
+    _insightBadge();
     return;
   }
 
@@ -4451,6 +4677,62 @@ function _flRender() {
 }
 
 /* Jump back to a specific answered step */
+/* Count of items needing action, shown on the insights button */
+async function _insightBadge() {
+  try {
+    const { list } = await _computeInsights();
+    const n = list.filter(i => i.sev === "alert").length;
+    const el = document.getElementById("fl-insight-badge");
+    if (el && n) { el.textContent = n; el.classList.add("on"); }
+  } catch {}
+}
+
+window.showInsights = async function() {
+  const host = document.getElementById("flow-host");
+  const dock = document.getElementById("flow-dock");
+  host.innerHTML = `<div class="fl-head"><button class="fl-back"
+      onclick="_flRender()" aria-label="חזור">‹</button>
+      <span class="fl-head-icon">💡</span>
+      <span class="fl-head-label">מה כדאי לדעת</span></div>
+    <div class="asst-card">⏳ מנתח את הנתונים…</div>`;
+  dock.innerHTML = ""; dock.classList.remove("open");
+
+  try {
+    const { list, dataPoints } = await _computeInsights();
+    let body;
+    if (!list.length) {
+      body = `<div class="fl-empty" style="display:block;text-align:start">
+        ✅ הכל נראה תקין — לא מצאתי משהו שדורש תשומת לב.
+        <div class="asst-note" style="margin-top:8px">
+          התובנות משתפרות ככל שנצברים נתונים.
+          כרגע: ${dataPoints.expenses} רכישות · ${dataPoints.months} חודשים ·
+          ${dataPoints.tracked} מוצרים עם דפוס קנייה מזוהה.
+        </div></div>`;
+    } else {
+      body = `<div class="ins-list">
+        ${list.map(i => `
+          <div class="ins ${i.sev}">
+            <span class="ins-icon">${i.icon}</span>
+            <div class="ins-body">
+              <div class="ins-title">${esc(i.title)}</div>
+              <div class="ins-detail">${esc(i.detail)}</div>
+            </div>
+          </div>`).join("")}
+      </div>
+      <div class="asst-note" style="margin-top:12px">
+        מבוסס על ${dataPoints.expenses} רכישות ו-${dataPoints.months} חודשי נתונים.
+        ${dataPoints.tracked < 3 ? "ככל שתרשמו יותר קניות, התחזיות ידייקו." : ""}
+      </div>`;
+    }
+    host.innerHTML = `<div class="fl-head"><button class="fl-back"
+        onclick="_flRender()" aria-label="חזור">‹</button>
+        <span class="fl-head-icon">💡</span>
+        <span class="fl-head-label">מה כדאי לדעת</span></div>${body}`;
+  } catch (e) {
+    host.innerHTML = `<div class="asst-fail">❌ ${esc(e.message)}</div>`;
+  }
+};
+
 /* Jump back to the nth answered turn (index into turns, not steps —
    they differ once a step has been skipped by a `when` guard) */
 window._flEdit = function(n) {
