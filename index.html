@@ -288,11 +288,14 @@
 
   /* ═══ Views ═══════════════════════════════════════════ */
   .view{display:none;padding:24px 16px 110px;min-height:calc(100vh - var(--hh));
-    animation:viewIn .38s var(--ease-out)}
+    animation:viewIn .28s var(--ease-out)}
   .view.active{display:block}
+  /* Page enter: a short lift, no scale. Scaling a whole page reads as
+     a zoom effect; translation alone is what modern apps use, and at
+     280ms it feels responsive rather than animated-at-you. */
   @keyframes viewIn{
-    from{opacity:0;transform:translateY(14px) scale(0.98)}
-    to  {opacity:1;transform:translateY(0)     scale(1)}
+    from{opacity:0;transform:translateY(8px)}
+    to  {opacity:1;transform:translateY(0)}
   }
   #view-dashboard{padding:24px 16px 110px}
 
@@ -1895,9 +1898,20 @@
     font-variant-numeric:tabular-nums;
     letter-spacing:0;white-space:nowrap;max-width:100%;
     overflow:hidden;text-overflow:ellipsis;
-    transition:opacity .22s var(--ease);
+    /* Slide + fade rather than a flat blink. Short, single-direction,
+       no overshoot — motion should explain the change, not perform. */
+    transition:opacity .2s var(--ease), transform .2s var(--ease);
+    will-change:opacity, transform;
   }
-  .card-stat.swap{opacity:0}
+  @keyframes statIn{
+    from{opacity:0;transform:translateY(6px)}
+    to  {opacity:1;transform:translateY(0)}
+  }
+  /* First paint eases in; .in must come last so the rotation's
+     animation isn't overridden by the reveal (same specificity). */
+  .card-stat.has-value{animation:statIn .3s var(--ease)}
+  .card-stat.out{opacity:0;transform:translateY(-5px)}
+  .card-stat.in {animation:statIn .26s var(--ease)}
   .card-stat.has-value{display:inline-block}
   .card-stat.alert{background:rgba(255,255,255,.28)}
   .dash-card.wide .card-stat{margin-top:0;margin-inline-start:auto}
@@ -4065,22 +4079,29 @@ function _dashRotate() {
   clearInterval(_dashTimer);
   const keys = Object.keys(_dashFacts).filter(k => _dashFacts[k].length > 1);
   if (!keys.length) return;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   let n = 0;
   _dashTimer = setInterval(() => {
     n++;
-    keys.forEach(k => {
+    keys.forEach((k, i) => {
       const el = document.querySelector(`.card-stat[data-stat="${k}"]`);
       const facts = _dashFacts[k];
       if (!el || !facts.length) return;
       const f = facts[n % facts.length];
-      el.classList.add("swap");
+      /* Stagger each card slightly so the grid updates as a wave
+         rather than every pill blinking at once. */
       setTimeout(() => {
-        el.textContent = f.t;
-        el.classList.toggle("alert", !!f.alert);
-        el.classList.remove("swap");
-      }, 220);
+        el.classList.add("out");                    // slide up + fade out
+        setTimeout(() => {
+          el.textContent = f.t;
+          el.classList.toggle("alert", !!f.alert);
+          el.classList.remove("out");
+          el.classList.add("in");                   // enter from below
+          setTimeout(() => el.classList.remove("in"), 260);
+        }, 200);
+      }, i * 70);
     });
-  }, 4200);
+  }, 5000);
 }
 
 window.stopDashRotate = () => { clearInterval(_dashTimer); _dashTimer = null; };
@@ -5583,6 +5604,10 @@ function initDashboard() {
   _checkPaymentAlert();
   _initWhoUI();
   initActivityFeed();
+  /* The dashboard is already .active in the markup, so navigateTo()
+     never fires for it on a cold start — the card stats have to be
+     kicked off here, or they only appear after leaving and coming back. */
+  _loadDashStats();
 }
 
 function _checkPaymentAlert() {
