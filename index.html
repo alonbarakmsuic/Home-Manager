@@ -9084,6 +9084,18 @@ const _SH_CONFIG_DOC = () => doc(db, "smart_home", "config");
 
 const _VAC_LABEL = { start:"התחל ניקוי", dock:"חזור לעמדה", stop:"עצור" };
 
+/* Build a Shortcuts URL that comes BACK here when it's done.
+   Without x-success the phone strands you inside the Shortcuts app
+   and you have to swipe back yourself every single time. */
+function _shortcutURL(name, returnView) {
+  const back = location.origin + location.pathname + (returnView ? "#" + returnView : "");
+  return "shortcuts://x-callback-url/run-shortcut"
+       + "?name="      + encodeURIComponent(name)
+       + "&x-success=" + encodeURIComponent(back)
+       + "&x-cancel="  + encodeURIComponent(back)
+       + "&x-error="   + encodeURIComponent(back);
+}
+
 async function initSmartHouse() {
   try {
     const cfg = await getDoc(_SH_CONFIG_DOC());
@@ -9133,7 +9145,7 @@ window.vacuumCmd = async function(action) {
 
   showToast(`🤖 ${_VAC_LABEL[action] || action}`, "success");
   if (ind) { ind.textContent = "✅ נשלח"; setTimeout(() => { if (ind) ind.textContent = ""; }, 2500); }
-  window.location.href = "shortcuts://run-shortcut?name=" + encodeURIComponent(name);
+  window.location.href = _shortcutURL(name, "smart-house");
 };
 
 /* ── Philips TV (iOS Shortcuts) ──────────────────────────── */
@@ -9149,7 +9161,7 @@ window.tvCmd = function(cmd) {
   if (!name) return;
   const labels = { on:"📺 מדליק…", off:"📺 כובה…", volup:"🔊 Vol+", voldown:"🔉 Vol−", mute:"🔇 Muted" };
   showToast(labels[cmd] || cmd, "success");
-  window.location.href = "shortcuts://run-shortcut?name=" + encodeURIComponent(name);
+  window.location.href = _shortcutURL(name, "smart-house");
 };
 
 /* ── Settings panel ──────────────────────────────────────── */
@@ -9799,6 +9811,16 @@ window.showToast = function(msg, type = "") {
 ══════════════════════════════════════════════════════════ */
 initDashboard();
 initLaundryGlobal(); // global listener — keeps widget in sync on all views
+
+/* Coming back from an iOS Shortcut (x-success) reloads the page, which would
+   otherwise dump you on the dashboard. The hash says where you were. */
+(function _openFromHash() {
+  const id = (location.hash || "").replace(/^#/, "").trim();
+  if (id && VIEW_META[id]) {
+    // let the dashboard finish its first paint, then move
+    setTimeout(() => { try { navigateTo(id); } catch {} }, 0);
+  }
+})();
 
 /* ══════════════════════════════════════════════════════════
    MICRO-INTERACTIONS
