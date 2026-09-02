@@ -631,11 +631,13 @@
   .maint-task-num{font-size:.72rem;font-weight:700;color:var(--text-light);
     background:var(--bg);border:1px solid var(--border);border-radius:6px;
     padding:2px 7px;flex-shrink:0;margin-top:1px}
-  /* One-tap done on a task row */
-  .btn-maint-done{width:30px;height:30px;border-radius:var(--radius-sm);
-    border:1px solid var(--border-strong);background:var(--bg-card);
-    color:var(--primary);font-size:.9rem;font-weight:800;cursor:pointer;
-    font-family:inherit;flex-shrink:0;transition:var(--T)}
+  /* One-tap done. 44px is Apple's minimum reliable tap target — at the old
+     30px, with the bin 6px away, "done" and "delete" were the same gesture. */
+  .btn-maint-done{width:44px;height:44px;border-radius:var(--radius-sm);
+    border:1.5px solid var(--border-strong);background:var(--bg-card);
+    color:var(--primary);font-size:1.15rem;font-weight:800;cursor:pointer;
+    font-family:inherit;flex-shrink:0;transition:var(--T);
+    display:flex;align-items:center;justify-content:center;margin-top:-2px}
   .btn-maint-done:active{background:var(--primary);color:#fff;border-color:transparent}
   .maint-item.task-done{opacity:.55}
   .maint-item.task-done .maint-title-text{text-decoration:line-through}
@@ -643,11 +645,33 @@
     border-color:transparent}
 
   .maint-title-text{flex:1;font-size:.88rem;font-weight:600;line-height:1.4;color:var(--text)}
-  .maint-actions{display:flex;gap:6px;flex-shrink:0}
-  .btn-edit-maint{background:rgba(0,122,255,.1);color:var(--info);border:none;
-    border-radius:5px;width:30px;height:30px;cursor:pointer;font-size:.8rem;
-    display:flex;align-items:center;justify-content:center;transition:var(--T)}
+  .maint-actions{display:flex;gap:10px;flex-shrink:0}
+  .maint-actions .btn-edit-maint,
+  .maint-actions .btn-trash{width:40px;height:40px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;font-size:.9rem;
+    flex-shrink:0;cursor:pointer;transition:var(--T)}
+  .btn-edit-maint{background:rgba(0,122,255,.1);color:var(--info);border:none}
   .btn-edit-maint:active{background:rgba(0,122,255,.2)}
+  /* Two-tap delete: arms first, deletes second. A native confirm() dialog is
+     unreliable in an installed web app, and this is safer on a phone anyway. */
+  .maint-actions .btn-trash.armed{background:var(--danger);color:#fff;
+    width:auto;padding:0 12px;font-size:.72rem;font-weight:700}
+
+  /* ── In-app confirm / prompt ─────────────────────────── */
+  .ask-msg{font-size:.88rem;line-height:1.6;color:var(--text);
+    margin:6px 0 16px;white-space:pre-line;direction:rtl;text-align:start}
+  .ask-btns{display:flex;gap:10px;margin-top:4px}
+  .ask-btns button{flex:1;padding:13px 8px;border-radius:var(--radius-sm);
+    font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;
+    border:none;transition:var(--T)}
+  .ask-cancel{background:var(--bg-surface);color:var(--text);
+    border:.5px solid rgba(0,0,0,.12) !important}
+  .ask-ok{background:var(--primary);color:#fff}
+  .ask-ok.danger{background:var(--danger)}
+  .ask-btns button:active{transform:scale(.98);opacity:.9}
+  #ask-input{width:100%;padding:12px;border:1.5px solid var(--border);
+    border-radius:var(--radius-sm);font-size:1rem;font-family:inherit;
+    background:var(--bg);color:var(--text);box-sizing:border-box}
   .maint-meta{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
   .maint-date-label{font-size:.73rem;color:var(--text-muted)}
   .maint-status-pill{font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:10px}
@@ -3390,6 +3414,24 @@
 </div>
 
 <!-- ═════════════════ UPGRADE PURCHASED MODAL ═══════════ -->
+<!-- In-app replacement for confirm() / prompt(). iOS suppresses native dialogs
+     once a web app is launched from the Home Screen, which silently killed
+     every delete and every prompt in the app the day we installed it. -->
+<div id="ask-modal" class="modal-bg">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="ask-title">אישור</div>
+    <div class="ask-msg" id="ask-msg"></div>
+    <div class="form-group" id="ask-input-wrap" style="display:none">
+      <input type="text" id="ask-input" autocomplete="off">
+    </div>
+    <div class="ask-btns">
+      <button class="ask-cancel" id="ask-cancel">ביטול</button>
+      <button class="ask-ok"     id="ask-ok">אישור</button>
+    </div>
+  </div>
+</div>
+
 <div id="bought-modal" class="modal-bg" onclick="boughtBgClick(event)">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -3697,7 +3739,7 @@ window.restoreFromBackup = async function(input) {
   const when = backup.exportedAt
     ? new Date(backup.exportedAt).toLocaleString("en-GB") : "לא ידוע";
 
-  if (!confirm(
+  if (!await askConfirm(
     `לשחזר ${total} רשומות מהגיבוי?\n\nתאריך הגיבוי: ${when}\n\n` +
     `רשומות קיימות עם אותו מזהה יידרסו.\nרשומות שנוספו אחרי הגיבוי לא יימחקו.`
   )) { log("בוטל."); return; }
@@ -6143,7 +6185,7 @@ function _renderArchiveList(items) {
 }
 
 async function _deleteArchiveItem(id, cardEl) {
-  if (!confirm("Permanently delete this activity record?")) return;
+  if (!await askConfirm("Permanently delete this activity record?")) return;
   try {
     await deleteDoc(doc(db, "activity", id));
     // Also remove from dismissed list to keep it clean
@@ -6417,7 +6459,7 @@ window.addCleaningTask = async function() {
 };
 
 async function _deleteCleaningTask(id) {
-  if (!confirm("Delete this task from all future checklists?")) return;
+  if (!await askConfirm("Delete this task from all future checklists?")) return;
   try {
     await deleteDoc(doc(db, "cleaning_templates", id));
     await _renderTemplatesList();
@@ -6774,7 +6816,7 @@ window.addPlant = async function() {
 };
 
 async function deletePlant(id, name) {
-  if (!confirm(`Remove "${name}" from your garden?`)) return;
+  if (!await askConfirm(`Remove "${name}" from your garden?`)) return;
   try {
     await deleteDoc(doc(db, "plants", id));
     await setDoc(doc(db, "watering", "log"), { [id]: null }, { merge: true }).catch(() => {});
@@ -6879,9 +6921,9 @@ window.applyRentAgreement = function() {
 };
 
 window.saveRentAgreement = async function() {
-  const a = parseFloat(prompt("כמה אלון משלם על שכר דירה?", _rentAgreement.alon));
+  const a = parseFloat(await askText("כמה אלון משלם על שכר דירה?", _rentAgreement.alon, {number:true}));
   if (!Number.isFinite(a) || a < 0) return;
-  const t = parseFloat(prompt("כמה טלי משלמת על שכר דירה?", _rentAgreement.tali));
+  const t = parseFloat(await askText("כמה טלי משלמת על שכר דירה?", _rentAgreement.tali, {number:true}));
   if (!Number.isFinite(t) || t < 0) return;
   try {
     await setDoc(doc(db, "settings", "rent"), { alon:a, tali:t, updatedAt:serverTimestamp() });
@@ -7142,7 +7184,7 @@ async function renderBillsHistory() {
 }
 
 async function deleteBill(monthStr) {
-  if (!confirm(`Delete bills for ${_monthLabel(monthStr)}?\nגם השורות שלהם בהתחשבנות הזוגית יימחקו.`)) return;
+  if (!await askConfirm(`Delete bills for ${_monthLabel(monthStr)}?\nגם השורות שלהם בהתחשבנות הזוגית יימחקו.`)) return;
   try {
     await deleteDoc(doc(db, "bills", monthStr));
     await _removeBillsFromSplitwise(monthStr);   // keep the balance in sync
@@ -7269,10 +7311,10 @@ function renderMaintList(items) {
     div.className = `maint-item priority-${priority}`;
     div.innerHTML = `
       <div class="maint-item-header">
+        <button class="btn-maint-done" title="סמן כבוצע">✓</button>
         <span class="maint-task-num">#${idx + 1}</span>
         <span class="maint-title-text">${item.title}</span>
         <div class="maint-actions">
-          <button class="btn-maint-done" title="סמן כבוצע">✓</button>
           <button class="btn-edit-maint" title="Edit task">✏️</button>
           <button class="btn-trash" title="Delete">🗑️</button>
         </div>
@@ -7302,11 +7344,29 @@ function renderMaintList(items) {
         } else {
           showToast("↩︎ הוחזרה לפתוחות", "success");
         }
-      } catch(err) { showToast("Error: " + err.message, "error"); this.disabled = false; }
+      } catch(err) {
+        showToast("Error: " + err.message, "error");
+      } finally {
+        // Always re-enable. On a slow or offline write the old code left the
+        // button dead, so a second tap did nothing and it looked broken.
+        this.disabled = false;
+      }
     });
     if (!_taskOpen(item)) div.classList.add("task-done");
     div.querySelector(".btn-edit-maint").addEventListener("click", () => startEditMaint(item));
-    div.querySelector(".btn-trash").addEventListener("click", () => deleteMaintenance(item.id));
+    /* Two taps to delete. The first arms the button for 3 seconds, the second
+       does it. No native confirm() — those are unreliable once the app is
+       installed to the Home Screen, which is where the bin appeared dead. */
+    div.querySelector(".btn-trash").addEventListener("click", function() {
+      if (this.dataset.armed === "1") { deleteMaintenance(item.id); return; }
+      this.dataset.armed = "1";
+      this.classList.add("armed");
+      this.textContent = "למחוק?";
+      clearTimeout(this._disarm);
+      this._disarm = setTimeout(() => {
+        this.dataset.armed = ""; this.classList.remove("armed"); this.textContent = "🗑️";
+      }, 3000);
+    });
     div.querySelector(".maint-status-sel").addEventListener("change", async function() {
       try {
         await setDoc(doc(db, "maintenance", item.id), { status: this.value }, { merge: true });
@@ -7318,7 +7378,7 @@ function renderMaintList(items) {
 }
 
 async function deleteMaintenance(id) {
-  if (!confirm("Delete this task?")) return;
+  // Confirmation is handled by the two-tap arming on the button itself.
   // If we were editing this task, reset the form
   if (_editingMaintId === id) _resetMaintForm();
   try {
@@ -8301,7 +8361,7 @@ async function _toggleStaple(id, name, currentStatus) {
 }
 
 async function _deleteStaple(id, name) {
-  if (!confirm(`Remove "${name}" from pantry?`)) return;
+  if (!await askConfirm(`Remove "${name}" from pantry?`)) return;
   try {
     await deleteDoc(doc(db, "pantry", id));
     await deleteDoc(doc(db, "grocery_queue", id)).catch(() => {});
@@ -8313,7 +8373,7 @@ async function _deleteStaple(id, name) {
    EXPENSES — CURRENT STATUS  (flat query, no indexes)
 ══════════════════════════════════════════════════════════ */
 window.deleteExpense = async function(id) {
-  if (!confirm("Delete this entry?")) return;
+  if (!await askConfirm("Delete this entry?")) return;
   try {
     await deleteDoc(doc(db, "expenses", id));
     showToast("🗑️ Entry deleted", "success");
@@ -8341,7 +8401,7 @@ async function _loadBudget() {
 
 window.setGroceryBudget = async function() {
   const cur = _budget.groceries || "";
-  const raw = prompt("יעד חודשי לקניות (₪) — השאר ריק כדי לבטל:", cur);
+  const raw = await askText("יעד חודשי לקניות (₪) — השאר ריק כדי לבטל:", cur, {number:true});
   if (raw === null) return;
   const n = parseFloat(raw);
   const val = Number.isFinite(n) && n > 0 ? n : 0;
@@ -8894,7 +8954,7 @@ async function _addSWExpense() {
 }
 
 async function _deleteSWExpense(id, isSettlement = false) {
-  if (!confirm(isSettlement
+  if (!await askConfirm(isSettlement
     ? "למחוק את סגירת החשבון? החוב יחזור ליתרה."
     : "Delete this shared expense?")) return;
   try {
@@ -9966,6 +10026,72 @@ window.showToast = function(msg, type = "") {
   t.textContent = msg; t.className = `show ${type}`;
   clearTimeout(t._t); t._t = setTimeout(() => { t.className = ""; }, 3200);
 };
+
+/* ══════════════════════════════════════════════════════════
+   ASK — in-app confirm() and prompt()
+
+   iOS silently ignores window.confirm/prompt/alert in a web app
+   launched from the Home Screen. Every "are you sure?" in this app
+   therefore returned false and every delete quietly did nothing.
+   These two return promises and work everywhere.
+══════════════════════════════════════════════════════════ */
+let _askResolve = null;
+
+function _askClose(value) {
+  const bg = document.getElementById("ask-modal");
+  if (bg) bg.classList.remove("open");
+  const r = _askResolve; _askResolve = null;
+  if (r) r(value);
+}
+
+function _askOpen({ title, message, okText, danger, input, placeholder, value }) {
+  return new Promise(resolve => {
+    // A second call while one is open cancels the first rather than orphaning it
+    if (_askResolve) _askClose(input ? null : false);
+    _askResolve = resolve;
+
+    const $ = id => document.getElementById(id);
+    $("ask-title").textContent = title || (input ? "הזנה" : "אישור");
+    $("ask-msg").textContent   = message || "";
+    $("ask-msg").style.display = message ? "" : "none";
+
+    const wrap = $("ask-input-wrap"), inp = $("ask-input");
+    wrap.style.display = input ? "" : "none";
+    if (input) {
+      inp.value = value == null ? "" : String(value);
+      inp.placeholder = placeholder || "";
+      inp.type = input === "number" ? "number" : "text";
+      inp.inputMode = input === "number" ? "decimal" : "text";
+    }
+
+    const ok = $("ask-ok"), cancel = $("ask-cancel");
+    ok.textContent = okText || "אישור";
+    ok.classList.toggle("danger", !!danger);
+
+    ok.onclick     = () => _askClose(input ? inp.value.trim() : true);
+    cancel.onclick = () => _askClose(input ? null : false);
+    inp.onkeydown  = e => { if (e.key === "Enter") ok.click(); };
+
+    const bg = $("ask-modal");
+    bg.onclick = e => { if (e.target === bg) _askClose(input ? null : false); };
+    bg.classList.add("open");
+    if (input) setTimeout(() => { inp.focus(); inp.select(); }, 60);
+  });
+}
+
+/** Replaces confirm(). Resolves true/false. */
+function askConfirm(message, opts = {}) {
+  return _askOpen({ message, danger: opts.danger !== false,
+                    okText: opts.okText || "אישור", title: opts.title });
+}
+/** Replaces prompt(). Resolves the string, or null if cancelled. */
+function askText(message, value, opts = {}) {
+  return _askOpen({ message, value, input: opts.number ? "number" : "text",
+                    okText: opts.okText || "שמור", title: opts.title,
+                    placeholder: opts.placeholder });
+}
+window.askConfirm = askConfirm;
+window.askText    = askText;
 
 /* ══════════════════════════════════════════════════════════
    PUSH NOTIFICATIONS
