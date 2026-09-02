@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Home Manager</title>
+  <!-- Installable web app: needed so iOS allows push notifications.
+       Purely additive — the site behaves exactly as before in a Safari tab. -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Home Manager">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -2787,6 +2794,18 @@
 
   <p class="section-title" style="margin-top:22px">📋 Saved Bills</p>
   <div id="bills-history"><div class="empty"><div class="empty-icon">📄</div>No bills saved yet.</div></div>
+
+  <p class="section-title" style="margin-top:22px">🔔 התראות</p>
+  <div class="confirm-card">
+    <p>התראות לטלפון על <strong>חשבונות שלא הוזנו</strong>, <strong>צמחים שצריכים השקיה</strong>
+       ו<strong>משימות באיחור</strong> — גם כשהאפליקציה סגורה.</p>
+    <p class="last-conf" id="push-status">בודק…</p>
+    <button class="btn-confirm" id="btn-push-enable" onclick="enablePush()">🔔 הפעל התראות בטלפון הזה</button>
+    <p class="restore-warn" style="margin-top:10px">
+      באייפון חובה לפתוח את האפליקציה <strong>מהאייקון במסך הבית</strong> (Share ← Add to Home Screen),
+      אחרת אפל לא מאפשרת התראות. צריך להפעיל בכל טלפון בנפרד.
+    </p>
+  </div>
 
   <p class="section-title" style="margin-top:22px">💾 גיבוי נתונים</p>
   <div class="confirm-card">
@@ -5797,7 +5816,7 @@ function _onEnter(id) {
   if (id === "activity-archive")   initActivityArchive();
   if (id === "chores-cleaning")    initCleaning();
   if (id === "chores-gardening")   initGardening();
-  if (id === "chores-payments")    initPayments();
+  if (id === "chores-payments")    { initPayments(); _renderPushStatus(); }
   if (id === "chores-maintenance") initMaintenance();
   if (id === "expenses-status")    initExpensesStatus();
   if (id === "expenses-reports")   initReportSelector();
@@ -9940,6 +9959,122 @@ window.showToast = function(msg, type = "") {
   t.textContent = msg; t.className = `show ${type}`;
   clearTimeout(t._t); t._t = setTimeout(() => { t.className = ""; }, 3200);
 };
+
+/* ══════════════════════════════════════════════════════════
+   PUSH NOTIFICATIONS
+   Standard Web Push (VAPID) — no Firebase Messaging, no Apple
+   developer account, no cost. A scheduled GitHub Action reads
+   Firestore once a day and posts to Apple's push service.
+
+   iOS only permits this when the app was opened from a Home
+   Screen icon, so every failure path below says so plainly
+   rather than leaving a dead button.
+
+   Firestore: /push_subs/{key} → { endpoint, p256dh, auth, who, ua, at }
+══════════════════════════════════════════════════════════ */
+const VAPID_PUBLIC =
+  "BK5MvBEiAD_ckPpkZEz_piCJmFjCzdZZAK9gEjWVjXEQWc5YbqvOAn-DMdiNTxLF7m4PojGBwpgsXACmI8QG1es";
+
+function _b64ToU8(b64) {
+  const pad = "=".repeat((4 - (b64.length % 4)) % 4);
+  const s = (b64 + pad).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(s);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+const _u8ToB64 = buf =>
+  btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+/* A stable per-subscription id so re-enabling replaces rather than duplicates */
+function _subKey(endpoint) {
+  let h = 0;
+  for (let i = 0; i < endpoint.length; i++) h = (h * 31 + endpoint.charCodeAt(i)) | 0;
+  return "s" + Math.abs(h).toString(36);
+}
+
+const _pushSupported = () =>
+  "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+
+/* iOS gives push only to home-screen installs. Detect that honestly. */
+const _isStandalone = () =>
+  window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+
+const _isIOS = () =>
+  /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+async function _renderPushStatus() {
+  const el  = document.getElementById("push-status");
+  const btn = document.getElementById("btn-push-enable");
+  if (!el) return;
+  const set = (txt, hideBtn) => { el.textContent = txt; if (btn) btn.style.display = hideBtn ? "none" : ""; };
+
+  if (!_pushSupported())            return set("❌ הדפדפן הזה לא תומך בהתראות", true);
+  if (_isIOS() && !_isStandalone()) return set("⚠️ פתחו את האפליקציה מהאייקון במסך הבית כדי להפעיל התראות", true);
+  if (Notification.permission === "denied")
+    return set("🚫 ההתראות חסומות — יש לאשר בהגדרות האייפון", true);
+
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const sub = reg && await reg.pushManager.getSubscription();
+    if (sub) return set("✅ ההתראות פעילות בטלפון הזה", true);
+  } catch {}
+  set("🔕 ההתראות כבויות בטלפון הזה", false);
+}
+window._renderPushStatus = _renderPushStatus;
+
+window.enablePush = async function() {
+  const btn = document.getElementById("btn-push-enable");
+  if (!_pushSupported()) { showToast("הדפדפן לא תומך בהתראות", "error"); return; }
+  if (_isIOS() && !_isStandalone()) {
+    showToast("פתחו קודם מהאייקון במסך הבית", "error");
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ מפעיל…"; }
+
+  try {
+    const reg = await navigator.serviceWorker.register("sw.js");
+    await navigator.serviceWorker.ready;
+
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") throw new Error("ההרשאה נדחתה");
+
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: _b64ToU8(VAPID_PUBLIC)
+      });
+    }
+    const j = sub.toJSON();
+    await setDoc(doc(db, "push_subs", _subKey(j.endpoint)), {
+      endpoint: j.endpoint,
+      p256dh:   j.keys.p256dh,
+      auth:     j.keys.auth,
+      who:      _currentUser(),
+      ua:       navigator.userAgent.slice(0, 120),
+      at:       Date.now()
+    });
+
+    showToast("🔔 ההתראות הופעלו", "success");
+    _logActivity("🔔", `${_currentUser()} הפעיל התראות`);
+  } catch (err) {
+    showToast("שגיאה: " + err.message, "error");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "🔔 הפעל התראות בטלפון הזה"; }
+    _renderPushStatus();
+  }
+};
+
+/* Register the worker on load when notifications are already on, so an
+   existing subscription stays alive. Never registers otherwise — no worker,
+   no behaviour change for anyone who hasn't opted in. */
+(async function _pushBoot() {
+  try {
+    if (!_pushSupported() || Notification.permission !== "granted") return;
+    await navigator.serviceWorker.register("sw.js");
+  } catch (e) { console.warn("push boot:", e); }
+})();
 
 /* ══════════════════════════════════════════════════════════
    BOOT
