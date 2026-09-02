@@ -1279,7 +1279,12 @@
   .sh-field label{font-size:.73rem;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px}
   .sh-field input{width:100%;border:1.5px solid var(--border);border-radius:5px;padding:8px 10px;
     font-size:.8rem;font-family:inherit;background:var(--bg);color:var(--text);box-sizing:border-box}
-  .sh-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  /* Both columns run to the same height and the cards inside share it, so the
+     two launcher cards line up flush with the bottom of the vacuum card
+     whichever side happens to be taller. */
+  .sh-grid{display:flex;gap:12px;align-items:stretch}
+  .sh-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px}
+  .sh-col > .sh-card{flex:1}
   .sh-card{background:var(--bg-card);border-radius:var(--radius);padding:14px;
     box-shadow:var(--shadow-card);border:.5px solid rgba(0,0,0,.06)}
   .sh-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
@@ -1303,29 +1308,12 @@
     border:.5px solid rgba(0,0,0,.1);font-size:.66rem;padding:8px 2px}
   .btn-vac:active{transform:scale(0.98);opacity:.88}
   /* Shortcut not named yet — visibly unfinished rather than silently broken */
-  .btn-vac.unset,.sh-applink.unset,.btn-openapp.unset{opacity:.38;filter:grayscale(1)}
-  /* Secondary "open the real app" link at the foot of a card */
-  .sh-applink{display:block;width:100%;margin-top:9px;padding:7px 4px;
-    background:none;border:none;border-top:1px solid var(--border);
-    font-family:inherit;font-size:.64rem;font-weight:700;color:var(--primary);
-    cursor:pointer;text-align:center;direction:rtl}
-  .sh-applink:active{opacity:.6}
-  .sh-card-note{font-size:.64rem;color:var(--text-muted);line-height:1.5;
-    margin:2px 0 10px;direction:rtl}
+  .btn-vac.unset,.btn-openapp.unset{opacity:.38;filter:grayscale(1)}
   .btn-openapp{width:100%;padding:11px 6px;border:none;border-radius:6px;
     background:var(--bg-surface);color:var(--text);border:.5px solid rgba(0,0,0,.1);
     font-family:inherit;font-size:.74rem;font-weight:700;cursor:pointer;
     transition:var(--T)}
   .btn-openapp:active{transform:scale(0.98);opacity:.88}
-  /* TV */
-  .tv-btns{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-  .btn-tv{padding:10px 4px;border:none;border-radius:6px;font-size:.72rem;font-weight:700;
-    cursor:pointer;transition:var(--T);font-family:inherit}
-  .btn-tv.power-on{background:#218358;color:#fff}
-  .btn-tv.power-off{background:#CE2C31;color:#fff}
-  .btn-tv.vol{background:var(--bg-surface);color:var(--text);border:.5px solid rgba(0,0,0,.08)}
-  .btn-tv.mute{grid-column:span 2;background:var(--bg-surface);color:var(--text);border:.5px solid rgba(0,0,0,.08)}
-  .btn-tv:active{transform:scale(0.98);opacity:.88}
   /* Shared */
   .sh-send-indicator{text-align:center;font-size:.7rem;color:var(--text-muted);margin-top:7px;min-height:14px}
   /* ══ DRAMATIC REDESIGN OVERRIDES ══════════════════════════ */
@@ -3153,14 +3141,18 @@
       <input type="text" id="sh-app-tornado" placeholder="Open Tornado">
     </div>
     <div class="sh-field">
-      <label>📺 שלט מלא — פתיחת אפליקציית פיליפס</label>
+      <label>📺 טלוויזיה — פתיחת שלט פיליפס</label>
       <input type="text" id="sh-app-philips" placeholder="Open Philips">
     </div>
     <button class="btn-send" onclick="saveShSettings()" style="width:100%;margin-top:4px">💾 שמור</button>
   </div>
 
-  <!-- 2×2 device grid -->
+  <!-- Two independent columns rather than a grid: a grid row stretches every
+       card to the height of the tallest one, which made the two small launcher
+       cards as tall as the vacuum. Columns let each card keep its own height. -->
   <div class="sh-grid">
+
+   <div class="sh-col">
 
     <!-- ── 📺 Philips TV ──────────────────────── -->
     <div class="sh-card">
@@ -3169,22 +3161,34 @@
           <div class="sh-card-icon">📺</div>
           <div>
             <div class="sh-card-title">Philips TV</div>
-            <div class="sh-card-sub">iOS Shortcuts</div>
+            <div class="sh-card-sub">שלט</div>
           </div>
         </div>
-        <div class="sh-dot" id="tv-dot"></div>
       </div>
-      <div class="tv-btns">
-        <button class="btn-tv power-on"  onclick="tvCmd('on')">⏻ הדלק</button>
-        <button class="btn-tv power-off" onclick="tvCmd('off')">⏻ כבה</button>
-        <button class="btn-tv vol"       onclick="tvCmd('volup')">🔊 Vol+</button>
-        <button class="btn-tv vol"       onclick="tvCmd('voldown')">🔉 Vol−</button>
-        <button class="btn-tv mute"      onclick="tvCmd('mute')">🔇 Mute</button>
-      </div>
-      <button class="sh-applink" data-app="philips" onclick="openDeviceApp('philips')">
-        שלט מלא באפליקציה ←
+      <button class="btn-openapp" data-app="philips" onclick="openDeviceApp('philips')">
+        📺 פתח את השלט
       </button>
     </div>
+
+    <!-- ── ❄️ מזגן — launcher only ─────────────── -->
+    <div class="sh-card">
+      <div class="sh-card-header">
+        <div class="sh-card-left">
+          <div class="sh-card-icon">❄️</div>
+          <div>
+            <div class="sh-card-title">מזגן</div>
+            <div class="sh-card-sub">Tornado WIFI 3</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-openapp" data-app="tornado" onclick="openDeviceApp('tornado')">
+        ❄️ פתח את Tornado
+      </button>
+    </div>
+
+   </div>
+
+   <div class="sh-col">
 
     <!-- ── 🤖 Eureka Vacuum ───────────────────── -->
     <div class="sh-card">
@@ -3212,24 +3216,7 @@
       <div class="sh-send-indicator" id="vac-indicator"></div>
     </div>
 
-    <!-- ── ❄️ מזגן — launcher only ──────────────
-         No API worth chasing on the Tornado stack, so this card is
-         honest about what it is: a fast way into the real app. -->
-    <div class="sh-card">
-      <div class="sh-card-header">
-        <div class="sh-card-left">
-          <div class="sh-card-icon">❄️</div>
-          <div>
-            <div class="sh-card-title">מזגן</div>
-            <div class="sh-card-sub">Tornado WIFI 3</div>
-          </div>
-        </div>
-      </div>
-      <div class="sh-card-note">אין שליטה מהאפליקציה — נפתח באפליקציה של טורנדו</div>
-      <button class="btn-openapp" data-app="tornado" onclick="openDeviceApp('tornado')">
-        ❄️ פתח את Tornado
-      </button>
-    </div>
+   </div>
 
   </div>
 </main>
@@ -9259,21 +9246,9 @@ window.openDeviceApp = function(which) {
   window.location.href = _shortcutURL(name, "smart-house");
 };
 
-/* ── Philips TV (iOS Shortcuts) ──────────────────────────── */
-const _TV_SHORTCUT = {
-  on:      "TV On",
-  off:     "TV Off",
-  volup:   "TV VolUp",
-  voldown: "TV VolDown",
-  mute:    "TV Mute"
-};
-window.tvCmd = function(cmd) {
-  const name = _TV_SHORTCUT[cmd];
-  if (!name) return;
-  const labels = { on:"📺 מדליק…", off:"📺 כובה…", volup:"🔊 Vol+", voldown:"🔉 Vol−", mute:"🔇 Muted" };
-  showToast(labels[cmd] || cmd, "success");
-  window.location.href = _shortcutURL(name, "smart-house");
-};
+/* The TV's per-key buttons (Standby / volume / mute via the JointSpace API
+   and a Scriptable script) were removed: they stopped working in practice,
+   and Philips' own remote app does the job properly. One launcher instead. */
 
 /* ── Settings panel ──────────────────────────────────────── */
 window.toggleShSettings = function() {
