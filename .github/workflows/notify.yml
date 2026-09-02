@@ -1,0 +1,41 @@
+# Home Manager — daily notification check.
+# Save this as .github/workflows/notify.yml in the repo.
+#
+# GitHub's scheduler runs on UTC and can be a few minutes late, so this fires
+# at both 05:00 and 06:00 UTC (covering Israel summer and winter time) and the
+# script itself exits unless it's actually 08:00 in Israel.
+
+name: Home Manager notifications
+
+on:
+  schedule:
+    - cron: "0 5 * * *"    # 08:00 Israel summer time (UTC+3)
+    - cron: "0 6 * * *"    # 08:00 Israel winter time (UTC+2)
+  workflow_dispatch:        # lets you run it by hand from the Actions tab
+    inputs:
+      force:
+        description: "Send even if it's not 08:00 and ignore the cooldown"
+        type: boolean
+        default: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install web-push
+        run: npm install web-push --no-save
+
+      - name: Run check
+        env:
+          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+          FIREBASE_KEY:  ${{ secrets.FIREBASE_KEY }}
+          SEND_HOUR:     "8"
+          COOLDOWN_DAYS: "3"
+          FORCE:         ${{ inputs.force && '1' || '0' }}
+        run: node notify.mjs
