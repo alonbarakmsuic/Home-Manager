@@ -3156,10 +3156,6 @@
       <label>📺 שלט מלא — פתיחת אפליקציית פיליפס</label>
       <input type="text" id="sh-app-philips" placeholder="Open Philips">
     </div>
-    <div class="sh-field">
-      <label>🤖 שואב — פתיחת אפליקציית Eureka</label>
-      <input type="text" id="sh-app-eureka" placeholder="Open Eureka">
-    </div>
     <button class="btn-send" onclick="saveShSettings()" style="width:100%;margin-top:4px">💾 שמור</button>
   </div>
 
@@ -3213,9 +3209,6 @@
           <button class="btn-vac sub" data-vac="locate"   onclick="vacuumCmd('locate')">📍 איפה הוא</button>
         </div>
       </div>
-      <button class="sh-applink" data-app="eureka" onclick="openDeviceApp('eureka')">
-        מפות, לוח זמנים וסטטוס ←
-      </button>
       <div class="sh-send-indicator" id="vac-indicator"></div>
     </div>
 
@@ -9154,7 +9147,7 @@ window.cancelLaundry = async function() {
 ══════════════════════════════════════════════════════════ */
 let _shState  = { vacuum: { action: null, at: null, by: null } };
 let _shConfig = { vacClean:"", vacPause:"", vacResume:"", vacRecharge:"", vacLocate:"",
-                  appTornado:"", appPhilips:"", appEureka:"" };
+                  appTornado:"", appPhilips:"" };
 
 const _SH_STATE_DOC  = () => doc(db, "smart_home", "state");
 const _SH_CONFIG_DOC = () => doc(db, "smart_home", "config");
@@ -9166,11 +9159,11 @@ const _VAC_LABEL = { clean:"התחל ניקוי", pause:"השהה", resume:"המ
 const _VAC_KEY   = { clean:"vacClean", pause:"vacPause", resume:"vacResume",
                      recharge:"vacRecharge", locate:"vacLocate" };
 
-/* App launchers. Where there's no API worth chasing (the Tornado AC) or the
-   vendor app is simply better than anything we'd build (the full Philips
-   remote, Eureka's maps and schedule), the honest move is to open it. */
-const _APP_KEY   = { tornado:"appTornado", philips:"appPhilips", eureka:"appEureka" };
-const _APP_LABEL = { tornado:"Tornado WIFI 3", philips:"שלט פיליפס", eureka:"Eureka" };
+/* App launchers — only where we genuinely can't do better ourselves:
+   the Tornado AC has no API worth chasing, and Philips' own app is a far
+   better full remote than anything we'd rebuild. The vacuum needs none. */
+const _APP_KEY   = { tornado:"appTornado", philips:"appPhilips" };
+const _APP_LABEL = { tornado:"Tornado WIFI 3", philips:"שלט פיליפס" };
 
 /* Build a Shortcuts URL that comes BACK here when it's done.
    Without x-success the phone strands you inside the Shortcuts app
@@ -9196,7 +9189,6 @@ async function initSmartHouse() {
     set("sh-vac-locate",   _shConfig.vacLocate);
     set("sh-app-tornado",  _shConfig.appTornado);
     set("sh-app-philips",  _shConfig.appPhilips);
-    set("sh-app-eureka",   _shConfig.appEureka);
     _renderVacButtons();
   } catch (e) { console.warn("SH config:", e); }
 
@@ -9297,7 +9289,6 @@ window.saveShSettings = async function() {
   _shConfig.vacLocate   = get("sh-vac-locate");
   _shConfig.appTornado  = get("sh-app-tornado");
   _shConfig.appPhilips  = get("sh-app-philips");
-  _shConfig.appEureka   = get("sh-app-eureka");
   try {
     await setDoc(_SH_CONFIG_DOC(), _shConfig, { merge:true });
     _renderVacButtons();
