@@ -112,13 +112,16 @@
   /* ═══ Header ══════════════════════════════════════════ */
   #app-header{
     position:sticky;top:0;z-index:100;
-    height:60px;
+    /* Installed on the Home Screen there is no Safari chrome, so the page
+       runs under the clock and battery. Reserve that strip: the bar's
+       colour still fills behind the status icons, the content sits below. */
+    height:calc(60px + env(safe-area-inset-top));
     /* Flat near-black instead of a three-stop green gradient.
        The brand colour now earns attention where it means something. */
     background:#12151A;
     backdrop-filter:blur(20px) saturate(180%);
     -webkit-backdrop-filter:blur(20px) saturate(180%);
-    display:flex;align-items:center;padding:0 14px;gap:10px;
+    display:flex;align-items:center;padding:env(safe-area-inset-top) 14px 0;gap:10px;
     border-bottom:1px solid rgba(255,255,255,.07);
     box-shadow:0 1px 9px rgba(0,0,0,.12),0 1px 0 rgba(18,20,24,.06) inset;
     overflow:hidden}
@@ -183,12 +186,15 @@
     box-shadow:0 1px 4px rgba(0,0,0,.11)}
 
   /* ═══ Assistant ═══════════════════════════════════════ */
-  #assistant-fab{position:fixed;bottom:84px;inset-inline-end:18px;z-index:150;
+  /* bottom must clear the nav AND the home-indicator strip. Using padding for
+     that stretched the button and pushed its icon off-centre — offset the
+     position instead so the circle stays a circle. */
+  #assistant-fab{position:fixed;bottom:calc(92px + env(safe-area-inset-bottom));
+    inset-inline-end:18px;z-index:150;
     width:54px;height:54px;border-radius:50%;border:none;cursor:pointer;
     background:#5B5BD6;color:#fff;font-size:1.45rem;
     box-shadow:0 2px 8px rgba(18,20,24,.10);transition:var(--T);
-    display:flex;align-items:center;justify-content:center;
-    padding-bottom:env(safe-area-inset-bottom)}
+    display:flex;align-items:center;justify-content:center}
   #assistant-fab:active{transform:scale(0.98)}
   .asst-input-wrap{display:flex;gap:8px;align-items:center;margin-bottom:14px}
   /* No hardcoded direction — the input carries dir="auto", so the
@@ -1415,7 +1421,8 @@
   .section-title::after{content:none}
 
   /* Views now account for bottom nav */
-  .view{padding-bottom:150px}  /* clears the floating assistant button */
+  /* clears the floating assistant button, the nav bar, and the home indicator */
+  .view{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
   #view-dashboard{padding-bottom:120px}
 
   /* Submenu cards – more colorful icon wrap */
