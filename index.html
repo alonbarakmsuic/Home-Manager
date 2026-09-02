@@ -1302,6 +1302,8 @@
   .btn-vac.sub{background:var(--bg-surface);color:var(--text);
     border:.5px solid rgba(0,0,0,.1);font-size:.66rem;padding:8px 2px}
   .btn-vac:active{transform:scale(0.98);opacity:.88}
+  /* Shortcut not named yet — visibly unfinished rather than silently broken */
+  .btn-vac.unset{opacity:.38;filter:grayscale(1)}
   /* TV */
   .tv-btns{display:grid;grid-template-columns:1fr 1fr;gap:5px}
   .btn-tv{padding:10px 4px;border:none;border-radius:6px;font-size:.72rem;font-weight:700;
@@ -3099,9 +3101,12 @@
   </div>
   <div id="sh-settings-panel" class="sh-settings-panel">
     <p style="font-size:.77rem;color:var(--text-muted);margin-bottom:14px;line-height:1.55">
-      כל כפתור מריץ <strong>קיצור דרך</strong> באייפון. צרו קיצור באפליקציית Shortcuts
-      עם הפעולה של Eureka, ורשמו כאן את השם <em>בדיוק</em> כפי שקראתם לו.<br>
-      צריך לעשות זאת פעם אחת בכל טלפון.
+      כל כפתור מריץ <strong>קיצור דרך</strong> באייפון.<br>
+      ליצירה: אפליקציית <strong>eureka</strong> ← My ← Voice Control ← Siri ←
+      Create Siri Shortcut ← Add to Siri לכל פקודה.<br>
+      רשמו כאן את השם <em>בדיוק</em> כפי שהוא מופיע באפליקציית Shortcuts.
+      כפתור אפור = עדיין לא הוגדר.<br>
+      <strong>בכל טלפון צריך ליצור את הקיצורים מחדש, עם אותם שמות.</strong>
     </p>
     <div class="sh-field">
       <label>▶ שואב — Clean</label>
@@ -3165,12 +3170,12 @@
            The app has no way to read the vacuum back, so it doesn't pretend to. -->
       <div class="vac-last" id="vac-last">אין פקודה אחרונה</div>
       <div class="vac-btns">
-        <button class="btn-vac start" onclick="vacuumCmd('clean')">▶ התחל ניקוי</button>
+        <button class="btn-vac start" data-vac="clean" onclick="vacuumCmd('clean')">▶ התחל ניקוי</button>
         <div class="vac-grid">
-          <button class="btn-vac sub" onclick="vacuumCmd('pause')">⏸ השהה</button>
-          <button class="btn-vac sub" onclick="vacuumCmd('resume')">⏵ המשך</button>
-          <button class="btn-vac sub" onclick="vacuumCmd('recharge')">🔌 לעמדה</button>
-          <button class="btn-vac sub" onclick="vacuumCmd('locate')">📍 איפה הוא</button>
+          <button class="btn-vac sub" data-vac="pause"    onclick="vacuumCmd('pause')">⏸ השהה</button>
+          <button class="btn-vac sub" data-vac="resume"   onclick="vacuumCmd('resume')">⏵ המשך</button>
+          <button class="btn-vac sub" data-vac="recharge" onclick="vacuumCmd('recharge')">🔌 לעמדה</button>
+          <button class="btn-vac sub" data-vac="locate"   onclick="vacuumCmd('locate')">📍 איפה הוא</button>
         </div>
       </div>
       <div class="sh-send-indicator" id="vac-indicator"></div>
@@ -9125,6 +9130,7 @@ async function initSmartHouse() {
     set("sh-vac-resume",   _shConfig.vacResume);
     set("sh-vac-recharge", _shConfig.vacRecharge);
     set("sh-vac-locate",   _shConfig.vacLocate);
+    _renderVacButtons();
   } catch (e) { console.warn("SH config:", e); }
 
   _unsub("smart-house");
@@ -9134,7 +9140,18 @@ async function initSmartHouse() {
   });
 }
 
+/* Dim any button whose Siri Shortcut hasn't been named yet, so an
+   unfinished setup is visible at a glance instead of only failing on tap. */
+function _renderVacButtons() {
+  document.querySelectorAll("[data-vac]").forEach(b => {
+    const ready = !!(_shConfig[_VAC_KEY[b.dataset.vac]] || "").trim();
+    b.classList.toggle("unset", !ready);
+    b.title = ready ? "" : "לא הוגדר קיצור ב-Device Settings";
+  });
+}
+
 function _renderShState() {
+  _renderVacButtons();
   const el = document.getElementById("vac-last");
   if (!el) return;
   const v = _shState.vacuum || {};
@@ -9198,6 +9215,7 @@ window.saveShSettings = async function() {
   _shConfig.vacLocate   = get("sh-vac-locate");
   try {
     await setDoc(_SH_CONFIG_DOC(), _shConfig, { merge:true });
+    _renderVacButtons();
     showToast("✅ נשמר!", "success");
     document.getElementById("sh-settings-panel").classList.remove("open");
   } catch(err) { showToast("Error: " + err.message, "error"); }
