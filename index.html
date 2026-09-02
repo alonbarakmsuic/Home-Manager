@@ -9164,19 +9164,46 @@ function _shortcutURL(name, returnView) {
        + "&x-error="   + encodeURIComponent(back);
 }
 
+/* Which input feeds which config key — one list, used by both paint and save,
+   so the two can never drift apart again. */
+const _SH_FIELDS = {
+  "sh-vac-clean":    "vacClean",
+  "sh-vac-pause":    "vacPause",
+  "sh-vac-resume":   "vacResume",
+  "sh-vac-recharge": "vacRecharge",
+  "sh-vac-locate":   "vacLocate",
+  "sh-app-tornado":  "appTornado",
+  "sh-app-philips":  "appPhilips"
+};
+const _SH_CACHE = "shConfigCache";
+let _shConfigLoaded = false;   // false until Firestore has actually answered
+
+function _shPaintConfig() {
+  for (const [id, key] of Object.entries(_SH_FIELDS)) {
+    const el = document.getElementById(id);
+    if (el) el.value = _shConfig[key] || "";
+  }
+  _renderVacButtons();
+}
+
 async function initSmartHouse() {
+  /* Paint from the local mirror first. Firestore can take a second or two on
+     mobile data, and a blank panel invites you to retype and save — which is
+     exactly how the settings used to get wiped. */
+  try {
+    const cached = JSON.parse(localStorage.getItem(_SH_CACHE) || "null");
+    if (cached && typeof cached === "object") Object.assign(_shConfig, cached);
+  } catch {}
+  _shPaintConfig();
+
   try {
     const cfg = await getDoc(_SH_CONFIG_DOC());
-    if (cfg.exists()) Object.assign(_shConfig, cfg.data());
-    const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ""; };
-    set("sh-vac-clean",    _shConfig.vacClean);
-    set("sh-vac-pause",    _shConfig.vacPause);
-    set("sh-vac-resume",   _shConfig.vacResume);
-    set("sh-vac-recharge", _shConfig.vacRecharge);
-    set("sh-vac-locate",   _shConfig.vacLocate);
-    set("sh-app-tornado",  _shConfig.appTornado);
-    set("sh-app-philips",  _shConfig.appPhilips);
-    _renderVacButtons();
+    if (cfg.exists()) {
+      Object.assign(_shConfig, cfg.data());
+      try { localStorage.setItem(_SH_CACHE, JSON.stringify(_shConfig)); } catch {}
+    }
+    _shConfigLoaded = true;
+    _shPaintConfig();
   } catch (e) { console.warn("SH config:", e); }
 
   _unsub("smart-house");
@@ -9256,16 +9283,33 @@ window.toggleShSettings = function() {
 };
 
 window.saveShSettings = async function() {
-  const get = id => document.getElementById(id)?.value.trim() || "";
-  _shConfig.vacClean    = get("sh-vac-clean");
-  _shConfig.vacPause    = get("sh-vac-pause");
-  _shConfig.vacResume   = get("sh-vac-resume");
-  _shConfig.vacRecharge = get("sh-vac-recharge");
-  _shConfig.vacLocate   = get("sh-vac-locate");
-  _shConfig.appTornado  = get("sh-app-tornado");
-  _shConfig.appPhilips  = get("sh-app-philips");
+  /* Guard 1 — never save a form that was never filled from the database.
+     Saving mid-load used to write blanks over every stored name. */
+  if (!_shConfigLoaded) {
+    showToast("⏳ ההגדרות עדיין נטענות — רגע ונסו שוב", "error");
+    return;
+  }
+
+  const next = {};
+  for (const [id, key] of Object.entries(_SH_FIELDS)) {
+    const el = document.getElementById(id);
+    if (el) next[key] = el.value.trim();      // absent field = leave key alone
+  }
+
+  /* Guard 2 — if we had names and the form is now entirely blank, something
+     went wrong rather than the user deliberately clearing all seven. */
+  const had  = Object.values(_shConfig).some(v => (v || "").trim());
+  const will = Object.values(next).some(v => v);
+  if (had && !will) {
+    showToast("⚠️ כל השדות ריקים — לא נשמר כדי לא למחוק את ההגדרות", "error");
+    return;
+  }
+
+  Object.assign(_shConfig, next);
+  try { localStorage.setItem(_SH_CACHE, JSON.stringify(_shConfig)); } catch {}
+
   try {
-    await setDoc(_SH_CONFIG_DOC(), _shConfig, { merge:true });
+    await setDoc(_SH_CONFIG_DOC(), next, { merge:true });
     _renderVacButtons();
     showToast("✅ נשמר!", "success");
     document.getElementById("sh-settings-panel").classList.remove("open");
