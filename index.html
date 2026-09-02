@@ -1303,7 +1303,20 @@
     border:.5px solid rgba(0,0,0,.1);font-size:.66rem;padding:8px 2px}
   .btn-vac:active{transform:scale(0.98);opacity:.88}
   /* Shortcut not named yet — visibly unfinished rather than silently broken */
-  .btn-vac.unset{opacity:.38;filter:grayscale(1)}
+  .btn-vac.unset,.sh-applink.unset,.btn-openapp.unset{opacity:.38;filter:grayscale(1)}
+  /* Secondary "open the real app" link at the foot of a card */
+  .sh-applink{display:block;width:100%;margin-top:9px;padding:7px 4px;
+    background:none;border:none;border-top:1px solid var(--border);
+    font-family:inherit;font-size:.64rem;font-weight:700;color:var(--primary);
+    cursor:pointer;text-align:center;direction:rtl}
+  .sh-applink:active{opacity:.6}
+  .sh-card-note{font-size:.64rem;color:var(--text-muted);line-height:1.5;
+    margin:2px 0 10px;direction:rtl}
+  .btn-openapp{width:100%;padding:11px 6px;border:none;border-radius:6px;
+    background:var(--bg-surface);color:var(--text);border:.5px solid rgba(0,0,0,.1);
+    font-family:inherit;font-size:.74rem;font-weight:700;cursor:pointer;
+    transition:var(--T)}
+  .btn-openapp:active{transform:scale(0.98);opacity:.88}
   /* TV */
   .tv-btns{display:grid;grid-template-columns:1fr 1fr;gap:5px}
   .btn-tv{padding:10px 4px;border:none;border-radius:6px;font-size:.72rem;font-weight:700;
@@ -3128,6 +3141,25 @@
       <label>📍 שואב — Locate</label>
       <input type="text" id="sh-vac-locate" placeholder="Vacuum Locate">
     </div>
+
+    <p style="font-size:.77rem;color:var(--text-muted);margin:18px 0 12px;line-height:1.55;
+              border-top:1px solid var(--border);padding-top:14px">
+      <strong>פתיחת אפליקציות.</strong> ב-Shortcuts: <strong>+</strong> ←
+      Add Action ← חפשו <em>Open App</em> ← בחרו את האפליקציה ← תנו שם.
+      זה עובד לכל אפליקציה, בלי הגדרות נוספות.
+    </p>
+    <div class="sh-field">
+      <label>❄️ מזגן — פתיחת Tornado WIFI 3</label>
+      <input type="text" id="sh-app-tornado" placeholder="Open Tornado">
+    </div>
+    <div class="sh-field">
+      <label>📺 שלט מלא — פתיחת אפליקציית פיליפס</label>
+      <input type="text" id="sh-app-philips" placeholder="Open Philips">
+    </div>
+    <div class="sh-field">
+      <label>🤖 שואב — פתיחת אפליקציית Eureka</label>
+      <input type="text" id="sh-app-eureka" placeholder="Open Eureka">
+    </div>
     <button class="btn-send" onclick="saveShSettings()" style="width:100%;margin-top:4px">💾 שמור</button>
   </div>
 
@@ -3153,6 +3185,9 @@
         <button class="btn-tv vol"       onclick="tvCmd('voldown')">🔉 Vol−</button>
         <button class="btn-tv mute"      onclick="tvCmd('mute')">🔇 Mute</button>
       </div>
+      <button class="sh-applink" data-app="philips" onclick="openDeviceApp('philips')">
+        שלט מלא באפליקציה ←
+      </button>
     </div>
 
     <!-- ── 🤖 Eureka Vacuum ───────────────────── -->
@@ -3178,7 +3213,29 @@
           <button class="btn-vac sub" data-vac="locate"   onclick="vacuumCmd('locate')">📍 איפה הוא</button>
         </div>
       </div>
+      <button class="sh-applink" data-app="eureka" onclick="openDeviceApp('eureka')">
+        מפות, לוח זמנים וסטטוס ←
+      </button>
       <div class="sh-send-indicator" id="vac-indicator"></div>
+    </div>
+
+    <!-- ── ❄️ מזגן — launcher only ──────────────
+         No API worth chasing on the Tornado stack, so this card is
+         honest about what it is: a fast way into the real app. -->
+    <div class="sh-card">
+      <div class="sh-card-header">
+        <div class="sh-card-left">
+          <div class="sh-card-icon">❄️</div>
+          <div>
+            <div class="sh-card-title">מזגן</div>
+            <div class="sh-card-sub">Tornado WIFI 3</div>
+          </div>
+        </div>
+      </div>
+      <div class="sh-card-note">אין שליטה מהאפליקציה — נפתח באפליקציה של טורנדו</div>
+      <button class="btn-openapp" data-app="tornado" onclick="openDeviceApp('tornado')">
+        ❄️ פתח את Tornado
+      </button>
     </div>
 
   </div>
@@ -9096,7 +9153,8 @@ window.cancelLaundry = async function() {
    and never claims to know what the device is actually doing.
 ══════════════════════════════════════════════════════════ */
 let _shState  = { vacuum: { action: null, at: null, by: null } };
-let _shConfig = { vacClean:"", vacPause:"", vacResume:"", vacRecharge:"", vacLocate:"" };
+let _shConfig = { vacClean:"", vacPause:"", vacResume:"", vacRecharge:"", vacLocate:"",
+                  appTornado:"", appPhilips:"", appEureka:"" };
 
 const _SH_STATE_DOC  = () => doc(db, "smart_home", "state");
 const _SH_CONFIG_DOC = () => doc(db, "smart_home", "config");
@@ -9107,6 +9165,12 @@ const _VAC_LABEL = { clean:"התחל ניקוי", pause:"השהה", resume:"המ
                      recharge:"חזרה לעמדה", locate:"איתור השואב" };
 const _VAC_KEY   = { clean:"vacClean", pause:"vacPause", resume:"vacResume",
                      recharge:"vacRecharge", locate:"vacLocate" };
+
+/* App launchers. Where there's no API worth chasing (the Tornado AC) or the
+   vendor app is simply better than anything we'd build (the full Philips
+   remote, Eureka's maps and schedule), the honest move is to open it. */
+const _APP_KEY   = { tornado:"appTornado", philips:"appPhilips", eureka:"appEureka" };
+const _APP_LABEL = { tornado:"Tornado WIFI 3", philips:"שלט פיליפס", eureka:"Eureka" };
 
 /* Build a Shortcuts URL that comes BACK here when it's done.
    Without x-success the phone strands you inside the Shortcuts app
@@ -9130,6 +9194,9 @@ async function initSmartHouse() {
     set("sh-vac-resume",   _shConfig.vacResume);
     set("sh-vac-recharge", _shConfig.vacRecharge);
     set("sh-vac-locate",   _shConfig.vacLocate);
+    set("sh-app-tornado",  _shConfig.appTornado);
+    set("sh-app-philips",  _shConfig.appPhilips);
+    set("sh-app-eureka",   _shConfig.appEureka);
     _renderVacButtons();
   } catch (e) { console.warn("SH config:", e); }
 
@@ -9143,11 +9210,14 @@ async function initSmartHouse() {
 /* Dim any button whose Siri Shortcut hasn't been named yet, so an
    unfinished setup is visible at a glance instead of only failing on tap. */
 function _renderVacButtons() {
-  document.querySelectorAll("[data-vac]").forEach(b => {
-    const ready = !!(_shConfig[_VAC_KEY[b.dataset.vac]] || "").trim();
-    b.classList.toggle("unset", !ready);
-    b.title = ready ? "" : "לא הוגדר קיצור ב-Device Settings";
-  });
+  const mark = (sel, map, attr) =>
+    document.querySelectorAll(sel).forEach(b => {
+      const ready = !!(_shConfig[map[b.dataset[attr]]] || "").trim();
+      b.classList.toggle("unset", !ready);
+      b.title = ready ? "" : "לא הוגדר קיצור ב-Device Settings";
+    });
+  mark("[data-vac]", _VAC_KEY, "vac");
+  mark("[data-app]", _APP_KEY, "app");
 }
 
 function _renderShState() {
@@ -9185,6 +9255,18 @@ window.vacuumCmd = async function(action) {
   window.location.href = _shortcutURL(name, "smart-house");
 };
 
+/* ── Open a vendor app ───────────────────────────────────────
+   Deliberately does NOT log to the activity feed — opening an app
+   isn't a household event, and the feed shouldn't fill up with it. */
+window.openDeviceApp = function(which) {
+  const name = (_shConfig[_APP_KEY[which]] || "").trim();
+  if (!name) {
+    showToast(`⚙️ הגדירו קיצור לפתיחת ${_APP_LABEL[which] || which} ב-Device Settings`, "error");
+    return;
+  }
+  window.location.href = _shortcutURL(name, "smart-house");
+};
+
 /* ── Philips TV (iOS Shortcuts) ──────────────────────────── */
 const _TV_SHORTCUT = {
   on:      "TV On",
@@ -9213,6 +9295,9 @@ window.saveShSettings = async function() {
   _shConfig.vacResume   = get("sh-vac-resume");
   _shConfig.vacRecharge = get("sh-vac-recharge");
   _shConfig.vacLocate   = get("sh-vac-locate");
+  _shConfig.appTornado  = get("sh-app-tornado");
+  _shConfig.appPhilips  = get("sh-app-philips");
+  _shConfig.appEureka   = get("sh-app-eureka");
   try {
     await setDoc(_SH_CONFIG_DOC(), _shConfig, { merge:true });
     _renderVacButtons();
