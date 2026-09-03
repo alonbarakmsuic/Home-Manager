@@ -722,6 +722,10 @@
   .live-table tbody td{padding:11px 13px;font-size:.84rem;vertical-align:middle}
   .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:10px;
     font-size:.71rem;font-weight:700}
+  /* Date stamp beside a shared-expense row */
+  .sw-date{display:inline-block;margin-inline-start:7px;font-size:.66rem;
+    font-weight:600;color:var(--text-muted);white-space:nowrap;
+    direction:rtl;unicode-bidi:isolate}
   .badge-grocery{background:rgba(52,199,123,.12);color:var(--primary)}
   .badge-upgrade{background:rgba(94,92,230,.12);color:#5E5CE6}
 
@@ -2973,6 +2977,15 @@
     <div class="form-group">
       <label for="sw-amount">💰 סכום (₪)</label>
       <input type="number" id="sw-amount" placeholder="0" min="0" step="0.01">
+    </div>
+    <!-- Values must stay "groceries" / "upgrades" — Current Status and the
+         Monthly Reports branch on exactly those two strings. -->
+    <div class="form-group">
+      <label for="sw-category">קטגוריה</label>
+      <select id="sw-category">
+        <option value="groceries">🛒 קניות</option>
+        <option value="upgrades">🏠 שדרוגים לבית</option>
+      </select>
     </div>
     <div class="form-group">
       <label>מי שילם?</label>
@@ -8830,8 +8843,17 @@ function _renderSplitwise(items) {
   listEl.appendChild(wrap);
 
   const tbody = document.getElementById("sw-tbody");
+  /* Prefer the explicit date field on newer rows, fall back to the server
+     timestamp that every row has had since the start. */
+  const rowDate = e => {
+    const ms = e.date ? new Date(e.date).getTime() : _tsMs(e.createdAt);
+    if (!ms || isNaN(ms)) return "";
+    return new Date(ms).toLocaleDateString("he-IL", { day:"numeric", month:"short" });
+  };
   items.forEach(e => {
     const tr = document.createElement("tr");
+    const when = rowDate(e);
+    const dateTag = when ? `<span class="sw-date">${when}</span>` : "";
 
     if (e.kind === "settlement") {
       // A repayment between partners — not a shared expense
@@ -8839,7 +8861,7 @@ function _renderSplitwise(items) {
       const toHe   = e.from === "Tali" ? "אלון" : "טלי";
       tr.className = "sw-settle-row";
       tr.innerHTML = `
-        <td style="font-weight:600">💸 ${fromHe} העביר/ה ל${toHe}<span class="sw-settle-tag">סגירת חשבון</span></td>
+        <td style="font-weight:600">💸 ${fromHe} העביר/ה ל${toHe}<span class="sw-settle-tag">סגירת חשבון</span>${dateTag}</td>
         <td style="font-weight:700">−₪${(e.amount||0).toFixed(2)}</td>
         <td><span class="badge ${e.from === "Alon" ? "badge-alon" : "badge-tali"}">${fromHe}</span></td>
         <td><button class="btn-trash" title="Delete">🗑️</button></td>`;
@@ -8847,14 +8869,14 @@ function _renderSplitwise(items) {
       const isAlon = e.paidBy === "Alon";
       const isBill = e.source === "bill";
       tr.innerHTML = `
-        <td style="font-weight:500">${e.name || "—"}${isBill ? `<span class="sw-src-tag">חשבון</span>` : ""}</td>
+        <td style="font-weight:500">${e.name || "—"}${isBill ? `<span class="sw-src-tag">חשבון</span>` : ""}${dateTag}</td>
         <td style="font-weight:700;color:var(--primary-dark)">₪${(e.amount||0).toFixed(2)}</td>
         <td><span class="badge ${isAlon ? "badge-alon" : "badge-tali"}">${isAlon ? "אלון" : "טלי"}</span></td>
         <td><button class="btn-trash" title="Delete">🗑️</button></td>`;
     }
 
     tr.querySelector(".btn-trash").addEventListener("click", () =>
-      _deleteSWExpense(e.id, e.kind === "settlement"));
+      _deleteSWExpense(e.id, e.kind === "settlement", e.expenseId || null));
     tbody.appendChild(tr);
   });
 
@@ -8936,29 +8958,57 @@ async function _confirmSettle(payer) {
 async function _addSWExpense() {
   const nameEl = document.getElementById("sw-name");
   const amtEl  = document.getElementById("sw-amount");
+  const catEl  = document.getElementById("sw-category");
   const name   = nameEl.value.trim();
   const amount = parseFloat(amtEl.value) || 0;
+  const type   = catEl ? catEl.value : "groceries";
   if (!name)   { nameEl.classList.add("err"); setTimeout(() => nameEl.classList.remove("err"), 1500); return; }
   if (!amount) { amtEl.classList.add("err");  setTimeout(() => amtEl.classList.remove("err"), 1500);  return; }
   const btn = document.getElementById("btn-add-sw");
   btn.disabled = true; btn.textContent = "⏳ מוסיף…";
+
+  const date = new Date().toISOString().slice(0, 10);   // what Reports filter on
+  let expenseId = null;
+
   try {
-    await addDoc(collection(db, "splitwise_expenses"), {
-      name, amount, paidBy: _swPaidBy, createdAt: serverTimestamp()
+    /* Budget side first. If this succeeds but the balance write below fails
+       we'd otherwise leave an orphan in the monthly totals, so it gets rolled
+       back in the catch. */
+    const expRef = await addDoc(collection(db, "expenses"), {
+      type, date, amount, items: [name], createdAt: serverTimestamp()
     });
+    expenseId = expRef.id;
+
+    /* Balance side. `expenseId` is the link that lets a later delete remove
+       both halves — rows created before this change simply won't have it. */
+    await addDoc(collection(db, "splitwise_expenses"), {
+      name, amount, paidBy: _swPaidBy, type, date,
+      expenseId, createdAt: serverTimestamp()
+    });
+
     nameEl.value = ""; amtEl.value = "";
     showToast("✅ הוצאה נוספה!", "success");
     _logActivity("🤝", `רשם הוצאה משותפת — ${name} ₪${amount.toFixed(0)} (שילם: ${_swPaidBy === "Alon" ? "אלון" : "טלי"})`);
-  } catch(err) { showToast("Error: " + err.message, "error"); }
+  } catch(err) {
+    if (expenseId) {
+      // Undo the budget row so the two sides can't drift apart
+      await deleteDoc(doc(db, "expenses", expenseId)).catch(() => {});
+    }
+    showToast("Error: " + err.message, "error");
+  }
   finally { btn.disabled = false; btn.textContent = "➕ הוסף הוצאה"; }
 }
 
-async function _deleteSWExpense(id, isSettlement = false) {
+async function _deleteSWExpense(id, isSettlement = false, expenseId = null) {
   if (!await askConfirm(isSettlement
     ? "למחוק את סגירת החשבון? החוב יחזור ליתרה."
-    : "Delete this shared expense?")) return;
+    : expenseId
+      ? "למחוק את ההוצאה? היא תרד גם מהיתרה וגם מהדוח החודשי."
+      : "Delete this shared expense?")) return;
   try {
     await deleteDoc(doc(db, "splitwise_expenses", id));
+    // Linked budget row, when this expense was created with one
+    if (expenseId) await deleteDoc(doc(db, "expenses", expenseId)).catch(() => {});
     showToast("🗑️ נמחק", "success");
   } catch(err) { showToast("Error: " + err.message, "error"); }
 }
