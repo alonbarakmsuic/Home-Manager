@@ -657,6 +657,24 @@
   .maint-actions .btn-trash.armed{background:var(--danger);color:#fff;
     width:auto;padding:0 12px;font-size:.72rem;font-weight:700}
 
+  /* ── Who paid, asked at checkout ─────────────────────── */
+  .pay-sum{font-size:.82rem;color:var(--text-muted);margin:4px 0 16px;
+    text-align:center;direction:rtl;unicode-bidi:isolate}
+  .pay-opts{display:flex;flex-direction:column;gap:9px}
+  .pay-opt{display:flex;align-items:center;gap:11px;width:100%;
+    padding:15px 14px;border-radius:var(--radius-sm);cursor:pointer;
+    background:var(--bg-surface);border:1.5px solid var(--border);
+    font-family:inherit;font-size:.9rem;font-weight:700;color:var(--text);
+    text-align:start;direction:rtl;transition:var(--T)}
+  .pay-opt span:first-child{font-size:1.3rem;line-height:1}
+  .pay-opt small{margin-inline-start:auto;font-size:.66rem;font-weight:600;
+    color:var(--text-muted)}
+  .pay-opt:active{background:var(--primary);border-color:var(--primary);color:#fff}
+  .pay-opt:active small{color:rgba(255,255,255,.75)}
+  .pay-cancel{width:100%;margin-top:14px;padding:12px;border:none;
+    background:none;font-family:inherit;font-size:.82rem;font-weight:700;
+    color:var(--text-muted);cursor:pointer}
+
   /* ── In-app confirm / prompt ─────────────────────────── */
   .ask-msg{font-size:.88rem;line-height:1.6;color:var(--text);
     margin:6px 0 16px;white-space:pre-line;direction:rtl;text-align:start}
@@ -3427,6 +3445,23 @@
 </div>
 
 <!-- ═════════════════ UPGRADE PURCHASED MODAL ═══════════ -->
+<!-- Who paid for this shopping trip. Asked at checkout instead of silently
+     assuming whoever's name is in the top toggle. -->
+<div id="pay-modal" class="modal-bg">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💳 מי שילם?</div>
+    <div class="pay-sum" id="pay-sum">—</div>
+    <div class="pay-opts">
+      <button class="pay-opt" data-pay="Alon"><span>🧑</span><span>אלון שילם</span></button>
+      <button class="pay-opt" data-pay="Tali"><span>👩</span><span>טלי שילמה</span></button>
+      <button class="pay-opt" data-pay="split"><span>🤝</span><span>חצי-חצי</span>
+        <small>לא משנה את היתרה</small></button>
+    </div>
+    <button class="pay-cancel" id="pay-cancel">ביטול</button>
+  </div>
+</div>
+
 <!-- In-app replacement for confirm() / prompt(). iOS suppresses native dialogs
      once a web app is launched from the Home Screen, which silently killed
      every delete and every prompt in the app the day we installed it. -->
@@ -7516,8 +7551,9 @@ function _renderShopMode() {
   list.querySelectorAll(".sm-row").forEach(b =>
     b.addEventListener("click", () => {
       const id = b.dataset.id;
-      checked.has(id) ? checked.delete(id) : checked.add(id);
-      if (_pantryQueueItems[id]) _pantryQueueItems[id].checked = checked.has(id);
+      // Same persisted path as the normal list, so Shopping Mode on one phone
+      // and the plain list on the other stay in step.
+      _setShopChecked("groceries", id, !checked.has(id));
       if (navigator.vibrate) navigator.vibrate(8);
       _renderShopMode();
     }));
@@ -7705,7 +7741,8 @@ async function _pickAdd(id) {
       label:`🔴 ${p.name}`, verb:"סימון כנגמר"
     });
     showToast(done, "success");
-    initShopping("groceries");            // refresh the list in place
+    /* No re-init: the live listener already paints the new row, and calling
+       initShopping here is exactly what used to clear every ticked box. */
   } catch (e) { showToast("שגיאה: " + e.message, "error"); }
 }
 
@@ -7719,7 +7756,7 @@ async function _pickAddNew() {
       label:`🛒 ${name}`, verb:"מוצר חדש למלאי + לרשימה"
     });
     showToast(done, "success");
-    initShopping("groceries");
+    /* Same here — the snapshot listener handles the refresh. */
   } catch (e) { showToast("שגיאה: " + e.message, "error"); }
 }
 
@@ -7834,13 +7871,9 @@ function _appendShopItem(ul, name, type, queueId, fromPantry = false, cat = null
 
   li.querySelector(".item-check").addEventListener("change", function() {
     li.classList.toggle("checked", this.checked);
-    const qid = li.dataset.queueId;
-    // Record outside the DOM so a live update from the other phone
-    // re-renders the list without clearing what you already ticked.
-    if (qid) {
-      this.checked ? _shopChecked[type].add(qid) : _shopChecked[type].delete(qid);
-      if (_pantryQueueItems[qid]) _pantryQueueItems[qid].checked = this.checked;
-    }
+    // Persisted, not just held in memory — that's what lets the other phone
+    // see it and what stops an "add item" from wiping the whole list.
+    _setShopChecked(type, li.dataset.queueId, this.checked);
   });
   li.querySelector(".item-bought")
     ?.addEventListener("click", () => openBoughtModal(name, li.dataset.queueId));
@@ -7857,7 +7890,26 @@ function _appendShopItem(ul, name, type, queueId, fromPantry = false, cat = null
 /* Which queue rows are ticked right now. Held outside the DOM so a
    live update from the other phone can re-render the list without
    losing what you already ticked in the shop. */
+/* Mirror of what's ticked. It used to be the ONLY record, which caused two
+   bugs at once: adding an item re-ran initShopping and wiped it, and the
+   other phone could never see it. The tick now lives on the queue document
+   and this Set is just a local cache of the last snapshot. */
 let _shopChecked = { groceries:new Set(), upgrades:new Set() };
+
+/** Single place that flips a tick: Firestore first (so both phones agree),
+ *  local Set updated immediately so the UI never feels laggy. */
+async function _setShopChecked(type, qid, checked) {
+  if (!qid) return;
+  checked ? _shopChecked[type].add(qid) : _shopChecked[type].delete(qid);
+  if (_pantryQueueItems[qid]) _pantryQueueItems[qid].checked = checked;
+  try {
+    await setDoc(doc(db, _QUEUE_COL[type], qid),
+      { checked, checkedBy: checked ? _currentUser() : null,
+        checkedAt: checked ? Date.now() : null }, { merge:true });
+  } catch (e) {
+    console.warn("tick sync:", e);   // offline writes replay when back online
+  }
+}
 
 async function initShopping(type) {
   const prefix = type === "groceries" ? "grocery" : "upgrade";
@@ -7870,7 +7922,9 @@ async function initShopping(type) {
   // which is friction at exactly the wrong moment (just home from the shop).
   if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
   document.getElementById(`${prefix}-amount`).value = "";
-  _shopChecked[type] = new Set();
+  /* Deliberately NOT cleared here. Re-running this function (which every
+     "add item" used to do) wiped every tick — that was the bug. The set is
+     rebuilt from the snapshot below, which is the real source of truth. */
 
   /* Pantry lookup for the department chips + grouping */
   let _pantryIdSet = new Set(), _catById = new Map(), _catByName = new Map();
@@ -7906,9 +7960,10 @@ async function initShopping(type) {
       (type === "groceries" ? _catRank(a.cat) - _catRank(b.cat) : 0) ||
       (_tsMs(a.addedAt) - _tsMs(b.addedAt)));
 
-    // drop ticks for rows that no longer exist
-    const live = new Set(rows.map(r => r.id));
-    [..._shopChecked[type]].forEach(id => { if (!live.has(id)) _shopChecked[type].delete(id); });
+    /* Rebuild the tick cache from the documents themselves. This is what
+       makes the two phones agree: whatever Tali ticks arrives here as a
+       normal snapshot update. */
+    _shopChecked[type] = new Set(rows.filter(r => r.checked === true).map(r => r.id));
 
     ul.innerHTML = "";
     _itemLists[type] = [];
@@ -8036,24 +8091,41 @@ async function sendEntry(type) {
     return;
   }
 
+  const entryAmount = parseFloat(amountEl.value) || 0;
+
+  /* Ask who paid instead of assuming the active toggle. Cancelling here
+     aborts the whole checkout — nothing is written. */
+  const payer = await askPayer(entryAmount, purchasedItems.length);
+  if (!payer) return;
+
   const btn = document.getElementById(`btn-send-${type}`);
   btn.disabled = true; btn.textContent = "⏳ Sending…";
-  const entryAmount = parseFloat(amountEl.value) || 0;
   try {
     await addDoc(collection(db, "expenses"), {
       type, date: dateEl.value,
       amount:    parseFloat(amountEl.value),
       items:     purchasedItems,   // only checked items
+      paidBy:    payer,
       createdAt: serverTimestamp()
     });
 
-    // ✅ Auto-sync to Splitwise — mirrors every submitted expense
-    await addDoc(collection(db, "splitwise_expenses"), {
-      name:      type === "groceries" ? "קניות בסופר" : "שדרוג הבית",
-      amount:    entryAmount,
-      paidBy:    _currentUser(),   // whoever is active in the top toggle
-      createdAt: serverTimestamp()
-    });
+    /* Balance side. "split" is recorded as two half rows, one per person,
+       so it nets to zero in the existing balance formula without touching
+       that formula — and the trip still shows up in the shared history. */
+    const swName = type === "groceries" ? "קניות בסופר" : "שדרוג הבית";
+    if (payer === "split") {
+      const half = entryAmount / 2;
+      await Promise.all(["Alon", "Tali"].map(who =>
+        addDoc(collection(db, "splitwise_expenses"), {
+          name: `${swName} (חצי-חצי)`, amount: half, paidBy: who,
+          type, date: dateEl.value, split: "50/50", createdAt: serverTimestamp()
+        })));
+    } else {
+      await addDoc(collection(db, "splitwise_expenses"), {
+        name: swName, amount: entryAmount, paidBy: payer,
+        type, date: dateEl.value, createdAt: serverTimestamp()
+      });
+    }
 
     // ✅ Sync every PURCHASED (checked) grocery item back to Pantry "In Stock".
     //    Matches by fuzzy name against the whole /pantry collection, so it covers
@@ -10128,6 +10200,28 @@ function _askOpen({ title, message, okText, danger, input, placeholder, value })
     if (input) setTimeout(() => { inp.focus(); inp.select(); }, 60);
   });
 }
+
+/** Who paid for a shopping trip. Resolves "Alon" | "Tali" | "split" | null. */
+let _payResolve = null;
+function askPayer(amount, itemCount) {
+  return new Promise(resolve => {
+    if (_payResolve) { const r = _payResolve; _payResolve = null; r(null); }
+    _payResolve = resolve;
+    const bg = document.getElementById("pay-modal");
+    document.getElementById("pay-sum").textContent =
+      `₪${(amount || 0).toFixed(0)} · ${itemCount} פריטים`;
+    const close = v => {
+      bg.classList.remove("open");
+      const r = _payResolve; _payResolve = null; if (r) r(v);
+    };
+    bg.querySelectorAll(".pay-opt").forEach(b =>
+      b.onclick = () => close(b.dataset.pay));
+    document.getElementById("pay-cancel").onclick = () => close(null);
+    bg.onclick = e => { if (e.target === bg) close(null); };
+    bg.classList.add("open");
+  });
+}
+window.askPayer = askPayer;
 
 /** Replaces confirm(). Resolves true/false. */
 function askConfirm(message, opts = {}) {
