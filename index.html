@@ -2022,6 +2022,170 @@
     font-weight:450;opacity:.7}
   .btn-shop-mode:active{filter:brightness(.93)}
 
+  /* ══ RECEIPT SCAN ═════════════════════════════════════ */
+  .btn-rx{background:var(--bg-card);color:var(--text);
+    border:1.5px dashed var(--border-strong)}
+  .btn-rx small{opacity:.6}
+
+  #rx{position:fixed;inset:0;z-index:520;background:var(--bg);
+    display:none;flex-direction:column;direction:rtl}
+  #rx.open{display:flex;animation:smIn .24s var(--ease)}
+  .rx-bar{display:flex;align-items:center;gap:12px;
+    padding:calc(12px + env(safe-area-inset-top)) 14px 12px;
+    background:var(--user-deep,#2A4A7F);color:#fff}
+  .rx-x{width:38px;height:38px;border-radius:50%;border:none;flex-shrink:0;
+    background:rgba(255,255,255,.14);color:#fff;font-size:1rem;cursor:pointer}
+  .rx-head{flex:1;min-width:0}
+  .rx-title{font-size:1rem;font-weight:700}
+  .rx-steps{display:flex;gap:5px;margin-top:6px}
+  .rx-steps i{height:3px;flex:1;border-radius:3px;background:rgba(255,255,255,.22)}
+  .rx-steps i.on{background:#fff}
+  .rx-body{flex:1;overflow-y:auto;padding:18px 16px 24px;
+    -webkit-overflow-scrolling:touch}
+  .rx-foot{flex-shrink:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+    background:var(--bg-card);border-top:1px solid var(--border)}
+  .rx-foot:empty{display:none}
+
+  /* Step 1 — capture */
+  .rx-hero{text-align:center;padding:10px 6px 18px}
+  .rx-hero-ic{font-size:2.6rem;line-height:1}
+  .rx-hero h3{margin:10px 0 6px;font-size:1.08rem}
+  .rx-hero p{margin:0;font-size:.8rem;color:var(--text-muted);line-height:1.6}
+  .rx-src{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .rx-src button{display:flex;flex-direction:column;align-items:center;gap:6px;
+    padding:18px 8px;border-radius:var(--radius);cursor:pointer;
+    border:1.5px solid var(--border);background:var(--bg-card);color:var(--text);
+    font-family:inherit;font-size:.84rem;font-weight:700}
+  .rx-src button span{font-size:1.6rem}
+  .rx-src button:active{transform:scale(.98)}
+  .rx-tips{background:var(--bg-card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:12px 14px;font-size:.76rem;
+    color:var(--text-muted);line-height:1.75}
+  .rx-tips b{color:var(--text)}
+  .rx-thumbs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .rx-thumb{position:relative;width:84px;height:112px;border-radius:10px;
+    overflow:hidden;border:1px solid var(--border);background:#eee}
+  .rx-thumb img{width:100%;height:100%;object-fit:cover}
+  .rx-thumb button{position:absolute;top:4px;inset-inline-start:4px;width:24px;height:24px;
+    border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;
+    font-size:.7rem;cursor:pointer}
+  .rx-thumb span{position:absolute;bottom:4px;inset-inline-end:6px;color:#fff;
+    font-size:.7rem;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+  .rx-thumb-add{width:84px;height:112px;border-radius:10px;cursor:pointer;
+    border:1.5px dashed var(--border-strong);background:transparent;
+    color:var(--text-muted);font-family:inherit;font-size:.72rem;font-weight:700}
+
+  /* Shared buttons */
+  .rx-primary{width:100%;padding:15px;border:none;border-radius:var(--radius-sm);
+    background:var(--primary);color:#fff;font-family:inherit;font-size:.95rem;
+    font-weight:700;cursor:pointer}
+  .rx-primary:disabled{opacity:.45}
+  .rx-sub{display:block;text-align:center;font-size:.7rem;color:var(--text-muted);
+    margin-top:7px}
+
+  /* Step 2 — working */
+  .rx-work{text-align:center;padding:60px 20px}
+  .rx-spin{width:46px;height:46px;margin:0 auto 18px;border-radius:50%;
+    border:4px solid var(--border);border-top-color:var(--primary);
+    animation:rxSpin .9s linear infinite}
+  @keyframes rxSpin{to{transform:rotate(360deg)}}
+  .rx-work h3{margin:0 0 6px;font-size:1rem}
+  .rx-work p{margin:0;font-size:.78rem;color:var(--text-muted)}
+  .rx-bar-p{height:6px;border-radius:6px;background:var(--border);
+    margin:18px auto 0;max-width:260px;overflow:hidden}
+  .rx-bar-p div{height:100%;background:var(--primary);width:0;transition:width .3s}
+
+  /* Step 3 — review */
+  .rx-total{background:var(--bg-card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:16px;margin-bottom:12px}
+  .rx-total label{font-size:.72rem;font-weight:700;color:var(--text-muted)}
+  .rx-total-row{display:flex;align-items:center;gap:8px;margin-top:4px}
+  .rx-total-row span{font-size:1.5rem;font-weight:800}
+  .rx-total-row input{flex:1;min-width:0;border:none;background:transparent;
+    font-family:inherit;font-size:1.9rem;font-weight:800;color:var(--text);
+    padding:0;direction:ltr;text-align:right}
+  .rx-checks{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+  .rx-check{display:flex;align-items:flex-start;gap:8px;font-size:.76rem;
+    line-height:1.5;padding:8px 10px;border-radius:8px;direction:rtl}
+  .rx-check.ok{background:rgba(33,131,88,.09);color:#1b6b48}
+  .rx-check.warn{background:rgba(180,83,9,.1);color:#8a4108}
+  .rx-sumrow{display:flex;gap:8px;margin:14px 0 8px;flex-wrap:wrap}
+  .rx-pill{font-size:.7rem;font-weight:700;padding:5px 10px;border-radius:20px;
+    background:var(--bg-card);border:1px solid var(--border)}
+  .rx-sec{font-size:.72rem;font-weight:800;color:var(--text-muted);
+    margin:16px 2px 8px;letter-spacing:.02em}
+  .rx-row{display:flex;align-items:center;gap:10px;width:100%;
+    padding:12px;margin-bottom:8px;border-radius:var(--radius-sm);
+    background:var(--bg-card);border:1px solid var(--border);
+    font-family:inherit;color:var(--text);text-align:start;cursor:pointer;
+    direction:rtl}
+  .rx-row:active{transform:scale(.99)}
+  .rx-dot{width:30px;height:30px;border-radius:50%;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:.85rem;
+    font-weight:800;color:#fff}
+  .rx-row.matched .rx-dot{background:#218358}
+  .rx-row.new .rx-dot{background:#0D74CE}
+  .rx-row.suggest .rx-dot{background:#B45309}
+  .rx-row.unknown .rx-dot{background:#8E8E93}
+  .rx-row.ignore{opacity:.5}
+  .rx-row.ignore .rx-dot{background:#C7C7CC}
+  .rx-row.unknown{border-color:#d9d9de;border-style:dashed}
+  .rx-main{flex:1;min-width:0}
+  .rx-name{font-size:.88rem;font-weight:700;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis}
+  .rx-name.muted{color:var(--text-muted);font-weight:600}
+  .rx-hint{font-size:.68rem;color:var(--text-muted);margin-top:2px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    direction:rtl;unicode-bidi:isolate}
+  .rx-price{text-align:left;flex-shrink:0;direction:ltr}
+  .rx-price b{display:block;font-size:.88rem}
+  .rx-price small{font-size:.65rem;color:var(--text-muted)}
+  .rx-accept{flex-shrink:0;padding:7px 11px;border-radius:20px;border:none;
+    background:#B45309;color:#fff;font-family:inherit;font-size:.72rem;
+    font-weight:700;cursor:pointer}
+  .rx-acc-all{margin-inline-start:auto;padding:5px 11px;border-radius:20px;
+    border:none;background:#B45309;color:#fff;font-family:inherit;
+    font-size:.7rem;font-weight:700;cursor:pointer}
+  .rx-disc{display:flex;justify-content:space-between;font-size:.78rem;
+    color:#1b6b48;padding:6px 12px}
+  .rx-raw{margin-top:18px;font-size:.72rem;color:var(--text-muted)}
+  .rx-raw summary{cursor:pointer;font-weight:700}
+  .rx-raw pre{white-space:pre-wrap;direction:rtl;background:var(--bg-card);
+    border:1px solid var(--border);border-radius:8px;padding:10px;
+    max-height:220px;overflow:auto;font-size:.68rem}
+
+  /* Picker sheet */
+  #rx-pick{z-index:560}
+  .rx-pick-sheet{max-height:88vh;display:flex;flex-direction:column;direction:rtl}
+  .rx-pick-src{font-size:.78rem;color:var(--text-muted);margin:2px 0 12px;
+    direction:rtl;unicode-bidi:isolate}
+  #rx-pick-q,#rx-new-name{width:100%;box-sizing:border-box;padding:12px;
+    border-radius:var(--radius-sm);border:1.5px solid var(--border);
+    background:var(--bg);font-family:inherit;font-size:1rem;color:var(--text)}
+  .rx-pick-list{overflow-y:auto;max-height:34vh;margin:10px 0;
+    display:flex;flex-direction:column;gap:6px}
+  .rx-pick-item{display:flex;align-items:center;gap:9px;padding:12px;
+    border-radius:var(--radius-sm);border:1px solid var(--border);
+    background:var(--bg-card);font-family:inherit;font-size:.88rem;
+    font-weight:600;color:var(--text);text-align:start;cursor:pointer}
+  .rx-pick-item.sugg{border-color:#B45309;background:rgba(180,83,9,.06)}
+  .rx-pick-item small{margin-inline-start:auto;font-size:.68rem;
+    color:var(--text-muted);font-weight:600}
+  .rx-pick-empty{font-size:.78rem;color:var(--text-muted);padding:8px 2px}
+  .rx-new{border-top:1px solid var(--border);padding-top:12px;margin-top:4px}
+  .rx-new-title{font-size:.78rem;font-weight:800;margin-bottom:8px}
+  .rx-cats{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+  .rx-cats button{padding:8px 11px;border-radius:20px;cursor:pointer;
+    border:1.5px solid var(--border);background:var(--bg-card);
+    font-family:inherit;font-size:.74rem;font-weight:700;color:var(--text)}
+  .rx-cats button.on{background:#0D74CE;border-color:#0D74CE;color:#fff}
+  .rx-new-add{width:100%;padding:12px;border:none;border-radius:var(--radius-sm);
+    background:#0D74CE;color:#fff;font-family:inherit;font-size:.86rem;
+    font-weight:700;cursor:pointer}
+  .rx-pick-ignore{width:100%;margin-top:10px;padding:11px;border:none;
+    background:none;font-family:inherit;font-size:.8rem;font-weight:700;
+    color:var(--text-muted);cursor:pointer}
+
   #shop-mode{position:fixed;inset:0;z-index:500;background:var(--bg);
     display:none;flex-direction:column;direction:rtl}
   #shop-mode.open{display:flex;animation:smIn .24s var(--ease)}
@@ -3070,6 +3234,12 @@
     🛒 <span>מצב קנייה</span>
     <small>תצוגה גדולה לסופר</small>
   </button>
+  <!-- Receipt scan — additive. It only ticks items and fills the amount;
+       the existing "Send to Monthly Expenses" below does the saving. -->
+  <button class="btn-shop-mode btn-rx" onclick="openReceiptScan()">
+    🧾 <span>סריקת קבלה</span>
+    <small>מסמן את מה שנקנה וממלא סכום</small>
+  </button>
 
   <div class="list-wrap">
     <div class="list-header"><h4>🛒 Items</h4><button class="btn-add" onclick="openAddModal('groceries')">＋ Add</button></div>
@@ -3445,6 +3615,38 @@
 </div>
 
 <!-- ═════════════════ UPGRADE PURCHASED MODAL ═══════════ -->
+<!-- ═════════════════ RECEIPT SCAN ══════════════════════ -->
+<div id="rx">
+  <div class="rx-bar">
+    <button class="rx-x" id="rx-close" aria-label="סגור">✕</button>
+    <div class="rx-head">
+      <div class="rx-title" id="rx-title">סריקת קבלה</div>
+      <div class="rx-steps" id="rx-steps"><i class="on"></i><i></i><i></i></div>
+    </div>
+  </div>
+  <div class="rx-body" id="rx-body"></div>
+  <div class="rx-foot" id="rx-foot"></div>
+  <input type="file" id="rx-cam" accept="image/*" capture="environment" hidden>
+  <input type="file" id="rx-lib" accept="image/*" multiple hidden>
+</div>
+
+<div id="rx-pick" class="modal-bg">
+  <div class="modal-sheet rx-pick-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">לאיזה מוצר זה שייך?</div>
+    <div class="rx-pick-src" id="rx-pick-src"></div>
+    <input type="search" id="rx-pick-q" placeholder="🔍 חיפוש במלאי…" autocomplete="off">
+    <div class="rx-pick-list" id="rx-pick-list"></div>
+    <div class="rx-new" id="rx-new">
+      <div class="rx-new-title">➕ מוצר חדש למלאי</div>
+      <input type="text" id="rx-new-name" placeholder="שם המוצר">
+      <div class="rx-cats" id="rx-cats"></div>
+      <button class="rx-new-add" id="rx-new-add">הוסף כמוצר חדש</button>
+    </div>
+    <button class="rx-pick-ignore" id="rx-pick-ignore">🚫 לא מוצר / התעלם מהשורה</button>
+  </div>
+</div>
+
 <!-- Who paid for this shopping trip. Asked at checkout instead of silently
      assuming whoever's name is in the top toggle. -->
 <div id="pay-modal" class="modal-bg">
@@ -3694,7 +3896,8 @@ const _BACKUP_COLLECTIONS = [
   "pantry", "grocery_queue", "upgrade_queue",
   "cleaning_templates", "checklists", "maintenance",
   "plants", "watering", "activity", "smart_home",
-  "laundry_status", "meal_wheels", "weekly_plan"
+  "laundry_status", "meal_wheels", "weekly_plan",
+  "receipt_codes"
 ];
 
 window.exportAllData = async function(btnId) {
@@ -10148,6 +10351,636 @@ window.showToast = function(msg, type = "") {
   t.textContent = msg; t.className = `show ${type}`;
   clearTimeout(t._t); t._t = setTimeout(() => { t.className = ""; }, 3200);
 };
+
+/* ══════════════════════════════════════════════════════════
+   RECEIPT SCAN  (free, on-device, barcode-first)
+
+   Reads a receipt photo on the phone with Tesseract — no server, no
+   per-scan cost. Hebrew words on a thermal receipt read poorly, digits
+   read well, so matching leans on the barcode printed on each line:
+   the first time you confirm "barcode X = Pantry item Y" it is stored
+   in /receipt_codes and matched automatically on every later receipt.
+
+   Deliberately does NOT save an expense. Confirming only (a) ticks the
+   bought items on the normal shopping list and (b) fills in the amount
+   and date. The existing "Send to Monthly Expenses" button then runs
+   exactly as it always has — who-paid, Pantry restock, Splitwise.
+
+   Firestore: /receipt_codes/{code | plu_<code>} → { pantryId, name, updatedAt }
+══════════════════════════════════════════════════════════ */
+const _RX_TESS = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+let _rx = null;          // session state while the scanner is open
+let _rxPickRow = null;   // row currently open in the picker sheet
+let _rxPickCat = "pantry";
+
+const _rx$ = id => document.getElementById(id);
+const _rxMoney = n => `₪${(Math.round((n || 0) * 100) / 100).toFixed(2)}`;
+
+function _rxLoadEngine() {
+  if (window.Tesseract) return Promise.resolve();
+  return new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = _RX_TESS;
+    s.onload = () => res();
+    s.onerror = () => rej(new Error("לא ניתן לטעון את מנוע הסריקה — בדקו חיבור לאינטרנט"));
+    document.head.appendChild(s);
+  });
+}
+
+/* Downscale, greyscale and lift contrast. Thermal print is faint and a
+   12-megapixel photo is slow; both hurt recognition. */
+function _rxPrep(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const max = 2200, sc = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+      const x = c.getContext("2d");
+      x.drawImage(img, 0, 0, c.width, c.height);
+      const d = x.getImageData(0, 0, c.width, c.height), p = d.data;
+      for (let i = 0; i < p.length; i += 4) {
+        let g = 0.299 * p[i] + 0.587 * p[i + 1] + 0.114 * p[i + 2];
+        g = (g - 128) * 1.4 + 138;
+        g = g < 0 ? 0 : g > 255 ? 255 : g;
+        p[i] = p[i + 1] = p[i + 2] = g;
+      }
+      x.putImageData(d, 0, 0);
+      URL.revokeObjectURL(url);
+      res(c);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("פורמט התמונה לא נתמך")); };
+    img.src = url;
+  });
+}
+
+/* ── Parsing ───────────────────────────────────────────────
+   Israeli supermarket receipts print each product as two lines:
+     <name>                       <barcode or short store code>
+     <line total>  <qty>  <unit price>
+   OCR may scramble word order on Hebrew lines, so everything here is
+   token-based rather than position-based. */
+function _rxHint(l) {
+  return l.replace(/\b\d{5,14}\b/g, " ")
+          .replace(/(^|\s)\d{1,3}(?=\s|$)/g, " ")
+          .replace(/[|_~=*<>{}\[\]]/g, " ")
+          .replace(/\s+/g, " ").trim();
+}
+
+function _rxParse(text) {
+  const lines = String(text || "").split(/\n+/)
+    .map(l => l.replace(/,/g, ".").trim()).filter(Boolean);
+  const items = [], totals = [];
+  let pending = null, date = null, lineCount = null, ended = false;
+
+  for (const l of lines) {
+    const dm = l.match(/\b(\d{1,2})[\/.](\d{1,2})[\/.](\d{2,4})\b/);
+    if (dm && !date) {
+      const dd = +dm[1], mm = +dm[2], yy = dm[3].length === 2 ? "20" + dm[3] : dm[3];
+      if (dd >= 1 && dd <= 31 && mm >= 1 && mm <= 12)
+        date = `${yy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+    }
+    const lc = l.match(/שורות\D{0,8}(\d{1,3})|(\d{1,3})\D{0,8}שורות/);
+    if (lc) lineCount = +(lc[1] || lc[2]);
+
+    // Total lines — and everything after them is footer, not products
+    if (/סה.{0,2}כ|לתשלום|נתקבל/.test(l) && !/פריטים|שורות|חסכת|מע.?מ/.test(l)) {
+      (l.match(/\d+\.\d{2}(?!\d)/g) || []).forEach(v => totals.push(+v));
+      ended = true; continue;
+    }
+    if (/={6,}|\*{6,}/.test(l)) { if (items.length) ended = true; continue; }
+    if (ended) continue;
+
+    const dec = l.match(/-?\d+\.\d{2,3}-?/g) || [];
+    if (dec.length >= 2) {
+      const vals = dec.map(s => {
+        const bare = s.replace(/-/g, "");
+        return { v: parseFloat(bare), neg: s.includes("-"), q: /\.\d{3}$/.test(bare) };
+      });
+      const qty = vals.find(v => v.q);
+      const money = vals.filter(v => !v.q);
+      let lineTotal = null, unit = null;
+      if (qty && money.length >= 2) {
+        const [a, b] = money;
+        if (Math.abs(a.v - qty.v * b.v) < 0.03)      { lineTotal = a.v; unit = b.v; }
+        else if (Math.abs(b.v - qty.v * a.v) < 0.03) { lineTotal = b.v; unit = a.v; }
+        else                                          { lineTotal = a.v; unit = b.v; }
+      } else if (money.length) {
+        lineTotal = money[0].v; unit = (money[1] || money[0]).v;
+      }
+      if (lineTotal == null) continue;
+      const neg = vals.some(v => v.neg);
+      items.push({
+        code: pending?.code || null, hint: pending?.hint || "",
+        qty: qty ? qty.v : 1, unit, total: neg ? -lineTotal : lineTotal, discount: neg
+      });
+      pending = null; continue;
+    }
+    if (dec.length === 1 && dec[0].includes("-")) {
+      // The discount's description is usually the line above it
+      items.push({ code: null, hint: pending?.hint || _rxHint(l).replace(/[\d.-]+/g, "").trim() || "הנחה", qty: 1, unit: null,
+                   total: -Math.abs(parseFloat(dec[0].replace(/-/g, ""))), discount: true });
+      pending = null; continue;
+    }
+
+    const heb  = /[֐-׿]{2,}/.test(l);
+    const long = l.match(/\b(\d{7,14})\b/);
+    // Produce uses a short store code at the very start or end of the line
+    const plu  = !long && heb ? l.match(/^(\d{2,3})\s|\s(\d{2,3})$/) : null;
+    if (long || plu || heb)
+      pending = { code: long ? long[1] : plu ? (plu[1] || plu[2]) : null, hint: _rxHint(l) };
+  }
+
+  let total = null;
+  if (totals.length) {
+    const freq = new Map();
+    totals.forEach(v => freq.set(v, (freq.get(v) || 0) + 1));
+    total = [...freq.entries()].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0][0];
+  }
+  return { items, total, date, lineCount };
+}
+
+/* ── Matching ──────────────────────────────────────────────── */
+const _rxCodeKey = c => (c && c.length >= 5) ? c : (c ? "plu_" + c : null);
+
+function _rxTokens(s) {
+  return _normalizePantryName(s || "")
+    .replace(/[^֐-׿a-z0-9 ]/g, " ")
+    .split(/\s+/).filter(t => t.length >= 2);
+}
+/* A suggestion, never a decision — "תפו"א אדום" vs "תפוח אדום" is exactly
+   why a human confirms anything that didn't come from barcode memory. */
+/* Abbreviations Israeli tills print. Expanded before matching so that
+   תפו"א reads as potatoes, not as the "תפוח" in an apple. */
+// (\b is ASCII-only in JS, so Hebrew word edges are spelled out)
+const _RX_W = "(^|[\\s\\d])", _RX_E = "(?=[\\s\\d]|$)";
+const _RX_ABBR = [
+  [/תפו.?א/g, "תפוח אדמה"], [/תפו.?ע/g, "תפוח עץ"],
+  ...["ק.?ג", "גר(?:ם)?", "מ.?ל", "יח.?", "ליטר", "יחידות"]
+    .map(w => [new RegExp(_RX_W + w + _RX_E, "g"), "$1 "])
+];
+function _rxSuggest(hint) {
+  let text = String(hint || "");
+  _RX_ABBR.forEach(([re, to]) => { text = text.replace(re, to); });
+  const ht = _rxTokens(text);
+  if (!ht.length) return null;
+  const hn = " " + ht.join(" ") + " ";
+  let best = null, bs = 0;
+  for (const p of _rx.pantry) {
+    const pt = _rxTokens(p.name);
+    if (!pt.length) continue;
+    /* Every word of the Pantry name must appear. One shared generic word
+       ("ממרח") was enough to pair Heinz spread with olive spread. */
+    const all = pt.every(t =>
+      ht.some(h => h === t || (t.length >= 3 && h.startsWith(t)) || (h.length >= 3 && t.startsWith(h))));
+    if (!all) continue;
+    // Prefer longer names, and names that appear as an unbroken phrase
+    const score = pt.length + (hn.includes(" " + pt.join(" ") + " ") ? 0.5 : 0);
+    if (score > bs) { bs = score; best = p; }
+  }
+  return best;
+}
+
+function _rxBuildRows(parsedPages) {
+  const rows = [], seen = new Map();   // signature → photo it first appeared in
+  parsedPages.forEach((pg, pi) => {
+    pg.items.forEach(it => {
+      /* Overlapping photos repeat the lines at the seam — drop a repeat only
+         when it came from a DIFFERENT photo. Two identical lines in the same
+         photo are a real double purchase and both count. */
+      const sig = it.code ? `${it.code}|${it.total}` : null;
+      if (sig && seen.has(sig) && seen.get(sig) !== pi) return;
+      if (sig && !seen.has(sig)) seen.set(sig, pi);
+
+      const r = { id: rows.length, ...it, state: "unknown", pantryId: null, pantryName: null };
+      if (it.discount)          r.state = "discount";
+      else if (!it.total)       r.state = "ignore";
+      else {
+        const mem = it.code && _rx.codes.get(_rxCodeKey(it.code));
+        const memP = mem && _rx.pantry.find(p => p.id === mem.pantryId);
+        if (memP) {
+          r.pantryId = memP.id; r.pantryName = memP.name;
+          // Long barcodes are unique → automatic. Short store codes collide
+          // between chains, so they're offered for one-tap confirmation.
+          r.state = it.code.length >= 5 ? "matched" : "suggest";
+          r.fromMemory = true;
+        } else {
+          const s = _rxSuggest(it.hint);
+          if (s) { r.state = "suggest"; r.pantryId = s.id; r.pantryName = s.name; }
+        }
+      }
+      rows.push(r);
+    });
+  });
+  return rows;
+}
+
+/* ── Open / close ──────────────────────────────────────────── */
+window.openReceiptScan = async function() {
+  _rx = { photos: [], rows: [], total: null, date: null, lineCount: null,
+          raw: "", pantry: [], codes: new Map(), queueIds: new Set() };
+  _rx$("rx").classList.add("open");
+  _rxStep(1);
+  _rxRenderCapture();
+  // Warm up in the background while you take the photo
+  _rxLoadEngine().catch(() => {});
+};
+
+async function _rxClose(force) {
+  if (!force && _rx && _rx.rows.length) {
+    if (!await askConfirm("לצאת מהסריקה? מה שזוהה לא יישמר.", { okText: "צא" })) return;
+  }
+  (_rx?.photos || []).forEach(p => URL.revokeObjectURL(p.url));
+  _rx = null;
+  _rx$("rx").classList.remove("open");
+  _rx$("rx-pick").classList.remove("open");
+}
+
+function _rxStep(n) {
+  [..._rx$("rx-steps").children].forEach((el, i) => el.classList.toggle("on", i < n));
+  _rx$("rx-title").textContent =
+    n === 1 ? "סריקת קבלה" : n === 2 ? "קורא את הקבלה…" : "בדיקה לפני שמירה";
+}
+
+/* ── Step 1: photos ───────────────────────────────────────── */
+function _rxRenderCapture() {
+  const ph = _rx.photos;
+  _rx$("rx-body").innerHTML = ph.length ? `
+    <div class="rx-hero" style="padding-bottom:10px">
+      <h3>${ph.length === 1 ? "תמונה אחת" : ph.length + " תמונות"}</h3>
+      <p>קבלה ארוכה? הוסיפו תמונה של החלק הבא, מלמעלה למטה.</p>
+    </div>
+    <div class="rx-thumbs">
+      ${ph.map((p, i) => `
+        <div class="rx-thumb"><img src="${p.url}" alt="">
+          <button data-del="${i}" aria-label="הסר">✕</button><span>${i + 1}</span></div>`).join("")}
+      <button class="rx-thumb-add" id="rx-more">＋<br>עוד חלק</button>
+    </div>` : `
+    <div class="rx-hero">
+      <div class="rx-hero-ic">🧾</div>
+      <h3>צלמו את הקבלה</h3>
+      <p>האפליקציה תזהה את המוצרים והסכום, תסמן אותם ברשימה<br>ותמלא את הסכום — אתם מאשרים לפני שמשהו נשמר.</p>
+    </div>
+    <div class="rx-src">
+      <button id="rx-btn-cam"><span>📷</span>צילום עכשיו</button>
+      <button id="rx-btn-lib"><span>🖼️</span>מהגלריה / צילום מסך</button>
+    </div>
+    <div class="rx-tips">
+      <b>לתוצאה הכי טובה:</b><br>
+      • קבלה <b>שטוחה</b> ובאור טוב, בלי צל של הטלפון<br>
+      • <b>כל הקבלה</b> בפריים — כולל השורה של הסה״כ<br>
+      • קבלה ארוכה? <b>צלמו בחלקים</b> מלמעלה למטה<br>
+      • קבלה דיגיטלית? צלמו <b>צילום מסך</b> ובחרו מהגלריה
+    </div>`;
+
+  _rx$("rx-foot").innerHTML = ph.length
+    ? `<button class="rx-primary" id="rx-go">🔍 קרא את הקבלה</button>
+       <span class="rx-sub">הכול קורה בטלפון — חינם, בלי שליחה לשרת</span>` : "";
+
+  _rx$("rx-btn-cam")?.addEventListener("click", () => _rx$("rx-cam").click());
+  _rx$("rx-btn-lib")?.addEventListener("click", () => _rx$("rx-lib").click());
+  _rx$("rx-more")?.addEventListener("click", () => _rx$("rx-lib").click());
+  _rx$("rx-go")?.addEventListener("click", _rxRun);
+  _rx$("rx-body").querySelectorAll("[data-del]").forEach(b =>
+    b.addEventListener("click", () => {
+      const [p] = _rx.photos.splice(+b.dataset.del, 1);
+      if (p) URL.revokeObjectURL(p.url);
+      _rxRenderCapture();
+    }));
+}
+
+function _rxAddFiles(fileList) {
+  if (!_rx) return;
+  [...(fileList || [])].forEach(f => {
+    if (f && f.type.startsWith("image/"))
+      _rx.photos.push({ file: f, url: URL.createObjectURL(f) });
+  });
+  _rxRenderCapture();
+}
+
+/* ── Step 2: read ─────────────────────────────────────────── */
+function _rxRenderWork(msg, sub, pct) {
+  _rx$("rx-body").innerHTML = `
+    <div class="rx-work">
+      <div class="rx-spin"></div>
+      <h3>${esc(msg)}</h3><p>${esc(sub || "")}</p>
+      <div class="rx-bar-p"><div style="width:${Math.round((pct || 0) * 100)}%"></div></div>
+    </div>`;
+  _rx$("rx-foot").innerHTML = "";
+}
+
+async function _rxRun() {
+  _rxStep(2);
+  const total = _rx.photos.length;
+  let worker = null;
+  try {
+    _rxRenderWork("מכין את מנוע הסריקה", "בפעם הראשונה יורדת חבילת עברית (כמה MB) — אחר כך זה מהיר", 0.02);
+
+    // Load data in parallel with the engine
+    const dataP = Promise.all([
+      getDocs(collection(db, "pantry")),
+      getDocs(collection(db, "receipt_codes")).catch(() => null),
+      getDocs(collection(db, "grocery_queue"))
+    ]);
+    await _rxLoadEngine();
+
+    let page = 0;
+    worker = await Tesseract.createWorker(["heb", "eng"], 1, {
+      logger: m => {
+        if (m.status === "recognizing text" && _rx)
+          _rxRenderWork(`קורא תמונה ${page + 1} מתוך ${total}`,
+            "מזהה מוצרים, ברקודים וסכומים", (page + m.progress) / total);
+      }
+    });
+    await worker.setParameters({ preserve_interword_spaces: "1" });
+
+    const [pSnap, cSnap, qSnap] = await dataP;
+    if (!_rx) return;                                   // closed meanwhile
+    pSnap.forEach(d => _rx.pantry.push({ id: d.id, ...d.data() }));
+    cSnap?.forEach(d => _rx.codes.set(d.id, d.data()));
+    qSnap.forEach(d => _rx.queueIds.add(d.id));
+
+    const pages = [];
+    for (page = 0; page < total; page++) {
+      const canvas = await _rxPrep(_rx.photos[page].file);
+      const { data } = await worker.recognize(canvas);
+      if (!_rx) return;
+      _rx.raw += (page ? "\n\n— — —\n\n" : "") + (data.text || "");
+      pages.push(_rxParse(data.text));
+    }
+
+    _rx.total     = pages.map(p => p.total).find(v => v != null) ?? null;
+    _rx.date      = pages.map(p => p.date).find(Boolean) || null;
+    _rx.lineCount = pages.map(p => p.lineCount).find(Boolean) || null;
+    _rx.rows      = _rxBuildRows(pages);
+
+    _rxStep(3);
+    _rxRenderReview();
+  } catch (err) {
+    console.warn("receipt scan:", err);
+    if (!_rx) return;
+    _rxStep(1);
+    _rxRenderCapture();
+    showToast("הסריקה נכשלה: " + err.message, "error");
+  } finally {
+    if (worker) worker.terminate().catch(() => {});
+  }
+}
+
+/* ── Step 3: review ───────────────────────────────────────── */
+function _rxRenderReview() {
+  const rows  = _rx.rows;
+  const items = rows.filter(r => r.state !== "discount");
+  const sum   = rows.filter(r => r.state !== "ignore").reduce((s, r) => s + (r.total || 0), 0);
+  const total = _rx.total;
+
+  const counts = { matched: 0, new: 0, suggest: 0, unknown: 0, ignore: 0 };
+  items.forEach(r => counts[r.state] = (counts[r.state] || 0) + 1);
+  const ready = counts.matched + counts.new;
+  const open  = counts.suggest + counts.unknown;
+
+  /* Completeness: the receipt states its own total and line count, so we
+     can tell you when part of it wasn't in the photo. */
+  const checks = [];
+  if (total == null)
+    checks.push(`<div class="rx-check warn">⚠️ לא זוהה סה״כ — הקלידו את הסכום מהקבלה</div>`);
+  else if (Math.abs(sum - total) <= 0.05)
+    checks.push(`<div class="rx-check ok">✓ סכום השורות תואם לסה״כ בקבלה</div>`);
+  else {
+    const diff = total - sum;
+    checks.push(`<div class="rx-check warn">⚠️ השורות שזוהו מסתכמות ב-${_rxMoney(sum)} — ${
+      diff > 0 ? `חסרים ${_rxMoney(diff)}. כנראה חלק מהקבלה לא צולם או לא נקרא.`
+               : `יותר ב-${_rxMoney(-diff)} מהסה״כ. ייתכן שהנחות לא נקראו.`}</div>`);
+  }
+  if (_rx.lineCount) {
+    const got = rows.length;
+    checks.push(got >= _rx.lineCount
+      ? `<div class="rx-check ok">✓ זוהו כל ${_rx.lineCount} השורות שבקבלה</div>`
+      : `<div class="rx-check warn">⚠️ בקבלה ${_rx.lineCount} שורות, זוהו ${got}. אפשר להוסיף תמונה של החלק החסר.</div>`);
+  }
+
+  const row = r => {
+    const dot = { matched:"✓", new:"＋", suggest:"?", unknown:"•", ignore:"–" }[r.state];
+    const title = r.state === "new" ? r.newName
+                : r.state === "ignore" ? (r.hint || "שורה")
+                : r.pantryName || "לא זוהה — לחצו לבחירה";
+    const sub = [
+      r.hint && r.state !== "ignore" ? `בקבלה: ${r.hint}` : "",
+      r.state === "matched" && r.fromMemory ? "זוהה לפי ברקוד" : "",
+      r.state === "suggest" && r.fromMemory ? "לפי קוד חנות" : "",
+      r.state === "new" ? `מוצר חדש · ${_CAT_SHORT[r.newCat] || ""}` : "",
+      r.state === "ignore" ? "לא ייכלל" : ""
+    ].filter(Boolean).join(" · ");
+    const qty = r.qty && Math.abs(r.qty - 1) > 0.0005
+      ? `${r.qty % 1 ? r.qty.toFixed(3) + " ק״ג" : "×" + r.qty}` : "";
+    return `
+      <button class="rx-row ${r.state}" data-row="${r.id}">
+        <span class="rx-dot">${dot}</span>
+        <span class="rx-main">
+          <div class="rx-name ${r.state === "unknown" ? "muted" : ""}">${esc(title)}</div>
+          ${sub ? `<div class="rx-hint">${esc(sub)}</div>` : ""}
+        </span>
+        ${r.state === "suggest" ? `<span class="rx-accept" data-accept="${r.id}">✓ נכון</span>` : ""}
+        <span class="rx-price"><b>${_rxMoney(r.total)}</b>${qty ? `<small>${qty}</small>` : ""}</span>
+      </button>`;
+  };
+
+  const group = (label, list) => list.length
+    ? `<div class="rx-sec">${label} · ${list.length}</div>${list.map(row).join("")}` : "";
+  const discounts = rows.filter(r => r.state === "discount");
+
+  _rx$("rx-body").innerHTML = `
+    <div class="rx-total">
+      <label>סה״כ לתשלום${_rx.date ? ` · ${_rx.date.split("-").reverse().join("/")}` : ""}</label>
+      <div class="rx-total-row">
+        <span>₪</span>
+        <input id="rx-total-in" type="number" inputmode="decimal" step="0.01"
+               value="${total != null ? total.toFixed(2) : ""}" placeholder="0.00">
+      </div>
+      <div class="rx-checks">${checks.join("")}</div>
+    </div>
+
+    <div class="rx-sumrow">
+      <span class="rx-pill">✓ ${ready} מוכנים</span>
+      ${open ? `<span class="rx-pill">? ${open} לבדיקה</span>` : ""}
+      ${counts.ignore ? `<span class="rx-pill">– ${counts.ignore} מדולגים</span>` : ""}
+      ${counts.suggest > 1 ? `<button class="rx-acc-all" id="rx-acc-all">✓ אשר את כל ההצעות (${counts.suggest})</button>` : ""}
+    </div>
+
+    ${group("לבדיקה שלכם", items.filter(r => r.state === "suggest" || r.state === "unknown"))}
+    ${group("מוכנים", items.filter(r => r.state === "matched" || r.state === "new"))}
+    ${discounts.length ? `<div class="rx-sec">הנחות</div>${discounts.map(r =>
+      `<div class="rx-disc"><span>${esc(r.hint || "הנחה")}</span><b>${_rxMoney(r.total)}</b></div>`).join("")}` : ""}
+    ${group("לא ייכללו", items.filter(r => r.state === "ignore"))}
+    ${!items.length ? `<div class="rx-check warn">לא זוהו מוצרים. נסו תמונה חדה ושטוחה יותר, או בחלקים.</div>` : ""}
+
+    <details class="rx-raw"><summary>הטקסט שנקרא מהקבלה</summary><pre>${esc(_rx.raw)}</pre></details>`;
+
+  _rx$("rx-foot").innerHTML = `
+    <button class="rx-primary" id="rx-ok" ${ready ? "" : "disabled"}>
+      ${ready === 1 ? "סמן פריט אחד" : `סמן ${ready} פריטים`} ומלא סכום</button>
+    <span class="rx-sub">${open
+      ? `${open} שורות שלא אושרו לא יסומנו · שום הוצאה לא נשמרת עדיין`
+      : "שום הוצאה לא נשמרת עדיין — תאשרו בכפתור השליחה הרגיל"}</span>`;
+
+  _rx$("rx-body").querySelectorAll("[data-row]").forEach(b =>
+    b.addEventListener("click", e => {
+      if (e.target.closest("[data-accept]")) return;
+      _rxOpenPick(+b.dataset.row);
+    }));
+  _rx$("rx-body").querySelectorAll("[data-accept]").forEach(b =>
+    b.addEventListener("click", e => {
+      e.stopPropagation();
+      const r = _rx.rows[+b.dataset.accept];
+      if (r) { r.state = "matched"; _rxRenderReview(); }
+    }));
+  _rx$("rx-acc-all")?.addEventListener("click", () => {
+    _rx.rows.forEach(r => { if (r.state === "suggest") r.state = "matched"; });
+    _rxRenderReview();
+  });
+  _rx$("rx-total-in").addEventListener("input", e => {
+    const v = parseFloat(e.target.value);
+    _rx.total = isNaN(v) ? null : v;
+  });
+  _rx$("rx-total-in").addEventListener("change", () => _rxRenderReview());
+  _rx$("rx-ok").addEventListener("click", _rxConfirm);
+}
+
+/* ── Picker sheet ─────────────────────────────────────────── */
+function _rxOpenPick(rowId) {
+  const r = _rx.rows[rowId];
+  if (!r || r.state === "discount") return;
+  _rxPickRow = r;
+  _rx$("rx-pick-src").textContent =
+    `בקבלה: ${r.hint || "(לא נקרא)"} · ${_rxMoney(r.total)}${r.code ? " · " + r.code : ""}`;
+  _rx$("rx-pick-q").value = "";
+  _rx$("rx-new-name").value = r.state === "new" ? r.newName : (r.hint || "");
+  _rxPickCat = r.newCat || "pantry";
+  _rxRenderCats();
+  _rxRenderPickList();
+  _rx$("rx-pick").classList.add("open");
+}
+
+function _rxRenderCats() {
+  _rx$("rx-cats").innerHTML = _PANTRY_CAT_LIST.map(c =>
+    `<button data-cat="${c.id}" class="${c.id === _rxPickCat ? "on" : ""}">${esc(c.label)}</button>`).join("");
+  _rx$("rx-cats").querySelectorAll("[data-cat]").forEach(b =>
+    b.addEventListener("click", () => { _rxPickCat = b.dataset.cat; _rxRenderCats(); }));
+}
+
+function _rxRenderPickList() {
+  const q = _normalizePantryName(_rx$("rx-pick-q").value || "");
+  const r = _rxPickRow;
+  let list = _rx.pantry.filter(p => !q || _normalizePantryName(p.name).includes(q));
+  // Current/suggested match first, then alphabetical
+  list.sort((a, b) => (b.id === r.pantryId) - (a.id === r.pantryId) ||
+                      String(a.name).localeCompare(String(b.name), "he"));
+  list = list.slice(0, 60);
+  _rx$("rx-pick-list").innerHTML = list.length ? list.map(p => `
+    <button class="rx-pick-item ${p.id === r.pantryId ? "sugg" : ""}" data-pid="${p.id}">
+      <span>${_CAT_EMOJI[p.category] || "🛒"}</span><span>${esc(p.name)}</span>
+      <small>${p.id === r.pantryId ? "מוצע" : (_CAT_SHORT[p.category] || "")}</small>
+    </button>`).join("")
+    : `<div class="rx-pick-empty">אין במלאי מוצר כזה — אפשר להוסיף אותו כחדש למטה.</div>`;
+  _rx$("rx-pick-list").querySelectorAll("[data-pid]").forEach(b =>
+    b.addEventListener("click", () => {
+      const p = _rx.pantry.find(x => x.id === b.dataset.pid);
+      if (!p) return;
+      Object.assign(_rxPickRow, { state: "matched", pantryId: p.id, pantryName: p.name,
+                                  newName: null, newCat: null });
+      _rx$("rx-pick").classList.remove("open");
+      _rxRenderReview();
+    }));
+}
+
+/* ── Step 4: hand off to the existing checkout ────────────── */
+async function _rxConfirm() {
+  const btn = _rx$("rx-ok");
+  btn.disabled = true; btn.textContent = "⏳ מסמן ברשימה…";
+  try {
+    const byNorm = new Map(_rx.pantry.map(p => [_normalizePantryName(p.name), p]));
+    const tick = new Map();      // pantryId → name
+    const learned = [];
+
+    for (const r of _rx.rows) {
+      if (r.state !== "matched" && r.state !== "new") continue;
+      let pid = r.pantryId, pname = r.pantryName;
+      if (r.state === "new") {
+        const dupe = byNorm.get(_normalizePantryName(r.newName));
+        if (dupe) { pid = dupe.id; pname = dupe.name; }
+        else {
+          // Same document shape the existing "new staple" flow creates
+          const ref = await addDoc(collection(db, "pantry"),
+            { name: r.newName, status: "low", category: r.newCat || "pantry",
+              createdAt: serverTimestamp() });
+          pid = ref.id; pname = r.newName;
+          byNorm.set(_normalizePantryName(pname), { id: pid, name: pname });
+        }
+      }
+      tick.set(pid, pname);
+      const key = _rxCodeKey(r.code);
+      if (key) learned.push(setDoc(doc(db, "receipt_codes", key),
+        { pantryId: pid, name: pname, updatedAt: Date.now() }, { merge: true }));
+    }
+
+    /* Put each item on the list (doc id = pantry id, same as the rest of the
+       app) already ticked. The live list shows them checked on both phones,
+       and the normal Send restocks them in Pantry and clears the list. */
+    const who = _currentUser();
+    await Promise.all([...tick].map(([pid, name]) => {
+      const data = { name, fromPantry: true, checked: true, checkedBy: who, checkedAt: Date.now() };
+      if (!_rx.queueIds.has(pid)) data.addedAt = serverTimestamp();
+      return setDoc(doc(db, "grocery_queue", pid), data, { merge: true });
+    }));
+    await Promise.all(learned).catch(e => console.warn("barcode memory:", e));
+
+    const amt = _rx$("grocery-amount"), dt = _rx$("grocery-date");
+    const total = _rx.total;
+    if (amt && total != null) amt.value = total.toFixed(2);
+    if (dt) dt.value = _rx.date || new Date().toISOString().slice(0, 10);
+
+    _logActivity("🧾", `סרק קבלה — ${tick.size} פריטים${total != null ? `, ${_rxMoney(total)}` : ""}`);
+    const n = tick.size;
+    await _rxClose(true);
+    showToast(`✅ ${n} פריטים סומנו — בדקו ולחצו "Send"`, "success");
+    setTimeout(() => _rx$("btn-send-groceries")?.scrollIntoView({ behavior: "smooth", block: "center" }), 500);
+  } catch (err) {
+    showToast("שגיאה: " + err.message, "error");
+    btn.disabled = false; btn.textContent = "נסו שוב";
+  }
+}
+
+/* ── Wiring (once) ────────────────────────────────────────── */
+(function _rxWire() {
+  _rx$("rx-close")?.addEventListener("click", () => _rxClose(false));
+  ["rx-cam", "rx-lib"].forEach(id =>
+    _rx$(id)?.addEventListener("change", e => { _rxAddFiles(e.target.files); e.target.value = ""; }));
+  _rx$("rx-pick-q")?.addEventListener("input", _rxRenderPickList);
+  _rx$("rx-pick")?.addEventListener("click", e => {
+    if (e.target === e.currentTarget) e.currentTarget.classList.remove("open");
+  });
+  _rx$("rx-pick-ignore")?.addEventListener("click", () => {
+    if (_rxPickRow) _rxPickRow.state = "ignore";
+    _rx$("rx-pick").classList.remove("open");
+    _rxRenderReview();
+  });
+  _rx$("rx-new-add")?.addEventListener("click", () => {
+    const name = (_rx$("rx-new-name").value || "").trim();
+    if (!name) { _rx$("rx-new-name").focus(); return; }
+    // Already in Pantry under that name? Use it rather than duplicating.
+    const dupe = _rx.pantry.find(p => _normalizePantryName(p.name) === _normalizePantryName(name));
+    Object.assign(_rxPickRow, dupe
+      ? { state: "matched", pantryId: dupe.id, pantryName: dupe.name, newName: null, newCat: null }
+      : { state: "new", newName: name, newCat: _rxPickCat, pantryId: null, pantryName: null });
+    _rx$("rx-pick").classList.remove("open");
+    _rxRenderReview();
+  });
+})();
+
+/* Exposed for testing only */
+window._rxParse = _rxParse;
+
 
 /* ══════════════════════════════════════════════════════════
    ASK — in-app confirm() and prompt()
