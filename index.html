@@ -435,7 +435,7 @@
   .checklist-table .task-name{font-weight:500}
   .checklist-table .task-room{color:var(--text-muted);font-size:.75rem}
   .checklist-table tr.done .task-name{color:var(--text-muted);text-decoration:line-through}
-  .task-check{width:22px;height:22px;border-radius:4px;border:1.5px solid rgba(0,0,0,.2);
+  .task-check{width:22px;height:22px;border-radius:4px;border:1.5px solid var(--text-light);
     appearance:none;-webkit-appearance:none;cursor:pointer;transition:var(--T);
     position:relative;display:block}
   .task-check:checked{background:var(--primary);border-color:var(--primary)}
@@ -826,7 +826,7 @@
   .shop-item{display:flex;align-items:center;padding:12px 16px;gap:12px;
     border-bottom:.5px solid var(--border);transition:background .15s}
   .shop-item:last-child{border-bottom:none}
-  .item-check{width:22px;height:22px;border-radius:4px;border:1.5px solid rgba(0,0,0,.18);
+  .item-check{width:22px;height:22px;border-radius:4px;border:1.5px solid var(--text-light);
     appearance:none;-webkit-appearance:none;cursor:pointer;transition:var(--T);
     position:relative;flex-shrink:0}
   .item-check:checked{background:var(--primary);border-color:var(--primary)}
@@ -2744,6 +2744,19 @@ html[data-theme="dark"] .badge-type-veggies{color:#9BE8BC}
 html[data-theme="dark"] .badge-noon{color:#E8A29B}
 html[data-theme="dark"] .badge-morning{color:#F3D591}
 html[data-theme="dark"] .badge-evening{color:#9BCAE9}
+
+
+/* Control outlines. These were drawn in fixed translucent black, which is
+   invisible on a dark background - an unticked checkbox simply vanished. */
+html[data-theme="dark"] :is(.item-check,.task-check){background:transparent}
+html[data-theme="dark"] :is(.item-check,.task-check):checked{border-color:var(--primary);background:var(--primary)}
+html[data-theme="dark"] :is(.form-group input,.form-group select,.form-group textarea,
+  .maint-status-sel){border-color:var(--border-strong)}
+html[data-theme="dark"] :is(.manage-tasks-btn,.checklist-table,.staple-dropdown,
+  .btn-edit-dish,.btn-del-dish,.btn-vac.sub,.btn-openapp){border-color:var(--border-strong)}
+html[data-theme="dark"] .ask-cancel{border-color:var(--border-strong) !important}
+html[data-theme="dark"] .maint-item.priority-low{border-left-color:rgba(255,255,255,.22)}
+html[data-theme="dark"] #bottom-nav{border-top-color:rgba(255,255,255,.08)}
 
 /* ── Smooth switch ─────────────────────────────────────────
    With View Transitions the whole page cross-fades (gradients and all).
