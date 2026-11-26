@@ -4,8 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Home Manager</title>
+  <meta name="theme-color" content="#2A4A7F">
+  <!-- Theme before first paint, so dark mode never flashes white -->
+  <script>
+    (function(){try{
+      var p=localStorage.getItem("themePref")||"auto";
+      var d=p==="dark"||(p==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.setAttribute("data-theme",d?"dark":"light");
+    }catch(e){}})();
+  </script>
   <!-- Installable web app: needed so iOS allows push notifications.
-       Purely additive — the site behaves exactly as before in a Safari tab. -->
+       Purely additive - the site behaves exactly as before in a Safari tab. -->
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -31,24 +40,24 @@
      these, so the whole app can be re-skinned from this block
      without touching a single class name or line of JS.
 
-     Palette is Radix Colors — perceptually even steps, designed
+     Palette is Radix Colors - perceptually even steps, designed
      for interfaces rather than picked by eye. Step 11 is the
      "readable on white" text step, step 9 the solid fill.
      ═══════════════════════════════════════════════════════ */
   :root {
-    /* Brand — one accent, used sparingly and deliberately */
-    --primary:#218358;        /* green11 — text/icons on light   */
-    --primary-light:#30A46C;  /* green9  — solid fills           */
-    --primary-dark:#193B2D;   /* green12 — headings              */
-    --primary-tint:#E9F9EE;   /* green3  — subtle backgrounds    */
+    /* Brand - one accent, used sparingly and deliberately */
+    --primary:#218358;        /* green11 - text/icons on light   */
+    --primary-light:#30A46C;  /* green9  - solid fills           */
+    --primary-dark:#193B2D;   /* green12 - headings              */
+    --primary-tint:#E9F9EE;   /* green3  - subtle backgrounds    */
 
-    /* Semantic — muted rather than iOS-vivid */
+    /* Semantic - muted rather than iOS-vivid */
     --accent:#AB6400;         /* amber11 */
     --danger:#CE2C31;         /* red11   */
     --warning:#AB6400;
     --info:#0D74CE;           /* blue11  */
 
-    /* Neutrals — the base the interface is actually built from */
+    /* Neutrals - the base the interface is actually built from */
     --bg:#FCFCFD;             /* gray1  */
     --bg-card:#FFFFFF;
     --bg-surface:#F9F9FB;     /* gray2  */
@@ -56,22 +65,22 @@
     --text:#1C2024;           /* gray12 */
     --text-muted:#60646C;     /* gray11 */
     --text-light:#8B8D98;     /* gray9  */
-    --border:#E8E8EC;         /* gray5 — a crisp hairline, not a blur */
+    --border:#E8E8EC;         /* gray5 - a crisp hairline, not a blur */
     --border-strong:#D9D9E0;  /* gray6  */
     --border-focus:#30A46C;
 
-    /* Elevation — structure comes from borders; shadow only hints
+    /* Elevation - structure comes from borders; shadow only hints
        at layering. Large diffuse shadows read as "toy". */
     --shadow-sm:0 1px 2px rgba(18,20,24,.04);
     --shadow:0 1px 3px rgba(18,20,24,.05),0 1px 2px rgba(18,20,24,.03);
     --shadow-lg:0 8px 24px rgba(18,20,24,.08),0 2px 6px rgba(18,20,24,.04);
     --shadow-card:0 1px 2px rgba(18,20,24,.04);
 
-    /* Radii — tight. This is the single biggest lever on "mature
+    /* Radii - tight. This is the single biggest lever on "mature
        vs playful". Anything above ~14px starts to look like a toy. */
     --radius-xs:4px; --radius-sm:6px; --radius:10px; --radius-lg:14px;
 
-    /* Motion — fast and decisive, no overshoot.
+    /* Motion - fast and decisive, no overshoot.
        NOTE: --spring is deliberately aliased to a non-bouncy curve.
        66 call sites reference it; re-pointing the token removes the
        bounce everywhere without editing any of them. */
@@ -99,12 +108,12 @@
   @media(min-width:481px){body{box-shadow:0 0 0 1px var(--border)}}
 
   /* ═══ Type scale ══════════════════════════════════════
-     Larger text gets tighter tracking — optical correction that
+     Larger text gets tighter tracking - optical correction that
      makes headings read as deliberate rather than accidental. */
   h1,h2,h3,h4{letter-spacing:var(--tracking-tighter);line-height:1.25;
     font-weight:650;color:var(--text)}
   input,select,textarea,button{letter-spacing:var(--tracking-tight)}
-  /* Numerals align in columns — essential for money */
+  /* Numerals align in columns - essential for money */
   .stat-value,.bill-total,.history-amount,.sw-balance-amount,.report-total,
   .item-price,.sw-table td,.report-detail td{
     font-variant-numeric:tabular-nums;font-feature-settings:'tnum'}
@@ -131,7 +140,7 @@
     background:linear-gradient(90deg,transparent,rgba(52,199,123,.5) 40%,rgba(52,199,123,.5) 60%,transparent);
     pointer-events:none}
 
-  /* Left slot — back button OR logo mark */
+  /* Left slot - back button OR logo mark */
   .hdr-left{width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
   #btn-back{display:none;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);
@@ -142,7 +151,7 @@
   #btn-back:active{transform:scale(0.98);background:rgba(255,255,255,.2)}
   #btn-back svg{display:block}
 
-  /* Logo mark — house icon in a glassy pill */
+  /* Logo mark - house icon in a glassy pill */
   #hdr-logo{
     width:34px;height:34px;border-radius:6px;
     background:rgba(52,199,123,.18);
@@ -153,7 +162,7 @@
   #app-header.has-back #hdr-logo{display:none}
   #app-header:not(.has-back) #btn-back{display:none!important}
 
-  /* Center — title + subtitle on dashboard */
+  /* Center - title + subtitle on dashboard */
   .hdr-center{flex:1;display:flex;flex-direction:column;align-items:center;min-width:0}
   #header-title{
     font-family:var(--font-sans);
@@ -166,7 +175,7 @@
     text-transform:uppercase;line-height:1}
   #app-header.has-back #header-subtitle{display:none}
 
-  /* Right — user avatar bubbles */
+  /* Right - user avatar bubbles */
   #who-toggle{
     display:flex;gap:5px;flex-shrink:0;margin-left:0}
   .who-btn{
@@ -187,7 +196,7 @@
 
   /* ═══ Assistant ═══════════════════════════════════════ */
   /* bottom must clear the nav AND the home-indicator strip. Using padding for
-     that stretched the button and pushed its icon off-centre — offset the
+     that stretched the button and pushed its icon off-centre - offset the
      position instead so the circle stays a circle. */
   #assistant-fab{position:fixed;bottom:calc(92px + env(safe-area-inset-bottom));
     inset-inline-end:18px;z-index:150;
@@ -197,7 +206,7 @@
     display:flex;align-items:center;justify-content:center}
   #assistant-fab:active{transform:scale(0.98)}
   .asst-input-wrap{display:flex;gap:8px;align-items:center;margin-bottom:14px}
-  /* No hardcoded direction — the input carries dir="auto", so the
+  /* No hardcoded direction - the input carries dir="auto", so the
      browser picks RTL or LTR from the first letter you type. */
   #asst-input{flex:1;padding:13px 15px;border:1.5px solid var(--border);
     border-radius:var(--radius);font-size:.92rem;font-family:inherit;
@@ -631,7 +640,7 @@
   .maint-task-num{font-size:.72rem;font-weight:700;color:var(--text-light);
     background:var(--bg);border:1px solid var(--border);border-radius:6px;
     padding:2px 7px;flex-shrink:0;margin-top:1px}
-  /* One-tap done. 44px is Apple's minimum reliable tap target — at the old
+  /* One-tap done. 44px is Apple's minimum reliable tap target - at the old
      30px, with the bin 6px away, "done" and "delete" were the same gesture. */
   .btn-maint-done{width:44px;height:44px;border-radius:var(--radius-sm);
     border:1.5px solid var(--border-strong);background:var(--bg-card);
@@ -836,7 +845,7 @@
   .bought-note{font-size:.73rem;color:var(--text-muted);line-height:1.55;
     margin:4px 0 14px;text-align:center;direction:rtl}
 
-  /* Department chip — sits between the item name and the delete button.
+  /* Department chip - sits between the item name and the delete button.
      Replaces the old 🧺 badge: now that groceries can only come from the
      Pantry, "is a staple" was always true and said nothing, whereas the
      aisle is genuinely useful while shopping. */
@@ -1353,7 +1362,7 @@
   .sh-card-sub{font-size:.67rem;color:var(--text-muted);margin-top:2px}
   .sh-dot{width:8px;height:8px;border-radius:50%;background:#c7c7cc;flex-shrink:0;margin-top:5px}
   .sh-dot.on{background:#34c77b;box-shadow:0 0 2px rgba(18,20,24,.10)}
-  /* Vacuum — "last command sent", deliberately not a device reading.
+  /* Vacuum - "last command sent", deliberately not a device reading.
      RTL isolation because it mixes Hebrew with a clock time. */
   .vac-last{text-align:center;font-size:.68rem;font-weight:600;color:var(--text-muted);
     margin:4px 0 10px;direction:rtl;unicode-bidi:isolate;
@@ -1366,7 +1375,7 @@
   .btn-vac.sub{background:var(--bg-surface);color:var(--text);
     border:.5px solid rgba(0,0,0,.1);font-size:.66rem;padding:8px 2px}
   .btn-vac:active{transform:scale(0.98);opacity:.88}
-  /* Shortcut not named yet — visibly unfinished rather than silently broken */
+  /* Shortcut not named yet - visibly unfinished rather than silently broken */
   .btn-vac.unset,.btn-openapp.unset{opacity:.38;filter:grayscale(1)}
   .btn-openapp{width:100%;padding:11px 6px;border:none;border-radius:6px;
     background:var(--bg-surface);color:var(--text);border:.5px solid rgba(0,0,0,.1);
@@ -1391,7 +1400,7 @@
     background:none;border:none;cursor:pointer;padding:6px 12px;
     border-radius:8px;transition:var(--T);flex:1;min-width:0;font-family:inherit}
   .nav-btn:active{transform:scale(0.98);background:rgba(0,0,0,.05)}
-  /* Icons no longer grow on select — the label colour carries the
+  /* Icons no longer grow on select - the label colour carries the
      state. Scaling type is the sort of motion that reads as playful. */
   .nav-icon{font-size:1.3rem;line-height:1;transition:var(--T);opacity:.5}
   .nav-label{font-size:.63rem;font-weight:550;color:var(--text-light);
@@ -1471,7 +1480,7 @@
   .view{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
   #view-dashboard{padding-bottom:120px}
 
-  /* Submenu cards – more colorful icon wrap */
+  /* Submenu cards - more colorful icon wrap */
   .submenu-card{background:var(--bg-card);border-radius:9px;
     padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;
     border:none;box-shadow:var(--shadow-card);
@@ -1486,7 +1495,7 @@
   /* Toast above nav */
   #toast{bottom:96px}
 
-  /* ══ VIEW TRANSITIONS API — most modern page morphing ══ */
+  /* ══ VIEW TRANSITIONS API - most modern page morphing ══ */
   /* Freeze header & nav in place; only content cross-fades */
   #app-header  { view-transition-name: app-header; }
   #bottom-nav  { view-transition-name: bottom-nav; }
@@ -1502,7 +1511,7 @@
   @keyframes vtNewFwd {
     from { opacity:0; transform:scale(1.03) translateY(-8px); filter:blur(6px); }
   }
-  /* Back: reverse — old rises, new comes from below */
+  /* Back: reverse - old rises, new comes from below */
   @keyframes vtOldBack {
     to { opacity:0; transform:scale(1.04) translateY(-6px); filter:blur(6px); }
   }
@@ -1542,7 +1551,7 @@
   .nav-label { transition:color .2s ease; }
   .nav-btn.active .nav-label { color:var(--primary); }
 
-  /* ══ BUTTON PRESS — refined scale only, no ripple ═══════ */
+  /* ══ BUTTON PRESS - refined scale only, no ripple ═══════ */
   .btn-confirm, .btn-send, .btn-plan-shop,
   .btn-water, .btn-start-laundry, .btn-laundry-clear,
   .laundry-dur-btn, .btn-add-plant, .btn-add-staple,
@@ -1622,7 +1631,7 @@
     margin:-24px -16px 20px;
     opacity:.9;
   }
-  /* Section accent on primary buttons — flat fill, no coloured glow.
+  /* Section accent on primary buttons - flat fill, no coloured glow.
      A brand-tinted bloom under a button is the single clearest
      "dated app" signal; elevation should read as neutral. */
   .view:not(#view-dashboard) .btn-send,
@@ -1696,7 +1705,7 @@
 
   /* ══ SWIPE TO DELETE ═════════════════════════════════════ */
   .shop-item { position:relative; overflow:hidden; touch-action:pan-y }
-  .swipe-delete-bg { display:none; /* removed — see _appendShopItem */
+  .swipe-delete-bg { display:none; /* removed - see _appendShopItem */
     position:absolute;right:0;top:0;bottom:0;width:90px;
     background:var(--danger);
     display:flex;align-items:center;justify-content:center;
@@ -1759,12 +1768,12 @@
   }
   .input-shake { animation:shake .36s ease; }
 
-  /* ══ TOAST — snappier entrance ══════════════════════════ */
+  /* ══ TOAST - snappier entrance ══════════════════════════ */
   #toast { transition:opacity .18s ease, transform 200ms cubic-bezier(0.2,0,0,1); }
   /* ═══════════════════════════════════════════════════════
      REFINEMENT LAYER
      Appended last so it wins on specificity ties without editing
-     ~200 upstream rules. Purely visual — no selector here is
+     ~200 upstream rules. Purely visual - no selector here is
      referenced by JS, and none change layout flow or hit targets.
      ═══════════════════════════════════════════════════════ */
 
@@ -1876,12 +1885,12 @@
   :focus-visible{outline:2px solid var(--primary-light);outline-offset:2px}
 
   /* ═══ Dashboard cards ═════════════════════════════════
-     Were full-bleed saturated blocks — six competing colours,
+     Were full-bleed saturated blocks - six competing colours,
      each shouting. Now neutral cards where colour appears only
      in a small icon chip, so the grid reads as one calm system
      and the eye can actually scan it. Hues are kept for
      recognition; only their weight changes. */
-  /* Colour restored — but as a saturated *surface*, not a pastel
+  /* Colour restored - but as a saturated *surface*, not a pastel
      wash, and now carrying a live number so the density comes from
      information rather than decoration. Tightened ~20% vs before. */
   .dash-card,
@@ -1919,10 +1928,10 @@
   .dash-card.wide .card-arrow{top:50%;transform:translateY(-50%)}
   .dash-card:active{transform:none;filter:brightness(.92)}
 
-  /* The live number — the thing that fixes "empty".
+  /* The live number - the thing that fixes "empty".
      direction:rtl + isolate is required, not cosmetic: these strings
      mix Hebrew with digits, and in an LTR container the bidi algorithm
-     reorders the runs — "8 משימות · 15 להשקות" renders as
+     reorders the runs - "8 משימות · 15 להשקות" renders as
      "משימות 8 · להשקות 15", which reads as nonsense. Isolating the
      element makes the numbers stay with the words they belong to. */
   .card-stat{
@@ -1935,7 +1944,7 @@
     letter-spacing:0;white-space:nowrap;max-width:100%;
     overflow:hidden;text-overflow:ellipsis;
     /* Slide + fade rather than a flat blink. Short, single-direction,
-       no overshoot — motion should explain the change, not perform. */
+       no overshoot - motion should explain the change, not perform. */
     transition:opacity .2s var(--ease), transform .2s var(--ease);
     will-change:opacity, transform;
   }
@@ -1966,7 +1975,7 @@
      Deliberately NOT chat bubbles. Rounded opposing blobs read
      as a messaging toy; this is a form that reveals itself one
      field at a time. Prompts are quiet labels, answers are
-     compact chips, and the record is a definition list — the
+     compact chips, and the record is a definition list - the
      same visual grammar as the rest of the app.
      ═══════════════════════════════════════════════════════ */
 
@@ -2046,7 +2055,7 @@
     background:var(--bg-card);border-top:1px solid var(--border)}
   .rx-foot:empty{display:none}
 
-  /* Step 1 — capture */
+  /* Step 1 - capture */
   .rx-hero{text-align:center;padding:10px 6px 18px}
   .rx-hero-ic{font-size:2.6rem;line-height:1}
   .rx-hero h3{margin:10px 0 6px;font-size:1.08rem}
@@ -2083,7 +2092,7 @@
   .rx-sub{display:block;text-align:center;font-size:.7rem;color:var(--text-muted);
     margin-top:7px}
 
-  /* Step 2 — working */
+  /* Step 2 - working */
   .rx-work{text-align:center;padding:60px 20px}
   .rx-spin{width:46px;height:46px;margin:0 auto 18px;border-radius:50%;
     border:4px solid var(--border);border-top-color:var(--primary);
@@ -2095,7 +2104,7 @@
     margin:18px auto 0;max-width:260px;overflow:hidden}
   .rx-bar-p div{height:100%;background:var(--primary);width:0;transition:width .3s}
 
-  /* Step 3 — review */
+  /* Step 3 - review */
   .rx-total{background:var(--bg-card);border:1px solid var(--border);
     border-radius:var(--radius);padding:16px;margin-bottom:12px}
   .rx-total label{font-size:.72rem;font-weight:700;color:var(--text-muted)}
@@ -2264,7 +2273,7 @@
     transition:width .45s var(--ease)}
   .budget-card.fast .budget-fill{background:var(--accent)}
   .budget-card.over .budget-fill{background:var(--danger)}
-  /* Marker for where you'd be if spending evenly — the reference that
+  /* Marker for where you'd be if spending evenly - the reference that
      turns a total into a judgement */
   .budget-today{position:absolute;top:-3px;width:2px;height:14px;
     background:var(--text);opacity:.45;border-radius:1px}
@@ -2462,8 +2471,8 @@
 
   /* ═══ Page background ═════════════════════════════════
      A flat white page reads as unfinished. This lays a soft
-     wash of the active user's colour behind everything —
-     blue for Alon, plum for Tali — strongest at the top where
+     wash of the active user's colour behind everything -
+     blue for Alon, plum for Tali - strongest at the top where
      the header meets content, fading out before the fold.
 
      `position:fixed` so it doesn't scroll (no seams, no repaint
@@ -2483,7 +2492,7 @@
       var(--bg);
     transition:background .3s var(--ease);
   }
-  /* Fine grain — adds depth without visible pattern. Inlined SVG
+  /* Fine grain - adds depth without visible pattern. Inlined SVG
      so there's no extra request. */
   body::after{
     content:'';
@@ -2503,7 +2512,7 @@
     --user-soft:#EAF0FA; --user-ink:#2A4A7F;
   }
 
-  /* Hero: deep navy for Alon, deep plum for Tali — a modern
+  /* Hero: deep navy for Alon, deep plum for Tali - a modern
      coloured surface rather than flat black, and an instant
      read on whose session is active. */
   .dash-hero{
@@ -2543,7 +2552,7 @@
     box-shadow:none;
   }
   #payment-alert p{color:#8C2318;font-size:.82rem;font-weight:500}
-  /* .alert-btn was white-on-translucent for the old red slab — on the
+  /* .alert-btn was white-on-translucent for the old red slab - on the
      new tinted card that renders as invisible. Solid fill instead. */
   #payment-alert .alert-btn{
     background:#CE2C31;color:#fff;border:1px solid #CE2C31;
@@ -2551,9 +2560,160 @@
     font-size:.79rem;font-weight:600;box-shadow:none;flex-shrink:0;
   }
   #payment-alert .alert-btn:active{background:#B02226;border-color:#B02226}
-  /* The bell was pulsing on a loop — ambient motion with nothing to say */
+  /* The bell was pulsing on a loop - ambient motion with nothing to say */
   #payment-alert .alert-icon{animation:none}
   </style>
+
+<style id="theme-dark">
+/* ══════════════════════════════════════════════════════════
+   DARK THEME
+   Active when <html data-theme="dark">. Set before first paint by the
+   small script in <head>, so there is never a white flash.
+   Most of the app runs on colour tokens, so overriding the tokens does
+   the bulk of the work; the rules below catch the few hard-coded tints.
+══════════════════════════════════════════════════════════ */
+html[data-theme="dark"]{
+  color-scheme:dark;
+  background:#0F1012;
+  --primary:#26915C; --primary-light:#3DB57B; --primary-tint:#11291D;
+  /* Used mostly as text (amounts, totals) - light on dark. The few places
+     that use it as a background are pinned back to deep green below. */
+  --primary-dark:#6FD19D;
+  --accent:#E8A33A; --warning:#E8A33A; --danger:#EF5A60;
+  /* mid blue: readable as text on dark AND behind white button text */
+  --info:#3B8EEA;
+  --bg:#0F1012; --bg-card:#18191C; --bg-surface:#202125; --bg-sunken:#0A0A0C;
+  --text:#ECEDEF; --text-muted:#A3A6AE; --text-light:#7D8089;
+  --border:#2A2C31; --border-strong:#3A3D44; --border-focus:#3DB57B;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.45);
+  --shadow:0 1px 3px rgba(0,0,0,.5);
+  --shadow-lg:0 8px 24px rgba(0,0,0,.55);
+  --shadow-card:0 1px 2px rgba(0,0,0,.5);
+}
+html[data-theme="dark"] :is(#sync-banner.synced,.checklist-meta,.report-hero,
+  .sw-balance-card.balanced){background:#1C5C3E}
+
+html[data-theme="dark"] body::after{opacity:.12}
+html[data-theme="dark"] #bottom-nav{background:rgba(22,23,26,.9);
+  border-top-color:rgba(255,255,255,.06)}
+html[data-theme="dark"] .staple-dropdown{background:rgba(26,27,30,.96)}
+html[data-theme="dark"] .form-group input:focus,
+html[data-theme="dark"] .form-group select:focus,
+html[data-theme="dark"] .form-group textarea:focus,
+html[data-theme="dark"] .maint-status-sel:focus{background:var(--bg-card)}
+html[data-theme="dark"] .icon-wrap{filter:saturate(1.1)}
+html[data-theme="dark"] .dish-result-card{background:#26221B}
+html[data-theme="dark"] .ingr-result-row{background:rgba(255,255,255,.05)}
+html[data-theme="dark"] .s-low,
+html[data-theme="dark"] .badge-type-carbs{background:rgba(245,166,35,.16)}
+html[data-theme="dark"] .s-out,
+html[data-theme="dark"] .badge-type-meat,
+html[data-theme="dark"] .badge-noon{background:rgba(239,90,96,.16)}
+html[data-theme="dark"] .badge-morning{background:rgba(245,166,35,.16)}
+html[data-theme="dark"] .badge-evening{background:rgba(94,168,245,.16);color:#9CC8F7}
+html[data-theme="dark"] .badge-type-veggies,
+html[data-theme="dark"] .s-stock,
+html[data-theme="dark"] .btn-ingr-add-sm{color:#6FD19D}
+html[data-theme="dark"] .badge-upgrade{color:#A9A7FF}
+html[data-theme="dark"] :is(.asst-verb,.asst-chip:active){color:#A49EFF}
+html[data-theme="dark"] .dish-ingr-toggle{color:#9AA8F5}
+html[data-theme="dark"] .pill-priority-low{color:#A3A6AE}
+html[data-theme="dark"] .staple-btn.stock{background:rgba(61,181,123,.14)}
+html[data-theme="dark"] .staple-btn.low{background:rgba(239,90,96,.14)}
+html[data-theme="dark"] .sk{background:linear-gradient(90deg,#222327 25%,#2C2D32 50%,#222327 75%);
+  background-size:200% 100%}
+html[data-theme="dark"] #payment-alert{background:rgba(239,90,96,.12);
+  border-color:rgba(239,90,96,.35)}
+html[data-theme="dark"] .rx-check.ok{background:rgba(61,181,123,.13);color:#7FD8A8}
+html[data-theme="dark"] .rx-check.warn{background:rgba(232,163,58,.14);color:#F0C17A}
+html[data-theme="dark"] .rx-disc{color:#7FD8A8}
+html[data-theme="dark"] .rx-row.unknown{border-color:#3A3D44}
+html[data-theme="dark"] #toast{box-shadow:0 0 0 1px rgba(255,255,255,.08),0 6px 20px rgba(0,0,0,.6)}
+html[data-theme="dark"] .modal-bg{background:rgba(0,0,0,.55)}
+html[data-theme="dark"] img.emoji,html[data-theme="dark"] .empty-icon{filter:none}
+
+
+/* Hard-coded dark text (status pills, badges, tags) - same hue, lifted
+   for a dark background. Generated from every such rule in the app. */
+html[data-theme="dark"] .asst-verb{color:#9691F3}
+html[data-theme="dark"] .asst-low-conf .asst-verb{color:#F3CB91}
+html[data-theme="dark"] .asst-chip:active{color:#9691F3}
+html[data-theme="dark"] .due-banner-title{color:#F3CA91}
+html[data-theme="dark"] .bp-btn[data-p="Alon"].active{color:#91B7F3}
+html[data-theme="dark"] .bp-btn[data-p="Tali"].active{color:#F292B8}
+html[data-theme="dark"] .bill-missing{color:#F3CB91}
+html[data-theme="dark"] .sw-src-tag{color:#91B7F3}
+html[data-theme="dark"] .pill-pending{color:#F3CA91}
+html[data-theme="dark"] .pill-priority-high{color:#E9A29B}
+html[data-theme="dark"] .pill-priority-medium{color:#F3CA91}
+html[data-theme="dark"] .pill-priority-low{color:#C2C2C2}
+html[data-theme="dark"] .badge-upgrade{color:#9695EF}
+html[data-theme="dark"] .pantry-tag{color:#F3CA91}
+html[data-theme="dark"] .sw-settle-tag{color:#92F2B9}
+html[data-theme="dark"] .badge-alon{color:#91F3D7}
+html[data-theme="dark"] .badge-tali{color:#EF94B9}
+html[data-theme="dark"] .dish-result-name{color:#E9A29B}
+html[data-theme="dark"] .staple-btn.stock .staple-status-pill{color:#92F2B9}
+html[data-theme="dark"] .staple-btn.low .staple-status-pill{color:#E9A29B}
+html[data-theme="dark"] .rx-check.ok{color:#9DE6C6}
+html[data-theme="dark"] .rx-check.warn{color:#F3BC91}
+html[data-theme="dark"] .rx-disc{color:#9DE6C6}
+html[data-theme="dark"] .pick-flag.low{color:#ED9F97}
+html[data-theme="dark"] #payment-alert p{color:#ED9F97}
+html[data-theme="dark"] :is(.s-stock,.badge-type-veggies){background:rgba(61,181,123,.15)}
+/* chips whose background was darkened above need lighter text */
+html[data-theme="dark"] .s-low{color:#F3CD91}
+html[data-theme="dark"] .s-out{color:#E8A29B}
+html[data-theme="dark"] .s-stock{color:#9BE8BC}
+html[data-theme="dark"] .badge-type-meat{color:#E8A29B}
+html[data-theme="dark"] .badge-type-carbs{color:#F3E091}
+html[data-theme="dark"] .badge-type-veggies{color:#9BE8BC}
+html[data-theme="dark"] .badge-noon{color:#E8A29B}
+html[data-theme="dark"] .badge-morning{color:#F3D591}
+html[data-theme="dark"] .badge-evening{color:#9BCAE9}
+
+/* ── Smooth switch ─────────────────────────────────────────
+   With View Transitions the whole page cross-fades (gradients and all).
+   Without them, colours ease instead. Both last ~0.5s. */
+@keyframes thOut{to{opacity:0}}
+@keyframes thIn{from{opacity:0}}
+html[data-theme-switch]::view-transition-group(*){animation-duration:520ms}
+html[data-theme-switch]::view-transition-old(*){animation:520ms ease both thOut}
+html[data-theme-switch]::view-transition-new(*){animation:520ms ease both thIn}
+html.theme-anim, html.theme-anim *, html.theme-anim *::before, html.theme-anim *::after{
+  transition:background-color .5s ease, color .5s ease, border-color .5s ease,
+             box-shadow .5s ease, fill .5s ease, stroke .5s ease !important}
+
+/* ── Header switch + menu ──────────────────────────────── */
+#theme-btn{width:34px;height:34px;border-radius:50%;flex-shrink:0;cursor:pointer;
+  margin-left:auto;margin-right:8px;border:1.5px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.1);color:#fff;display:flex;align-items:center;
+  justify-content:center;padding:0;transition:background .2s,transform .2s}
+#theme-btn:active{transform:scale(.94);background:rgba(255,255,255,.2)}
+#theme-btn svg{width:17px;height:17px}
+#app-header #who-toggle{margin-left:0}
+#theme-menu{position:fixed;z-index:600;min-width:200px;padding:6px;
+  border-radius:14px;background:var(--bg-card);border:1px solid var(--border);
+  box-shadow:0 12px 36px rgba(0,0,0,.22);direction:rtl;
+  opacity:0;transform:translateY(-6px) scale(.97);transform-origin:top left;
+  pointer-events:none;transition:opacity .18s ease,transform .18s ease}
+#theme-menu.open{opacity:1;transform:none;pointer-events:auto}
+#theme-menu button{display:flex;align-items:center;gap:11px;width:100%;
+  padding:11px 12px;border:none;border-radius:10px;background:none;cursor:pointer;
+  font-family:inherit;color:var(--text);text-align:start}
+#theme-menu button:active{background:var(--bg-surface)}
+#theme-menu button.on{background:var(--bg-surface)}
+#theme-menu svg{width:19px;height:19px;flex-shrink:0;color:var(--text-muted)}
+#theme-menu .tm-text{flex:1;display:flex;flex-direction:column;gap:1px}
+#theme-menu .tm-text b{font-size:.88rem;font-weight:650}
+#theme-menu .tm-text small{font-size:.68rem;color:var(--text-muted)}
+#theme-menu .tm-check{width:18px;height:18px;border-radius:50%;flex-shrink:0;
+  border:1.5px solid var(--border-strong)}
+#theme-menu button.on .tm-check{border:none;background:var(--primary);
+  box-shadow:inset 0 0 0 4px var(--bg-card)}
+#theme-menu-scrim{position:fixed;inset:0;z-index:599;display:none}
+#theme-menu-scrim.open{display:block}
+</style>
 
 </head>
 <body>
@@ -2580,6 +2740,9 @@
     <span id="header-title">Home Manager</span>
     <span id="header-subtitle">Your Family Hub</span>
   </div>
+
+  <!-- Appearance: Auto / Light / Dark -->
+  <button id="theme-btn" aria-label="מצב תצוגה" onclick="toggleThemeMenu()"></button>
 
   <!-- Right: user avatar toggle -->
   <div id="who-toggle">
@@ -2646,7 +2809,7 @@
         <button class="asst-chip" dir="auto" onclick="assistantFill(this)">מה המשימות</button>
         <button class="asst-chip" dir="auto" onclick="assistantFill(this)">מה כדאי לקנות</button>
       </div>
-      <p class="asst-ex-title" style="margin-top:14px">🇮🇱 פקודות — לחץ כדי למלא</p>
+      <p class="asst-ex-title" style="margin-top:14px">🇮🇱 פקודות - לחץ כדי למלא</p>
       <div class="asst-chips">
         <button class="asst-chip" dir="auto" onclick="assistantFill(this)">חלב נגמר</button>
         <button class="asst-chip" dir="auto" onclick="assistantFill(this)">קניתי לחם</button>
@@ -2677,7 +2840,7 @@
 <!-- OFFLINE / PENDING-SYNC BANNER -->
 <div id="sync-banner" role="status">
   <span id="sync-banner-icon">📡</span>
-  <span id="sync-banner-text">אין חיבור — השינויים נשמרים במכשיר ויסתנכרנו אוטומטית</span>
+  <span id="sync-banner-text">אין חיבור - השינויים נשמרים במכשיר ויסתנכרנו אוטומטית</span>
 </div>
 
 <!-- PAYMENT ALERT -->
@@ -2694,16 +2857,16 @@
       <div class="dash-hero-phrase" id="greeting-phrase">Good morning ☀️</div>
       <div class="dash-hero-name" id="greeting-name">Alon</div>
       <div class="dash-hero-sub" id="greeting-sub">Have a great day ahead</div>
-      <div class="dash-hero-date" id="greeting-date">—</div>
+      <div class="dash-hero-date" id="greeting-date">-</div>
       <div class="dash-hero-badge">
         <span>🏠 Home Manager</span>
       </div>
     </div>
-    <!-- What needs you right now — fills the empty half of the hero -->
+    <!-- What needs you right now - fills the empty half of the hero -->
     <div class="hero-side" id="hero-side"></div>
   </div>
 
-  <!-- Laundry widget — hidden when idle, auto-shown when running/done -->
+  <!-- Laundry widget - hidden when idle, auto-shown when running/done -->
   <div id="laundry-widget" class="laundry-widget" style="display:none" role="status" aria-live="polite">
     <!-- Populated dynamically by initLaundryGlobal() -->
   </div>
@@ -2757,7 +2920,7 @@
   <div class="activity-feed" id="activity-feed">
     <div class="activity-empty">
       <div class="activity-empty-icon">🔔</div>
-      <p>No activity yet — actions will appear here.</p>
+      <p>No activity yet - actions will appear here.</p>
     </div>
   </div>
 </main>
@@ -2782,7 +2945,7 @@
     </div>
     <div class="submenu-card" onclick="navigateTo('chores-maintenance')">
       <div class="icon-wrap" style="--icon-bg:rgba(59,130,246,.12)">🔧</div>
-      <div class="item-text"><div class="item-title">Task Log</div><div class="item-desc">יומן משימות — track apartment tasks</div></div>
+      <div class="item-text"><div class="item-title">Task Log</div><div class="item-desc">יומן משימות - track apartment tasks</div></div>
       <span class="item-arrow">›</span>
     </div>
   </div>
@@ -2821,7 +2984,7 @@
       <div class="progress-track"><div class="progress-fill" id="weekly-prog-fill" style="width:0%"></div></div>
     </div>
     <div class="checklist-meta">
-      <span>Week of <strong id="weekly-start">—</strong></span><span>Resets Sunday</span>
+      <span>Week of <strong id="weekly-start">-</strong></span><span>Resets Sunday</span>
     </div>
     <table class="checklist-table">
       <thead><tr><th style="width:34px"></th><th>Task</th><th>Room</th><th style="width:36px"></th></tr></thead>
@@ -2842,7 +3005,7 @@
       <div class="progress-track"><div class="progress-fill" id="monthly-prog-fill" style="width:0%"></div></div>
     </div>
     <div class="checklist-meta">
-      <span>Month of <strong id="monthly-month">—</strong></span><span>Resets 1st</span>
+      <span>Month of <strong id="monthly-month">-</strong></span><span>Resets 1st</span>
     </div>
     <table class="checklist-table">
       <thead><tr><th style="width:34px"></th><th>Task</th><th>Room</th><th style="width:36px"></th></tr></thead>
@@ -2916,7 +3079,7 @@
       <li><strong>Succulents &amp; Cacti:</strong> Once a week, small amount</li>
       <li><strong>Kitchen Herbs:</strong> Every 2 days, keep moist</li>
       <li><strong>Outdoor Pots:</strong> Daily in summer, every other day in winter</li>
-      <li><strong>Lavender:</strong> Weekly — drought-tolerant, don't over-water</li>
+      <li><strong>Lavender:</strong> Weekly - drought-tolerant, don't over-water</li>
     </ul>
   </div>
 </main>
@@ -2936,7 +3099,7 @@
       <label for="bills-month-sel">Month</label>
       <select id="bills-month-sel"></select>
     </div>
-    <!-- Rent — split between both partners -->
+    <!-- Rent - split between both partners -->
     <div class="bill-rent-block">
       <div class="bill-rent-title">🏠 Rent <span class="bill-rent-hint">מחולק בין שניכם</span></div>
       <div class="bills-grid">
@@ -2955,12 +3118,12 @@
       </button>
       <div class="rent-note" id="rent-agreement-note"></div>
       <div class="rent-excluded">
-        ℹ️ שכר הדירה <strong>לא נכנס להתחשבנות הזוגית</strong> — הסכומים כבר מוסכמים ביניכם.
+        ℹ️ שכר הדירה <strong>לא נכנס להתחשבנות הזוגית</strong> - הסכומים כבר מוסכמים ביניכם.
         הוא כן נספר בהוצאות החודשיות ובדוחות.
       </div>
     </div>
 
-    <!-- Other bills — each with its own payer -->
+    <!-- Other bills - each with its own payer -->
     <div class="bills-grid">
       <div class="form-group bill-field">
         <label for="bill-elec">⚡ Electricity</label>
@@ -3015,7 +3178,7 @@
   <p class="section-title" style="margin-top:22px">🔔 התראות</p>
   <div class="confirm-card">
     <p>התראות לטלפון על <strong>חשבונות שלא הוזנו</strong>, <strong>צמחים שצריכים השקיה</strong>
-       ו<strong>משימות באיחור</strong> — גם כשהאפליקציה סגורה.</p>
+       ו<strong>משימות באיחור</strong> - גם כשהאפליקציה סגורה.</p>
     <p class="last-conf" id="push-status">בודק…</p>
     <button class="btn-confirm" id="btn-push-enable" onclick="enablePush()">🔔 הפעל התראות בטלפון הזה</button>
     <p class="restore-warn" style="margin-top:10px">
@@ -3026,7 +3189,7 @@
 
   <p class="section-title" style="margin-top:22px">💾 גיבוי נתונים</p>
   <div class="confirm-card">
-    <p>מוריד קובץ אחד עם <strong>כל</strong> נתוני האפליקציה — הוצאות, חשבונות, התחשבנות, מלאי, משימות. שמור אותו ב-iCloud או ב-Drive.</p>
+    <p>מוריד קובץ אחד עם <strong>כל</strong> נתוני האפליקציה - הוצאות, חשבונות, התחשבנות, מלאי, משימות. שמור אותו ב-iCloud או ב-Drive.</p>
     <p class="last-conf" id="backup-status">⚠️ עדיין לא נוצר גיבוי</p>
     <button class="btn-confirm" id="btn-export-data" onclick="exportAllData('btn-export-data')">⬇️ הורד גיבוי מלא</button>
 
@@ -3096,7 +3259,7 @@
       <div class="icon-wrap" style="--icon-bg:rgba(236,72,153,.12)">🤝</div>
       <div class="item-text">
         <div class="item-title">התחשבנות זוגית</div>
-        <div class="item-desc">Splitwise — who owes whom</div>
+        <div class="item-desc">Splitwise - who owes whom</div>
       </div>
       <span class="item-arrow">›</span>
     </div>
@@ -3133,7 +3296,7 @@
     <label style="font-size:.77rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);display:block;margin-bottom:7px">Select Month</label>
     <select id="report-select" onchange="loadReport(this.value)"
       style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.88rem;background:var(--bg-card);color:var(--text);font-family:inherit;appearance:none">
-      <option value="">— Select a month —</option>
+      <option value="">- Select a month -</option>
     </select>
   </div>
   <div id="report-content">
@@ -3160,7 +3323,7 @@
       <label for="sw-amount">💰 סכום (₪)</label>
       <input type="number" id="sw-amount" placeholder="0" min="0" step="0.01">
     </div>
-    <!-- Values must stay "groceries" / "upgrades" — Current Status and the
+    <!-- Values must stay "groceries" / "upgrades" - Current Status and the
          Monthly Reports branch on exactly those two strings. -->
     <div class="form-group">
       <label for="sw-category">קטגוריה</label>
@@ -3195,7 +3358,7 @@
   <div class="drive-card">
     <div class="drive-card-glyph">📁</div>
     <h2 class="drive-card-title">התיקייה המשותפת שלנו</h2>
-    <p class="drive-card-desc">כל המסמכים, החוזים, הקבלות<br>וההוצאות — במקום אחד</p>
+    <p class="drive-card-desc">כל המסמכים, החוזים, הקבלות<br>וההוצאות - במקום אחד</p>
     <a class="drive-open-btn"
        href="https://drive.google.com/drive/folders/1UfYu1A3na8fxhU-ny3rIUztINhvAfwu_?usp=drive_link"
        target="_blank" rel="noopener noreferrer">
@@ -3221,7 +3384,7 @@
     </div>
     <div class="submenu-card" onclick="navigateTo('pantry')">
       <div class="icon-wrap" style="--icon-bg:rgba(212,160,23,.15)">🧺</div>
-      <div class="item-text"><div class="item-title">Pantry Staples</div><div class="item-desc">מלאי קריטי — track what's running low</div></div>
+      <div class="item-text"><div class="item-title">Pantry Staples</div><div class="item-desc">מלאי קריטי - track what's running low</div></div>
       <span class="item-arrow">›</span>
     </div>
   </div>
@@ -3234,7 +3397,7 @@
     🛒 <span>מצב קנייה</span>
     <small>תצוגה גדולה לסופר</small>
   </button>
-  <!-- Receipt scan — additive. It only ticks items and fills the amount;
+  <!-- Receipt scan - additive. It only ticks items and fills the amount;
        the existing "Send to Monthly Expenses" below does the saving. -->
   <button class="btn-shop-mode btn-rx" onclick="openReceiptScan()">
     🧾 <span>סריקת קבלה</span>
@@ -3326,7 +3489,7 @@
   <div class="pantry-grid" id="pantry-grid">
     <div class="pantry-empty">
       <div class="empty-icon">🧺</div>
-      <p>No staples yet — add one above!</p>
+      <p>No staples yet - add one above!</p>
     </div>
   </div>
 </main>
@@ -3361,23 +3524,23 @@
       <strong>בכל טלפון צריך ליצור את הקיצורים מחדש, עם אותם שמות.</strong>
     </p>
     <div class="sh-field">
-      <label>▶ שואב — Clean</label>
+      <label>▶ שואב - Clean</label>
       <input type="text" id="sh-vac-clean" placeholder="Vacuum Clean">
     </div>
     <div class="sh-field">
-      <label>⏸ שואב — Pause</label>
+      <label>⏸ שואב - Pause</label>
       <input type="text" id="sh-vac-pause" placeholder="Vacuum Pause">
     </div>
     <div class="sh-field">
-      <label>⏵ שואב — Resume</label>
+      <label>⏵ שואב - Resume</label>
       <input type="text" id="sh-vac-resume" placeholder="Vacuum Resume">
     </div>
     <div class="sh-field">
-      <label>🔌 שואב — Recharge</label>
+      <label>🔌 שואב - Recharge</label>
       <input type="text" id="sh-vac-recharge" placeholder="Vacuum Recharge">
     </div>
     <div class="sh-field">
-      <label>📍 שואב — Locate</label>
+      <label>📍 שואב - Locate</label>
       <input type="text" id="sh-vac-locate" placeholder="Vacuum Locate">
     </div>
 
@@ -3388,11 +3551,11 @@
       זה עובד לכל אפליקציה, בלי הגדרות נוספות.
     </p>
     <div class="sh-field">
-      <label>❄️ מזגן — פתיחת Tornado WIFI 3</label>
+      <label>❄️ מזגן - פתיחת Tornado WIFI 3</label>
       <input type="text" id="sh-app-tornado" placeholder="Open Tornado">
     </div>
     <div class="sh-field">
-      <label>📺 טלוויזיה — פתיחת שלט פיליפס</label>
+      <label>📺 טלוויזיה - פתיחת שלט פיליפס</label>
       <input type="text" id="sh-app-philips" placeholder="Open Philips">
     </div>
     <button class="btn-send" onclick="saveShSettings()" style="width:100%;margin-top:4px">💾 שמור</button>
@@ -3421,7 +3584,7 @@
       </button>
     </div>
 
-    <!-- ── ❄️ מזגן — launcher only ─────────────── -->
+    <!-- ── ❄️ מזגן - launcher only ─────────────── -->
     <div class="sh-card">
       <div class="sh-card-header">
         <div class="sh-card-left">
@@ -3523,7 +3686,7 @@
       <span class="planner-type-label">🥩 בשר</span>
       <div class="planner-dish-list" id="plan-list-meat"></div>
       <div class="planner-add-row">
-        <select class="planner-select" id="plan-select-meat"><option value="">— בחר מנה —</option></select>
+        <select class="planner-select" id="plan-select-meat"><option value="">- בחר מנה -</option></select>
         <button class="btn-plan-add" onclick="_plannerAddDish('meat')">+ הוסף</button>
       </div>
     </div>
@@ -3533,7 +3696,7 @@
       <span class="planner-type-label">🍞 פחמימה</span>
       <div class="planner-dish-list" id="plan-list-carbs"></div>
       <div class="planner-add-row">
-        <select class="planner-select" id="plan-select-carbs"><option value="">— בחר מנה —</option></select>
+        <select class="planner-select" id="plan-select-carbs"><option value="">- בחר מנה -</option></select>
         <button class="btn-plan-add" onclick="_plannerAddDish('carbs')">+ הוסף</button>
       </div>
     </div>
@@ -3543,7 +3706,7 @@
       <span class="planner-type-label">🥦 ירקות</span>
       <div class="planner-dish-list" id="plan-list-veggies"></div>
       <div class="planner-add-row">
-        <select class="planner-select" id="plan-select-veggies"><option value="">— בחר מנה —</option></select>
+        <select class="planner-select" id="plan-select-veggies"><option value="">- בחר מנה -</option></select>
         <button class="btn-plan-add" onclick="_plannerAddDish('veggies')">+ הוסף</button>
       </div>
     </div>
@@ -3610,11 +3773,15 @@
   </div>
   <div id="shop-mode-list"></div>
   <div id="shop-mode-foot">
-    <button id="shop-mode-finish" onclick="finishShopMode()">סיימתי — רשום הוצאה</button>
+    <button id="shop-mode-finish" onclick="finishShopMode()">סיימתי - רשום הוצאה</button>
   </div>
 </div>
 
 <!-- ═════════════════ UPGRADE PURCHASED MODAL ═══════════ -->
+<!-- Appearance menu -->
+<div id="theme-menu-scrim" onclick="toggleThemeMenu(false)"></div>
+<div id="theme-menu" role="menu" aria-label="מצב תצוגה"></div>
+
 <!-- ═════════════════ RECEIPT SCAN ══════════════════════ -->
 <div id="rx">
   <div class="rx-bar">
@@ -3653,7 +3820,7 @@
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-title">💳 מי שילם?</div>
-    <div class="pay-sum" id="pay-sum">—</div>
+    <div class="pay-sum" id="pay-sum">-</div>
     <div class="pay-opts">
       <button class="pay-opt" data-pay="Alon"><span>🧑</span><span>אלון שילם</span></button>
       <button class="pay-opt" data-pay="Tali"><span>👩</span><span>טלי שילמה</span></button>
@@ -3686,7 +3853,7 @@
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-title">💰 נקנה!</div>
-    <div class="bought-item" id="bought-item">—</div>
+    <div class="bought-item" id="bought-item">-</div>
     <div class="form-group">
       <label for="bought-amount">כמה שילמתם? (₪)</label>
       <input type="number" id="bought-amount" inputmode="decimal" step="0.01" min="0"
@@ -3714,7 +3881,7 @@
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-title">💸 סגירת חשבון</div>
-    <div class="settle-summary" id="settle-summary">—</div>
+    <div class="settle-summary" id="settle-summary">-</div>
     <div class="form-group">
       <label for="settle-amount">סכום ההחזר (₪)</label>
       <input type="number" id="settle-amount" placeholder="0" min="0" step="0.01">
@@ -3742,7 +3909,7 @@
     <div class="form-group">
       <label for="task-room-select">Room (optional)</label>
       <select id="task-room-select">
-        <option value="">— General / No Room —</option>
+        <option value="">- General / No Room -</option>
         <option value="living">🛋️ Living Room</option>
         <option value="hallway">🚪 Hallway</option>
         <option value="kitchen">🍳 Kitchen</option>
@@ -3792,7 +3959,7 @@
 <script type="module">
 /* ══════════════════════════════════════════════════════════
    FIREBASE INIT
-   Firestore collections (all read with flat getDocs — no composite indexes needed):
+   Firestore collections (all read with flat getDocs - no composite indexes needed):
    /cleaning_templates/{id}  → { name, area, frequency, createdAt }
    /checklists/{key}         → { templateId: bool, … }
    /watering/log             → { plantId: timestampMs, … }
@@ -3832,7 +3999,7 @@ const analytics = getAnalytics(app);
 /* ── Offline durability ────────────────────────────────────
    Without a persistent cache, Firestore keeps pending writes in
    MEMORY only. On a phone that means: save something with a weak
-   signal, the app gets swapped out — the write is gone silently.
+   signal, the app gets swapped out - the write is gone silently.
 
    persistentLocalCache writes to IndexedDB, so:
      · pending writes survive an app close / reload and send later
@@ -3853,7 +4020,7 @@ try {
 /* ══════════════════════════════════════════════════════════
    CONNECTION / SYNC MONITOR
    Pending writes are safe in IndexedDB, but the user should still
-   KNOW when something hasn't reached the server yet — silence is
+   KNOW when something hasn't reached the server yet - silence is
    what makes people think data was lost.
 ══════════════════════════════════════════════════════════ */
 let _syncHideTimer = null;
@@ -3875,9 +4042,9 @@ function _hideSyncBanner() {
 }
 
 function _initSyncMonitor() {
-  const online = () => _showSyncBanner("החיבור חזר — מסנכרן…", "🔄", true);
+  const online = () => _showSyncBanner("החיבור חזר - מסנכרן…", "🔄", true);
   const offline = () =>
-    _showSyncBanner("אין חיבור — השינויים נשמרים במכשיר ויסתנכרנו אוטומטית", "📡", false);
+    _showSyncBanner("אין חיבור - השינויים נשמרים במכשיר ויסתנכרנו אוטומטית", "📡", false);
 
   window.addEventListener("online",  online);
   window.addEventListener("offline", offline);
@@ -3890,7 +4057,7 @@ function _initSyncMonitor() {
    pulls every collection into a single JSON file the user keeps.
 ══════════════════════════════════════════════════════════ */
 /* Every collection the app writes to. Keep this in sync when adding
-   new ones — a collection missing here is silently absent from backups. */
+   new ones - a collection missing here is silently absent from backups. */
 const _BACKUP_COLLECTIONS = [
   "expenses", "bills", "splitwise_expenses", "reports",
   "pantry", "grocery_queue", "upgrade_queue",
@@ -3917,7 +4084,7 @@ window.exportAllData = async function(btnId) {
       const snap = await getDocs(collection(db, name));
       const rows = [];
       snap.forEach(d => {
-        // serverTimestamp objects don't survive JSON — flatten to millis
+        // serverTimestamp objects don't survive JSON - flatten to millis
         const raw = d.data();
         const clean = {};
         for (const [k, v] of Object.entries(raw)) {
@@ -3947,7 +4114,7 @@ window.exportAllData = async function(btnId) {
     localStorage.setItem("lastBackupAt", String(Date.now()));
     _renderBackupStatus();
     showToast(failed.length
-      ? `✅ ${docCount} רשומות — ${failed.length} אוספים נכשלו`
+      ? `✅ ${docCount} רשומות - ${failed.length} אוספים נכשלו`
       : `✅ גובו ${docCount} רשומות`, failed.length ? "error" : "success");
   } catch (e) {
     showToast("שגיאת ייצוא: " + e.message, "error");
@@ -4018,7 +4185,7 @@ window.restoreFromBackup = async function(input) {
   log(`\nסה״כ שוחזרו ${done} רשומות${failed ? ` · ${failed} נכשלו` : ""}`);
   showToast(failed ? `שוחזרו ${done} · ${failed} נכשלו` : `✅ שוחזרו ${done} רשומות`,
             failed ? "error" : "success");
-  _logActivity("♻️", `שחזר נתונים מגיבוי — ${done} רשומות`);
+  _logActivity("♻️", `שחזר נתונים מגיבוי - ${done} רשומות`);
   if (btn) { btn.disabled = false; btn.textContent = "📂 בחר קובץ גיבוי"; }
   log("\nרענן את הדף כדי לראות את כל הנתונים המשוחזרים.");
 };
@@ -4043,7 +4210,7 @@ function _renderBackupStatus() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   ✨ ASSISTANT — COMMAND PARSER
+   ✨ ASSISTANT - COMMAND PARSER
    Rule-based and bilingual. No AI, no network, no API key.
    Cross-references existing data so it redirects or refuses
    instead of creating duplicates. Handles questions and
@@ -4120,7 +4287,7 @@ function clean(s) {
     .replace(/\s+/g, " ")
     .replace(/^[\s,.\-–—]+|[\s,.\-–—]+$/g, "")
     .trim();
-  // Strip filler REPEATEDLY and only after trimming — a leading space
+  // Strip filler REPEATEDLY and only after trimming - a leading space
   // would otherwise defeat the ^ anchor ("  את הקפה"), and one pass
   // would leave "a new bookshelf" as "new bookshelf".
   let prev;
@@ -4130,14 +4297,14 @@ function clean(s) {
 
 /* ── Bilingual word boundaries ──────────────────────────────
    JS `\b` is defined over [A-Za-z0-9_], so `\bחשמל\b` can NEVER
-   match — Hebrew letters aren't "word characters". Every
+   match - Hebrew letters aren't "word characters". Every
    Hebrew-only pattern using \b fails silently.
    These build boundaries out of whitespace/punctuation instead,
    which works for both scripts. Lookbehind is avoided for older
    iOS Safari, so the leading boundary char is captured and
    restored on replace.                                        */
-const BND_BEFORE = "(?:^|[\\s,.:;!?()\\[\\]\"'\\-–—])";
-const BND_AFTER  = "(?=$|[\\s,.:;!?()\\[\\]\"'\\-–—])";
+const BND_BEFORE = "(?:^|[\\s,.:;!?()\\[\\]\"'\\---])";
+const BND_AFTER  = "(?=$|[\\s,.:;!?()\\[\\]\"'\\---])";
 
 const wordRe   = (alts, flags = "i")  => new RegExp(BND_BEFORE + "(?:" + alts + ")" + BND_AFTER, flags);
 const hasWord  = (text, alts)         => wordRe(alts).test(text);
@@ -4145,7 +4312,7 @@ const hasWord  = (text, alts)         => wordRe(alts).test(text);
    because callers collapse whitespace afterwards. */
 const dropWord = (text, alts)         => text.replace(wordRe(alts, "gi"), " ");
 
-/* Person detection — boundary safe in both scripts, Tali first
+/* Person detection - boundary safe in both scripts, Tali first
    (critical: "tali" contains the substring "i", which naive
    matching mis-attributed to Alon) */
 function detectPerson(text) {
@@ -4179,7 +4346,7 @@ const PANTRY_EMOJI = { low:"🔴", stock:"🟢" };
    PARSE
 ══════════════════════════════════════════════════════════ */
 /* ══════════════════════════════════════════════════════════
-   QUESTIONS — answered by reading data, no AI required.
+   QUESTIONS - answered by reading data, no AI required.
    Each returns {type:"query", q:<id>, arg?} for the app to resolve.
 ══════════════════════════════════════════════════════════ */
 const QUERIES = [
@@ -4195,7 +4362,7 @@ const QUERIES = [
 ];
 
 function parseQuery(text) {
-  /* Specific-bill questions are checked FIRST — "כמה שילמנו על חשמל"
+  /* Specific-bill questions are checked FIRST - "כמה שילמנו על חשמל"
      also matches the general spending pattern, and the more specific
      answer is the one the user wants. */
   const m = text.match(/(?:כמה|how much).{0,20}?(חשמל|גז|מים|ארנונה|אינטרנט|שכר דירה|electricity|gas|water|arnona|wifi|rent)/i);
@@ -4210,14 +4377,14 @@ function parseQuery(text) {
 }
 
 /* ══════════════════════════════════════════════════════════
-   MULTI-ITEM — "חלב לחם וביצים נגמרו" / "milk and bread are low"
+   MULTI-ITEM - "חלב לחם וביצים נגמרו" / "milk and bread are low"
    Splits the subject list, then re-runs the full command once per
    item so every rule (incl. duplicate checks) still applies.
 ══════════════════════════════════════════════════════════ */
 function parseMulti(raw, ctx) {
   const text = normText(raw);
   // Only worth splitting when a separator sits inside the subject.
-  // NB: no \b around ו — JS word boundaries don't apply to Hebrew.
+  // NB: no \b around ו - JS word boundaries don't apply to Hebrew.
   if (!/(?:,|\s+ו[א-ת]|\sand\s|\+)/.test(text)) return null;
 
   // Find the trailing verb phrase so it can be re-attached to each item
@@ -4238,12 +4405,12 @@ function parseMulti(raw, ctx) {
   if (!make) for (const h of HEAD) if (h.re.test(text)) { body = text.replace(h.re, ""); make = h.make; break; }
   if (!make) return null;
 
-  // "add X to groceries" — strip the trailing target before splitting
+  // "add X to groceries" - strip the trailing target before splitting
   body = body.replace(/\s+to\s+(?:the\s+)?(?:groceries|grocery|shopping)(?:\s+list)?\s*$/i, "")
              .replace(/\s+to\s+(?:the\s+)?upgrades?\s*$/i, "");
 
   /* Split on comma, "and", "+", or the Hebrew prefix ו attached to the
-     next word. Note the letter range must be א-ת — the block
+     next word. Note the letter range must be א-ת - the block
      below that (֐-ֿ) is vowel points, not letters.
      Bare spaces are NOT separators: "שמן זית" is one item, not two. */
   const parts = body.split(/\s*,\s*|\s+and\s+|\s*\+\s*|\s+ו(?=[א-ת])/)
@@ -4276,7 +4443,7 @@ function parseCommand(raw, ctx = {}) {
 
   /* Duplicates are the main way these lists get messy, so every
      "add" path checks what already exists before creating anything.
-     Threshold is deliberately high (0.72) — a near-identical name is
+     Threshold is deliberately high (0.72) - a near-identical name is
      a duplicate, a merely similar one is a different product. */
   const DUP = 0.72;
   const already = (needle, list, field = "name") => {
@@ -4294,7 +4461,7 @@ function parseCommand(raw, ctx = {}) {
       const payer = detectPerson(text);
       return {
         type:"bill", key, amount, payer,
-        label:`${def.emoji} ${def.he} — ₪${amount}${payer ? ` · ${payer === "Tali" ? "טלי" : "אלון"}` : ""}`,
+        label:`${def.emoji} ${def.he} - ₪${amount}${payer ? ` · ${payer === "Tali" ? "טלי" : "אלון"}` : ""}`,
         verb:"רישום חשבון חודשי"
       };
     }
@@ -4309,7 +4476,7 @@ function parseCommand(raw, ctx = {}) {
     name = clean(name) || "הוצאה משותפת";
     return {
       type:"splitwise", name, amount, payer,
-      label:`🤝 ${name} — ₪${amount} · ${payer === "Tali" ? "טלי" : "אלון"}`,
+      label:`🤝 ${name} - ₪${amount} · ${payer === "Tali" ? "טלי" : "אלון"}`,
       verb:"רישום הוצאה משותפת בהתחשבנות"
     };
   }
@@ -4379,7 +4546,7 @@ function parseCommand(raw, ctx = {}) {
           label:`🧺 "${dup.name}" כבר קיים במלאי`,
           note: dup.status === "low"
             ? "והוא כבר מסומן כנגמר, אז הוא נמצא ברשימת הקניות."
-            : "אם נגמר לך — אמור למשל \"" + dup.name + " נגמר\"."
+            : "אם נגמר לך - אמור למשל \"" + dup.name + " נגמר\"."
         };
         return {
           type:"addPantry", name,
@@ -4397,7 +4564,7 @@ function parseCommand(raw, ctx = {}) {
 
       /* KEY RULE: a grocery item that is also a pantry staple must not
          become a second, disconnected row. Mark the staple as Running
-         Low instead — that adds it to the list under the staple's own
+         Low instead - that adds it to the list under the staple's own
          ID, so the pantry and the shopping list stay one source. */
       if (t.list === "groceries") {
         const staple = already(name, pantry);
@@ -4405,7 +4572,7 @@ function parseCommand(raw, ctx = {}) {
           type:"pantryStatus", id:staple.id, name:staple.name, status:"low",
           label:`🔴 ${staple.name} → Running Low`,
           verb:"סימון חוסר במלאי",
-          note:`"${staple.name}" הוא מוצר במלאי הבית — סימנתי אותו כנגמר, וכך הוא נכנס לרשימת הקניות בלי כפילות.`,
+          note:`"${staple.name}" הוא מוצר במלאי הבית - סימנתי אותו כנגמר, וכך הוא נכנס לרשימת הקניות בלי כפילות.`,
           confidence:1
         };
       }
@@ -4462,7 +4629,7 @@ function parseCommand(raw, ctx = {}) {
         type:"addList", list:"groceries", name:needle,
         label:`🛒 ${needle} → רשימת קניות`,
         verb:"הוספה לרשימת הקניות",
-        note:`"${needle}" לא נמצא במלאי הבית — אם זה מוצר קבוע, שווה להוסיף אותו למלאי.`
+        note:`"${needle}" לא נמצא במלאי הבית - אם זה מוצר קבוע, שווה להוסיף אותו למלאי.`
       };
     }
   }
@@ -4494,16 +4661,16 @@ function parseInput(raw, ctx = {}) {
 }
 
 /* ══════════════════════════════════════════════════════════
-   ✨ ASSISTANT — STATE & CONTEXT
+   ✨ ASSISTANT - STATE & CONTEXT
 ══════════════════════════════════════════════════════════ */
 let _asstCtx = null, _asstPending = null;
 
-/* Escape before any innerHTML — parsed names come from free text */
+/* Escape before any innerHTML - parsed names come from free text */
 const esc = s => String(s ?? "").replace(/[&<>"']/g,
   c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 
 /* Pull the entities the parser matches against. The two queues are
-   what make duplicate detection possible — the parser checks them
+   what make duplicate detection possible - the parser checks them
    before creating anything new. */
 async function _loadAsstContext() {
   const grab = async (col, field) => {
@@ -4529,7 +4696,7 @@ async function _loadAsstContext() {
    The dashboard read as empty because the cards only said their
    own name. Each now carries a real number, so the screen is
    informative at a glance instead of decorative.
-   Fails silently — a card without data just shows its subtitle.
+   Fails silently - a card without data just shows its subtitle.
 ══════════════════════════════════════════════════════════ */
 /* ══════════════════════════════════════════════════════════
    HERO PRIORITY PANEL
@@ -4537,7 +4704,7 @@ async function _loadAsstContext() {
    it answers one question: what needs me right now?
 
    Deliberately at most 3 rows. A panel that lists everything is a
-   panel nobody reads — items only appear when they're actionable,
+   panel nobody reads - items only appear when they're actionable,
    and it stays empty when nothing needs doing.
 ══════════════════════════════════════════════════════════ */
 async function _renderHeroSide() {
@@ -4557,7 +4724,7 @@ async function _renderHeroSide() {
       _loadBudget()
     ]);
 
-    /* 1. Bills still missing this month — the costliest thing to forget */
+    /* 1. Bills still missing this month - the costliest thing to forget */
     const b = bSnap.exists() ? bSnap.data() : {};
     const missing = [];
     if (!(b.rentAlon ?? b.rent ?? 0) && !(b.rentTali ?? 0)) missing.push("שכ״ד");
@@ -4604,7 +4771,7 @@ async function _renderHeroSide() {
       if (open) rows.push({ icon:"📋", val:`${open} משימות`, sub:"פתוחות",
                             go:"chores-maintenance" });
     }
-  } catch { /* hero is decoration if data fails — never block the page */ }
+  } catch { /* hero is decoration if data fails - never block the page */ }
 
   if (!rows.length) {
     el.innerHTML = `<div class="hero-clear">✅<span>הכל מסודר</span></div>`;
@@ -4678,7 +4845,7 @@ async function _loadDashStats() {
     catch { return null; }
   };
 
-  // 🧹 Chores — open tasks + plants needing water
+  // 🧹 Chores - open tasks + plants needing water
   try {
     const [mSnap, pSnap, wSnap] = await Promise.all([
       getDocs(collection(db, "maintenance")),
@@ -4709,7 +4876,7 @@ async function _loadDashStats() {
     ]);
   } catch { /* leave blank */ }
 
-  // 💰 Expenses — month to date, variable + fixed
+  // 💰 Expenses - month to date, variable + fixed
   try {
     const d = new Date();
     const month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -4749,7 +4916,7 @@ async function _loadDashStats() {
     ]);
   } catch { /* leave blank */ }
 
-  // 🛒 Shopping — items waiting + staples running low
+  // 🛒 Shopping - items waiting + staples running low
   try {
     const [gq, uq, pantry] = await Promise.all([
       getDocs(collection(db, "grocery_queue")),
@@ -4765,7 +4932,7 @@ async function _loadDashStats() {
     ]);
   } catch { /* leave blank */ }
 
-  // 🔐 Vault / 🗓️ Calendar / 🍽️ Meals — counts where a collection exists
+  // 🔐 Vault / 🗓️ Calendar / 🍽️ Meals - counts where a collection exists
   await Promise.all([
     count("vault_docs").then(n => n && set("vault", `${n} מסמכים`)),
     count("calendar_events").then(n => n && set("calendar", `${n} אירועים`)),
@@ -4828,7 +4995,7 @@ async function _restockPredictions() {
 /* ══════════════════════════════════════════════════════════
    💡 INSIGHTS ENGINE
    Derives what's worth knowing from data the app already has.
-   No AI — these are statistics over your own history.
+   No AI - these are statistics over your own history.
 
    Two rules kept throughout:
      · Every insight states the evidence behind it, so you can
@@ -4895,7 +5062,7 @@ async function _computeInsights() {
 
   /* ── 2. A bill that jumped ─────────────────────────────
      Compares this month against the average of earlier months.
-     This is the one that finds real money — a leak, a tariff
+     This is the one that finds real money - a leak, a tariff
      change, or a billing error. */
   const past = bills.filter(b => b.id < month).sort((a, b) => b.id.localeCompare(a.id));
   const cur  = bills.find(b => b.id === month);
@@ -4926,7 +5093,7 @@ async function _computeInsights() {
   if (stale.length)
     out.push({ icon:"🛒", sev:"watch", score:70,
       title:`${stale.length} פריטים ברשימה מעל 3 שבועות`,
-      detail:`${stale.slice(0,4).map(s => s.name).join(" · ")}${stale.length>4?"…":""} — אולי כבר נקנו, או שלא באמת צריך אותם.` });
+      detail:`${stale.slice(0,4).map(s => s.name).join(" · ")}${stale.length>4?"…":""} - אולי כבר נקנו, או שלא באמת צריך אותם.` });
 
   /* ── 4. Balance drifting ───────────────────────────────── */
   if (sw.length) {
@@ -4934,7 +5101,7 @@ async function _computeInsights() {
     if (Math.abs(net) >= 300)
       out.push({ icon:"🤝", sev:"watch", score:75,
         title:`יתרה של ₪${Math.abs(net).toFixed(0)} בהתחשבנות`,
-        detail:`${net > 0 ? "טלי חייבת לאלון" : "אלון חייב לטלי"}. כשהסכום מצטבר קל לשכוח — אפשר לסגור חשבון מהמסך של ההתחשבנות.` });
+        detail:`${net > 0 ? "טלי חייבת לאלון" : "אלון חייב לטלי"}. כשהסכום מצטבר קל לשכוח - אפשר לסגור חשבון מהמסך של ההתחשבנות.` });
   }
 
   /* ── 5. Tasks going stale ──────────────────────────────── */
@@ -4981,7 +5148,7 @@ async function _computeInsights() {
   if (expenses.length >= 5 && neverBought.length >= 3)
     out.push({ icon:"🧺", sev:"info", score:25,
       title:`${neverBought.length} מוצרים במלאי לא הופיעו באף קנייה`,
-      detail:`${neverBought.slice(0,4).map(p=>p.name).join(" · ")}${neverBought.length>4?"…":""} — או שהם נדירים, או ששמם ברשימת הקניות נכתב אחרת.` });
+      detail:`${neverBought.slice(0,4).map(p=>p.name).join(" · ")}${neverBought.length>4?"…":""} - או שהם נדירים, או ששמם ברשימת הקניות נכתב אחרת.` });
 
   /* ── 9. Bills not yet filled ───────────────────────────── */
   const missing = [];
@@ -5001,7 +5168,7 @@ async function _computeInsights() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   QUERIES — answered by reading data, no AI
+   QUERIES - answered by reading data, no AI
 ══════════════════════════════════════════════════════════ */
 const _curMonth = () => {
   const d = new Date();
@@ -5029,8 +5196,8 @@ async function _answerQuery(q, arg) {
       const fixed = (b.rentAlon ?? b.rent ?? 0) + (b.rentTali ?? 0) +
                     _BILL_DEFS.reduce((s, d) => s + (b[d.key] || 0), 0);
       return `<strong>${_monthLabel(month)}</strong>
-        ${li([`🛒 קניות — ₪${g.toFixed(0)}`, `🏠 שדרוגים — ₪${u.toFixed(0)}`,
-              `💳 חשבונות — ₪${fixed.toFixed(0)}`])}
+        ${li([`🛒 קניות - ₪${g.toFixed(0)}`, `🏠 שדרוגים - ₪${u.toFixed(0)}`,
+              `💳 חשבונות - ₪${fixed.toFixed(0)}`])}
         <div style="margin-top:10px;font-size:1.05rem;font-weight:800">
           סה״כ ₪${(g + u + fixed).toFixed(0)}</div>`;
     }
@@ -5059,7 +5226,7 @@ async function _answerQuery(q, arg) {
       const b = s.exists() ? s.data() : {};
       if (arg === "rent") {
         const a = b.rentAlon ?? b.rent ?? 0, t = b.rentTali ?? 0;
-        return (a + t) ? `🏠 <strong>שכר דירה — ₪${(a + t).toFixed(0)}</strong>${
+        return (a + t) ? `🏠 <strong>שכר דירה - ₪${(a + t).toFixed(0)}</strong>${
           li([`אלון ₪${a.toFixed(0)}`, `טלי ₪${t.toFixed(0)}`])}`
           : `לא נרשם שכר דירה ל-${_monthLabel(month)}.`;
       }
@@ -5067,7 +5234,7 @@ async function _answerQuery(q, arg) {
       const amt = b[arg] || 0;
       if (!def) return "לא זיהיתי את סוג החשבון.";
       return amt
-        ? `${def.emoji} <strong>${def.he} — ₪${amt.toFixed(0)}</strong>
+        ? `${def.emoji} <strong>${def.he} - ₪${amt.toFixed(0)}</strong>
            <div class="asst-note">שילם: ${(b[`${arg}Payer`] || def.defaultPayer) === "Tali" ? "טלי" : "אלון"} · ${_monthLabel(month)}</div>`
         : `לא נרשם חשבון ${def.he} ל-${_monthLabel(month)}.`;
     }
@@ -5099,19 +5266,19 @@ async function _answerQuery(q, arg) {
         return `✅ <strong>הכל נראה תקין</strong>
           <div class="asst-note">${dataPoints.expenses} רכישות · ${dataPoints.months} חודשים במעקב.</div>`;
       return `💡 <strong>מה כדאי לדעת (${list.length})</strong>
-        ${li(list.slice(0,6).map(i => `${i.icon} ${i.title} — ${i.detail}`))}`;
+        ${li(list.slice(0,6).map(i => `${i.icon} ${i.title} - ${i.detail}`))}`;
     }
     case "restock": {
       const preds = await _restockPredictions();
       if (!preds.length)
         return `🔮 <strong>אין תחזיות עדיין</strong>
-          <div class="asst-note">התחזית נבנית מהיסטוריית הקניות — צריך לפחות
+          <div class="asst-note">התחזית נבנית מהיסטוריית הקניות - צריך לפחות
           ${_MIN_PURCHASES} רכישות של אותו מוצר. ככל שתרשמו יותר קניות, זה ישתפר.</div>`;
       const c = await _loadAsstContext();
       const onList = new Set(c.groceryQueue.map(i => _normalizePantryName(i.name)));
       return `🔮 <strong>כנראה נגמר או עומד להיגמר</strong>${
         li(preds.slice(0, 10).map(p =>
-          `${p.name} — נקנה כל ~${p.avg} ימים, עברו ${p.since}${
+          `${p.name} - נקנה כל ~${p.avg} ימים, עברו ${p.since}${
             onList.has(_normalizePantryName(p.name)) ? " ✅ כבר ברשימה" : ""}`))}
         <div class="asst-note">מבוסס על ${preds[0].purchases}+ רכישות קודמות.</div>`;
     }
@@ -5120,15 +5287,15 @@ async function _answerQuery(q, arg) {
 }
 
 /* ══════════════════════════════════════════════════════════
-   ✨ GUIDED FLOWS — declarative conversation
+   ✨ GUIDED FLOWS - declarative conversation
    ────────────────────────────────────────────────────────
    A flow is DATA, not code: an ordered list of steps, each
    naming the key it fills. The engine renders whatever the
    step's `type` calls for and collects answers into a plain
    object. Adding a flow costs one entry here and no new UI.
 
-   Each flow ends by returning an INTENT — the exact shape the
-   text parser produces — which is handed to _runIntent(). So
+   Each flow ends by returning an INTENT - the exact shape the
+   text parser produces - which is handed to _runIntent(). So
    writes, activity logging and undo are shared with the typed
    path rather than reimplemented.
 
@@ -5152,7 +5319,7 @@ const FLOWS = [
       ["נכנס ל",  "התחשבנות זוגית"],
     ],
     intent:d => ({ type:"splitwise", name:d.name, amount:+d.amount, payer:d.payer,
-                   label:`🤝 ${d.name} — ₪${d.amount}`, verb:"רישום הוצאה משותפת" }),
+                   label:`🤝 ${d.name} - ₪${d.amount}`, verb:"רישום הוצאה משותפת" }),
   },
   {
     id:"bill", icon:"💳", label:"חשבון חודשי",
@@ -5175,13 +5342,13 @@ const FLOWS = [
     intent:d => {
       const def = _BILL_DEFS.find(b => b.key === d.which);
       return { type:"bill", key:d.which, amount:+d.amount, payer:d.payer,
-               label:`${def ? def.emoji + " " + def.he : "🏠 שכר דירה"} — ₪${d.amount}`,
+               label:`${def ? def.emoji + " " + def.he : "🏠 שכר דירה"} - ₪${d.amount}`,
                verb:"רישום חשבון חודשי" };
     },
   },
   {
     /* Groceries are chosen from the Pantry, never free-typed. Picking a
-       staple marks it Running Low, which is what puts it on the list —
+       staple marks it Running Low, which is what puts it on the list -
        so the pantry stays the single source and no duplicate row is
        created. Items already queued are excluded from the options.
        A genuinely new product is added to the Pantry first, so it
@@ -5204,7 +5371,7 @@ const FLOWS = [
     summary:(d,ctx) => d.pick === "__new"
       ? [["מוצר חדש", d.newName], ["נוסף ל", "מלאי הבית + רשימת קניות"]]
       : (() => { const p = (ctx.pantry || []).find(x => x.id === d.pick) || {};
-                 return [["מוצר", p.name || "—"], ["מסומן", "נגמר"],
+                 return [["מוצר", p.name || "-"], ["מסומן", "נגמר"],
                          ["נכנס ל", "רשימת קניות (דרך המלאי)"]]; })(),
     intent:(d,ctx) => {
       if (d.pick === "__new")
@@ -5216,7 +5383,7 @@ const FLOWS = [
     },
   },
   {
-    /* Upgrades have no canonical catalogue, so free text is right here —
+    /* Upgrades have no canonical catalogue, so free text is right here -
        but the executor still refuses a near-identical existing entry. */
     id:"upgrades", icon:"🏠", label:"שדרוג לבית",
     hint:"פריט לרשימת השדרוגים",
@@ -5238,7 +5405,7 @@ const FLOWS = [
     ],
     summary:(d,ctx) => {
       const p = (ctx.pantry || []).find(x => x.id === d.id) || {};
-      return [["מוצר", p.name || "—"],
+      return [["מוצר", p.name || "-"],
               ["מצב חדש", d.status === "low" ? "נגמר" : "במלאי"],
               ["נכנס ל", d.status === "low" ? "רשימת קניות (אוטומטי)" : "מלאי הבית"]];
     },
@@ -5263,7 +5430,7 @@ const FLOWS = [
       empty:"אין צמחים רשומים." }],
     summary:(d,ctx) => {
       const p = (ctx.plants || []).find(x => x.id === d.id) || {};
-      return [["צמח", p.name || "—"], ["סומן", "מושקה עכשיו"]];
+      return [["צמח", p.name || "-"], ["סומן", "מושקה עכשיו"]];
     },
     intent:(d,ctx) => {
       const p = (ctx.plants || []).find(x => x.id === d.id) || {};
@@ -5278,7 +5445,7 @@ const FLOWS = [
       empty:"אין משימות ניקיון מוגדרות." }],
     summary:(d,ctx) => {
       const r = (ctx.rooms || []).find(x => x.id === d.id) || {};
-      return [["משימה", r.name || "—"], ["סומן", "בוצע השבוע"]];
+      return [["משימה", r.name || "-"], ["סומן", "בוצע השבוע"]];
     },
     intent:(d,ctx) => {
       const r = (ctx.rooms || []).find(x => x.id === d.id) || {};
@@ -5290,7 +5457,7 @@ const FLOWS = [
 /* ── Conversation state ────────────────────────────────────
    One object holds the whole conversation. `data` is built up
    step by step and is the single source of truth for both the
-   summary and the resulting intent — no text parsing involved. */
+   summary and the resulting intent - no text parsing involved. */
 let _fl = null;   // { def, i, data:{}, turns:[] }
 
 window.flowStart = async function(id) {
@@ -5356,16 +5523,16 @@ const _flOpts = step =>
 /* ── Renderer ──────────────────────────────────────────────
    One function paints the whole panel from state. No partial
    DOM updates to keep in sync, so the view can never drift
-   from the data — the usual source of bugs in wizard UIs. */
+   from the data - the usual source of bugs in wizard UIs. */
 /* Exposed on window: inline onclick handlers resolve against the
-   global scope, so a module-scoped function is invisible to them —
+   global scope, so a module-scoped function is invisible to them -
    that silently broke the back button in the insights panel. */
 function _flRender() {
   const host = document.getElementById("flow-host");
   const dock = document.getElementById("flow-dock");
   if (!host || !dock) return;
 
-  /* Idle — show the insights banner + category launcher */
+  /* Idle - show the insights banner + category launcher */
   if (!_fl) {
     host.innerHTML = `
       <button class="fl-insight-cta" id="fl-insights" >
@@ -5424,7 +5591,7 @@ function _flRender() {
   }
   html += `</div>`;
 
-  /* Summary — structured, not a sentence */
+  /* Summary - structured, not a sentence */
   if (done) {
     const rows = def.summary(data, _asstCtx || {});
     html += `
@@ -5460,7 +5627,7 @@ function _flRender() {
     /* Values are carried on data-* and bound with real listeners.
        An inline onclick would need the value JSON-quoted inside a
        double-quoted attribute, which silently breaks the markup for
-       every value — that bug disabled all chip-based flows. */
+       every value - that bug disabled all chip-based flows. */
     dock.innerHTML = `
       ${step.search && opts.length > 6
         ? `<input class="fl-search" id="fl-search" placeholder="חפש…" dir="auto">` : ""}
@@ -5523,7 +5690,7 @@ window.showInsights = async function() {
     let body;
     if (!list.length) {
       body = `<div class="fl-empty" style="display:block;text-align:start">
-        ✅ הכל נראה תקין — לא מצאתי משהו שדורש תשומת לב.
+        ✅ הכל נראה תקין - לא מצאתי משהו שדורש תשומת לב.
         <div class="asst-note" style="margin-top:8px">
           התובנות משתפרות ככל שנצברים נתונים.
           כרגע: ${dataPoints.expenses} רכישות · ${dataPoints.months} חודשים ·
@@ -5554,7 +5721,7 @@ window.showInsights = async function() {
   }
 };
 
-/* Jump back to the nth answered turn (index into turns, not steps —
+/* Jump back to the nth answered turn (index into turns, not steps -
    they differ once a step has been skipped by a `when` guard) */
 window._flEdit = function(n) {
   if (!_fl || n < 0 || n >= _fl.turns.length) return;
@@ -5573,7 +5740,7 @@ window._flFilter = function(q) {
   });
 };
 
-/* Commit — hands the assembled intent to the shared executor,
+/* Commit - hands the assembled intent to the shared executor,
    so writes, activity log and undo behave exactly as the typed
    path does. Nothing is written before this point. */
 window.flowCommit = async function() {
@@ -5689,7 +5856,7 @@ window.assistantParse = async function() {
     return;
   }
 
-  /* Nothing to do — it already exists somewhere in the app */
+  /* Nothing to do - it already exists somewhere in the app */
   if (intent.type === "duplicate") {
     out.innerHTML = `
       <div class="asst-dup">
@@ -5710,9 +5877,9 @@ window.assistantParse = async function() {
       <div class="asst-verb">${esc(intent.verb)}</div>
       <div class="asst-label" dir="auto">${esc(intent.label)}</div>
       ${intent.note ? `<div class="asst-note">💡 ${esc(intent.note)}</div>` : ""}
-      ${lowConf ? `<div class="asst-note">⚠️ התאמה לא מדויקת — ודא שזה הפריט הנכון</div>` : ""}
+      ${lowConf ? `<div class="asst-note">⚠️ התאמה לא מדויקת - ודא שזה הפריט הנכון</div>` : ""}
       ${intent.type === "bill" ? `<div class="asst-note">ייכנס גם להתחשבנות הזוגית${
-          intent.payer ? "" : " — המשלם ייקבע לפי ברירת המחדל"}</div>` : ""}
+          intent.payer ? "" : " - המשלם ייקבע לפי ברירת המחדל"}</div>` : ""}
       <div class="asst-btns">
         <button class="asst-confirm" id="asst-do">✅ בצע</button>
         <button class="asst-cancel" onclick="assistantReset()">ביטול</button>
@@ -5804,7 +5971,7 @@ function _wireUndo() {
   };
 }
 
-/* Runs ONE intent. Returns {done, undo} — undo is a function or null. */
+/* Runs ONE intent. Returns {done, undo} - undo is a function or null. */
 async function _runIntent(i) {
   {
     let done = "", undo = null;
@@ -5846,7 +6013,7 @@ async function _runIntent(i) {
          item enters the catalogue rather than becoming a loose string. */
       case "newStaple": {
         /* Query the pantry directly rather than trusting a cached
-           context — this path is reachable from the shopping picker,
+           context - this path is reachable from the shopping picker,
            where that cache may never have been populated, and a missed
            duplicate check is exactly what this feature exists to stop. */
         let existing = [];
@@ -5864,7 +6031,7 @@ async function _runIntent(i) {
             await setDoc(doc(db, "pantry", dupe.id), { status:"stock" }, { merge:true });
             await deleteDoc(doc(db, "grocery_queue", dupe.id)).catch(() => {});
           };
-          done = `ℹ️ "${dupe.name}" כבר במלאי — סומן כנגמר`;
+          done = `ℹ️ "${dupe.name}" כבר במלאי - סומן כנגמר`;
           break;
         }
         const ref = await addDoc(collection(db, "pantry"),
@@ -5941,7 +6108,7 @@ async function _runIntent(i) {
         const sref = await addDoc(collection(db, "splitwise_expenses"),
           { name: i.name, amount: i.amount, paidBy: i.payer, createdAt: serverTimestamp() });
         undo = () => deleteDoc(doc(db, "splitwise_expenses", sref.id));
-        done = `🤝 ${i.name} — ₪${i.amount} נרשם על שם ${i.payer === "Tali" ? "טלי" : "אלון"}`;
+        done = `🤝 ${i.name} - ₪${i.amount} נרשם על שם ${i.payer === "Tali" ? "טלי" : "אלון"}`;
         _logActivity("🤝", `${i.name} ₪${i.amount} (${i.payer})`);
         break;
       }
@@ -6101,7 +6268,7 @@ window.navigateTo = function(viewId) {
     const t = document.startViewTransition(() => _swapView(viewId));
     t.finished.finally(() => document.documentElement.removeAttribute("data-nav-back"));
   } else {
-    // Graceful fallback — instant swap + simple fade-in on content
+    // Graceful fallback - instant swap + simple fade-in on content
     _swapView(viewId);
     const el = document.getElementById("view-" + viewId);
     if (el) {
@@ -6168,7 +6335,7 @@ function initDashboard() {
   _initWhoUI();
   initActivityFeed();
   /* The dashboard is already .active in the markup, so navigateTo()
-     never fires for it on a cold start — the card stats have to be
+     never fires for it on a cold start - the card stats have to be
      kicked off here, or they only appear after leaving and coming back. */
   _loadDashStats();
   _renderHeroSide();
@@ -6198,17 +6365,21 @@ function _currentUser() {
    colour rather than near-black, while keeping white text at AAA
    (8.8:1 / 8.2:1) and the muted sub-text at AA (5.6:1 / 5.5:1). */
 const USER_THEME = {
-  Alon: { deep:"#2A4A7F", mid:"#3A66AC", soft:"#EAF0FA", ink:"#2A4A7F" },
-  Tali: { deep:"#7A3570", mid:"#9A468C", soft:"#FAEDF7", ink:"#7A3570" },
+  Alon: { deep:"#2A4A7F", mid:"#3A66AC", soft:"#EAF0FA", ink:"#2A4A7F",
+          softDark:"#172238", inkDark:"#9DBBEB" },
+  Tali: { deep:"#7A3570", mid:"#9A468C", soft:"#FAEDF7", ink:"#7A3570",
+          softDark:"#2B1828", inkDark:"#E0A6D4" },
 };
 
 function _applyUserTheme(name) {
   const t = USER_THEME[name] || USER_THEME.Alon;
   const r = document.documentElement;
+  // Set inline, so it can't be overridden by the dark stylesheet - pick per theme here
+  const dark = r.getAttribute("data-theme") === "dark";
   r.style.setProperty("--user-deep", t.deep);
   r.style.setProperty("--user-mid",  t.mid);
-  r.style.setProperty("--user-soft", t.soft);
-  r.style.setProperty("--user-ink",  t.ink);
+  r.style.setProperty("--user-soft", dark ? t.softDark : t.soft);
+  r.style.setProperty("--user-ink",  dark ? t.inkDark  : t.ink);
   r.setAttribute("data-user", name);
   // keep the iOS status-bar / browser chrome in step
   const meta = document.querySelector('meta[name="theme-color"]');
@@ -6261,7 +6432,7 @@ function initActivityFeed() {
   const lastSeen = parseInt(localStorage.getItem("lastSeenActivity") || "0");
   localStorage.setItem("lastSeenActivity", Date.now());
   _unsub("activity");
-  // ✅ FLAT onSnapshot — sort in JS, no composite index needed
+  // ✅ FLAT onSnapshot - sort in JS, no composite index needed
   _unsubs["activity"] = onSnapshot(collection(db, "activity"), snap => {
     const items = [];
     snap.forEach(d => items.push({ id: d.id, ...d.data() }));
@@ -6454,7 +6625,7 @@ function confirmPayment() {
   document.getElementById("payment-alert").classList.remove("visible");
   document.getElementById("last-confirmed-label").textContent =
     new Date().toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" });
-  showToast("✅ Bills confirmed — reminder paused for 30 days", "success");
+  showToast("✅ Bills confirmed - reminder paused for 30 days", "success");
   _logActivity("✅", "confirmed all bills as paid");
 }
 
@@ -6470,7 +6641,7 @@ window.switchTab = function(group, panel, btn) {
 };
 
 /* ══════════════════════════════════════════════════════════
-   CLEANING — DYNAMIC TEMPLATES (flat queries, no indexes)
+   CLEANING - DYNAMIC TEMPLATES (flat queries, no indexes)
 ══════════════════════════════════════════════════════════ */
 function _weekKey() {
   const d = new Date(), sun = new Date(d);
@@ -6529,7 +6700,7 @@ async function initCleaning() {
   _cachedCleaningMonthRef = doc(db, "checklists", _monthKey());
 
   try {
-    // ✅ FLAT query — no where() + orderBy() = no composite index needed
+    // ✅ FLAT query - no where() + orderBy() = no composite index needed
     const [tplSnap, ws, ms] = await Promise.all([
       getDocs(collection(db, "cleaning_templates")),
       getDoc(_cachedCleaningWeekRef),
@@ -6579,7 +6750,7 @@ function renderChecklist(type, templates, data, docRef) {
   templates.forEach(task => {
     const done     = data[task.id] === true;
     const roomInfo = _CLEANING_ROOMS.find(r => r.id === task.room);
-    const roomLabel= roomInfo ? `${roomInfo.emoji} ${roomInfo.label}` : (task.area || "—");
+    const roomLabel= roomInfo ? `${roomInfo.emoji} ${roomInfo.label}` : (task.area || "-");
     const hasDate  = !!task.nextDate;
     const isDue    = hasDate && task.nextDate <= today;
 
@@ -6651,7 +6822,7 @@ async function _renderTemplatesList() {
     const snap = await getDocs(collection(db, "cleaning_templates"));
     if (snap.empty) {
       el.innerHTML = `<div class="empty" style="padding:14px 0">
-        <div class="empty-icon">✏️</div>No tasks yet — add one above!</div>`;
+        <div class="empty-icon">✏️</div>No tasks yet - add one above!</div>`;
       return;
     }
     const items = [];
@@ -6835,7 +7006,7 @@ window.saveTaskSchedule = async function(taskId, date) {
 };
 
 /* ══════════════════════════════════════════════════════════
-   GARDENING  (fully dynamic — /plants collection)
+   GARDENING  (fully dynamic - /plants collection)
    Schema: /plants/{autoId} → { name, intervalDays, notifyEnabled, createdAt }
    Watering log: /watering/log → { plantId: timestampMs }
 ══════════════════════════════════════════════════════════ */
@@ -6874,7 +7045,7 @@ async function initGardening() {
   <div class="sk-row"><div class="sk sk-circle"></div><div class="sk-lines"><div class="sk sk-line mid"></div><div class="sk sk-line short"></div></div></div>
 </div></td></tr>`;
   try {
-    // ✅ FLAT queries — no composite indexes needed
+    // ✅ FLAT queries - no composite indexes needed
     const [plantsSnap, waterSnap] = await Promise.all([
       getDocs(collection(db, "plants")),
       getDoc(doc(db, "watering", "log"))
@@ -6919,7 +7090,7 @@ function _notifyCheck(plants, waterData) {
       const days = p.intervalDays || 3;
       const lastMs = waterData[p.id] || 0;
       const daysLate = Math.floor((now - lastMs) / 864e5) - days;
-      return `🌿 <strong>${p.name}</strong> — ${daysLate >= 0 ? daysLate + "d overdue" : "due today"}`;
+      return `🌿 <strong>${p.name}</strong> - ${daysLate >= 0 ? daysLate + "d overdue" : "due today"}`;
     }).join("<br>");
     banner.classList.add("visible");
   } else if (banner) {
@@ -6954,7 +7125,7 @@ function _renderPlants(plants, waterData) {
   if (!visible.length) {
     const msg = q
       ? `🔍 No plants found for "${_plantSearch}"`
-      : "No plants yet — type a name above and tap ＋ to add one!";
+      : "No plants yet - type a name above and tap ＋ to add one!";
     tbody.innerHTML = `<tr><td colspan="5"><div class="empty">
       <div class="empty-icon">🌱</div><p>${msg}</p>
     </div></td></tr>`;
@@ -6984,7 +7155,7 @@ function _renderPlants(plants, waterData) {
         </div>
       </td>
       <td class="last-watered" id="lw-${p.id}">${str}</td>
-      <td id="st-${p.id}"><span class="status-dot ${cls}"></span>${ago > 900 ? "—" : ago + "d ago"}</td>
+      <td id="st-${p.id}"><span class="status-dot ${cls}"></span>${ago > 900 ? "-" : ago + "d ago"}</td>
       <td><button class="btn-water" id="bw-${p.id}">💧 Water</button></td>
       <td><button class="btn-trash" title="Remove plant">🗑️</button></td>`;
     tr.querySelector(".btn-plant-rename").addEventListener("click", () => _startRename(p.id, p.name));
@@ -7026,18 +7197,18 @@ function _startRename(id, currentName) {
 // ── Notification toggle ────────────────────────────────
 async function _togglePlantNotify(id, currentlyOn) {
   const newVal = !currentlyOn;
-  // Always save the toggle first — in-app banner works regardless of browser support
+  // Always save the toggle first - in-app banner works regardless of browser support
   try {
     await setDoc(doc(db, "plants", id), { notifyEnabled: newVal }, { merge: true });
   } catch(e) { showToast("Error: " + e.message, "error"); return; }
 
   // Browser notification support check (not available on iOS Safari or some browsers)
   if (newVal && typeof Notification === "undefined") {
-    showToast("🔔 Reminder saved! (In-app banner only — this browser doesn't support push notifications)", "success");
+    showToast("🔔 Reminder saved! (In-app banner only - this browser doesn't support push notifications)", "success");
     initGardening(); return;
   }
   if (newVal && Notification.permission === "denied") {
-    showToast("🔔 Reminder saved! Browser notifications are blocked — enable in settings for push alerts.", "success");
+    showToast("🔔 Reminder saved! Browser notifications are blocked - enable in settings for push alerts.", "success");
     initGardening(); return;
   }
   if (newVal && Notification.permission === "default") {
@@ -7094,12 +7265,12 @@ async function waterPlant(id, name, days) {
     _notifyCheck(_cachedPlants, _cachedWater); // refresh banner
   } catch(err) {
     btn.disabled = false; btn.textContent = "💧 Water";
-    showToast("Error — check connection.", "error");
+    showToast("Error - check connection.", "error");
   }
 }
 
 /* ══════════════════════════════════════════════════════════
-   PAYMENTS — BILLS FORM
+   PAYMENTS - BILLS FORM
 ══════════════════════════════════════════════════════════ */
 async function initPayments() {
   document.getElementById("btn-confirm-pay").onclick = confirmPayment;
@@ -7131,7 +7302,7 @@ async function initPayments() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   RENT — a standing agreement, not a shared expense
+   RENT - a standing agreement, not a shared expense
    ────────────────────────────────────────────────────────
    Alon and Tali each pay a fixed, pre-agreed share. Because the
    split is already settled between them, rent must NOT enter the
@@ -7168,7 +7339,7 @@ window.applyRentAgreement = function() {
   if (a) a.value = _rentAgreement.alon;
   if (t) t.value = _rentAgreement.tali;
   _updateRentTotal(); _updateMissingHint();
-  showToast(`🏠 שכ״ד לפי ההסכם — אלון ₪${_rentAgreement.alon} · טלי ₪${_rentAgreement.tali}`, "success");
+  showToast(`🏠 שכ״ד לפי ההסכם - אלון ₪${_rentAgreement.alon} · טלי ₪${_rentAgreement.tali}`, "success");
 };
 
 window.saveRentAgreement = async function() {
@@ -7292,7 +7463,7 @@ async function _loadBillInputs(monthStr) {
    its lines instead of duplicating them. */
 const _billSWId = (monthStr, key) => `bill_${monthStr}_${key}`;
 
-/* Push this month's bills into /splitwise_expenses — one line per bill. */
+/* Push this month's bills into /splitwise_expenses - one line per bill. */
 async function _syncBillsToSplitwise(monthStr, data) {
   const label = _monthLabel(monthStr);
   const ops   = [];
@@ -7311,14 +7482,14 @@ async function _syncBillsToSplitwise(monthStr, data) {
     }
   };
 
-  /* Rent is deliberately NOT pushed — see the RENT block above.
+  /* Rent is deliberately NOT pushed - see the RENT block above.
      Passing 0 also removes any rent rows written by earlier versions,
      which were creating a recurring phantom debt. */
   push("rentAlon", "", 0, "Alon");
   push("rentTali", "", 0, "Tali");
 
   _BILL_DEFS.forEach(b =>
-    push(b.key, `${b.emoji} ${b.he} — ${label}`, data[b.key] || 0, data[`${b.key}Payer`]));
+    push(b.key, `${b.emoji} ${b.he} - ${label}`, data[b.key] || 0, data[`${b.key}Payer`]));
 
   await Promise.all(ops);
 }
@@ -7384,8 +7555,8 @@ async function saveBills() {
 
     showToast(syncErr
       ? "✅ Bills saved (התחשבנות sync failed)"
-      : `✅ Bills saved — ₪${total.toFixed(0)} נכנס להתחשבנות 🤝`, syncErr ? "error" : "success");
-    _logActivity("💳", `saved bills for ${_monthLabel(monthStr)} — ₪${total.toFixed(0)}`);
+      : `✅ Bills saved - ₪${total.toFixed(0)} נכנס להתחשבנות 🤝`, syncErr ? "error" : "success");
+    _logActivity("💳", `saved bills for ${_monthLabel(monthStr)} - ₪${total.toFixed(0)}`);
     await renderBillsHistory();
   } catch(err) { showToast("Error: " + err.message, "error"); }
   finally { btn.disabled = false; btn.textContent = "💾 Save Bills for this Month"; }
@@ -7425,7 +7596,7 @@ async function renderBillsHistory() {
           <span class="bill-total">₪${total.toFixed(0)}</span>
           <button class="btn-trash" title="Delete">🗑️</button>
         </div>
-        <div class="bill-details">${details || "<span>—</span>"}</div>`;
+        <div class="bill-details">${details || "<span>-</span>"}</div>`;
       div.querySelector(".btn-trash").addEventListener("click", () => deleteBill(b.id));
       el.appendChild(div);
     });
@@ -7450,7 +7621,7 @@ async function deleteBill(monthStr) {
 let _editingMaintId = null;  // null = adding new, string = editing existing
 
 /* The Task Log writes "resolved"; the assistant used to write "done".
-   Both mean closed — one helper so the dashboard, insights and
+   Both mean closed - one helper so the dashboard, insights and
    assistant can never disagree about what's open. */
 const TASK_CLOSED = new Set(["resolved", "done", "closed"]);
 const _taskOpen = t => !TASK_CLOSED.has((t && t.status) || "pending");
@@ -7468,7 +7639,7 @@ function initMaintenance() {
   document.getElementById("btn-log-maint").onclick = saveMaintenance;
 
   _unsub("maintenance");
-  // ✅ FLAT query — sort by priority then date in JS
+  // ✅ FLAT query - sort by priority then date in JS
   _unsubs["maintenance"] = onSnapshot(collection(db, "maintenance"), snap => {
     const items = [];
     snap.forEach(d => items.push({ id: d.id, ...d.data() }));
@@ -7581,7 +7752,7 @@ function renderMaintList(items) {
         <option value="resolved"    ${item.status==="resolved"    ? "selected":""}>✅ Resolved</option>
       </select>`;
     /* One tap to close. The status dropdown already existed, but it takes
-       two interactions and sits below the fold — which is why 14 of 14
+       two interactions and sits below the fold - which is why 14 of 14
        tasks had never been closed. */
     div.querySelector(".btn-maint-done").addEventListener("click", async function() {
       const wasOpen = _taskOpen(item);
@@ -7606,7 +7777,7 @@ function renderMaintList(items) {
     if (!_taskOpen(item)) div.classList.add("task-done");
     div.querySelector(".btn-edit-maint").addEventListener("click", () => startEditMaint(item));
     /* Two taps to delete. The first arms the button for 3 seconds, the second
-       does it. No native confirm() — those are unreliable once the app is
+       does it. No native confirm() - those are unreliable once the app is
        installed to the Home Screen, which is where the bin appeared dead. */
     div.querySelector(".btn-trash").addEventListener("click", function() {
       if (this.dataset.armed === "1") { deleteMaintenance(item.id); return; }
@@ -7648,7 +7819,7 @@ let _pantryQueueItems = {};
 
 /* ══════════════════════════════════════════════════════════
    🛒 SHOPPING MODE
-   A second, opt-in surface over the same data — the existing list
+   A second, opt-in surface over the same data - the existing list
    is untouched, so you can compare them and keep whichever wins.
 
    Built for one-handed use in a shop: large rows, department
@@ -7664,10 +7835,10 @@ window.openShopMode = async function() {
   host.classList.add("open");
   document.body.style.overflow = "hidden";
 
-  // Keep the screen on — a list that blacks out mid-aisle is useless
+  // Keep the screen on - a list that blacks out mid-aisle is useless
   try {
     if ("wakeLock" in navigator) _wakeLock = await navigator.wakeLock.request("screen");
-  } catch { /* unsupported or denied — not fatal */ }
+  } catch { /* unsupported or denied - not fatal */ }
 
   // Department lookup, same as the normal list
   const catById = new Map(), catByName = new Map();
@@ -7724,7 +7895,7 @@ function _renderShopMode() {
     total ? `${(got / total) * 100}%` : "0%";
   const finish = document.getElementById("shop-mode-finish");
   finish.disabled = got === 0;
-  finish.textContent = got ? `סיימתי — ${got} פריטים` : "סמן מה שלקחת";
+  finish.textContent = got ? `סיימתי - ${got} פריטים` : "סמן מה שלקחת";
 
   const rows = _shopHideDone
     ? _shopModeRows.filter(r => !checked.has(r.id))
@@ -7821,8 +7992,8 @@ window.confirmBought = async function() {
     if (queueId) await deleteDoc(doc(db, "upgrade_queue", queueId)).catch(() => {});
 
     closeBoughtModal();
-    showToast(`✅ ${name} — ₪${amount.toFixed(0)} נרשם בהוצאות`, "success");
-    _logActivity("🏠", `קנה ${name} — ₪${amount.toFixed(0)}`, [name]);
+    showToast(`✅ ${name} - ₪${amount.toFixed(0)} נרשם בהוצאות`, "success");
+    _logActivity("🏠", `קנה ${name} - ₪${amount.toFixed(0)}`, [name]);
     _boughtItem = null;
   } catch (err) {
     showToast("שגיאה: " + err.message, "error");
@@ -7832,7 +8003,7 @@ window.confirmBought = async function() {
 };
 
 /* ══════════════════════════════════════════════════════════
-   GROCERY PICKER — choose from the Pantry, never free text
+   GROCERY PICKER - choose from the Pantry, never free text
    ────────────────────────────────────────────────────────
    Typing filters the staples you already keep; picking one marks
    it Running Low, which is what puts it on the list. Free text is
@@ -7923,13 +8094,13 @@ function _renderPick() {
   list.querySelectorAll(".pick-row:not([disabled])").forEach(b =>
     b.addEventListener("click", () => _pickAdd(b.dataset.id)));
 
-  /* Escape hatch: add a product the pantry doesn't have yet — it is
+  /* Escape hatch: add a product the pantry doesn't have yet - it is
      created as a staple first so it joins the catalogue. */
   newBox.innerHTML = _pickQuery
     ? `<button class="pick-add-new" id="pick-add-new">
          ➕ הוסף את "<strong>${esc(_pickQuery)}</strong>" כמוצר חדש למלאי
        </button>`
-    : `<p class="pick-hint">בחר מוצר מהמלאי — כך נמנעות כפילויות.
+    : `<p class="pick-hint">בחר מוצר מהמלאי - כך נמנעות כפילויות.
          מוצר חדש? הקלד את שמו וייווצר גם במלאי.</p>`;
   newBox.querySelector("#pick-add-new")?.addEventListener("click", _pickAddNew);
 }
@@ -7959,7 +8130,7 @@ async function _pickAddNew() {
       label:`🛒 ${name}`, verb:"מוצר חדש למלאי + לרשימה"
     });
     showToast(done, "success");
-    /* Same here — the snapshot listener handles the refresh. */
+    /* Same here - the snapshot listener handles the refresh. */
   } catch (e) { showToast("שגיאה: " + e.message, "error"); }
 }
 
@@ -8007,7 +8178,7 @@ window.confirmAddItem = async function() {
     });
     if (li) li.dataset.queueId = ref.id;
   } catch (err) {
-    showToast("לא נשמר — בדוק חיבור", "error");
+    showToast("לא נשמר - בדוק חיבור", "error");
     console.warn("Queue add failed:", err);
   }
 };
@@ -8037,7 +8208,7 @@ function _appendShopItem(ul, name, type, queueId, fromPantry = false, cat = null
   if (cat) li.dataset.cat = cat;
 
   /* Row: checkbox · name · department · delete (pinned far right).
-     The department chip replaces the old 🧺 badge — now that groceries
+     The department chip replaces the old 🧺 badge - now that groceries
      can only come from the Pantry, "is a staple" is always true and
      the badge said nothing, whereas the aisle is useful in the shop. */
   const dept = (type === "groceries" && cat)
@@ -8074,7 +8245,7 @@ function _appendShopItem(ul, name, type, queueId, fromPantry = false, cat = null
 
   li.querySelector(".item-check").addEventListener("change", function() {
     li.classList.toggle("checked", this.checked);
-    // Persisted, not just held in memory — that's what lets the other phone
+    // Persisted, not just held in memory - that's what lets the other phone
     // see it and what stops an "add item" from wiping the whole list.
     _setShopChecked(type, li.dataset.queueId, this.checked);
   });
@@ -8126,7 +8297,7 @@ async function initShopping(type) {
   if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
   document.getElementById(`${prefix}-amount`).value = "";
   /* Deliberately NOT cleared here. Re-running this function (which every
-     "add item" used to do) wiped every tick — that was the bug. The set is
+     "add item" used to do) wiped every tick - that was the bug. The set is
      rebuilt from the snapshot below, which is the real source of truth. */
 
   /* Pantry lookup for the department chips + grouping */
@@ -8140,7 +8311,7 @@ async function initShopping(type) {
         _catById.set(d.id, v.category || null);
         if (v.name) _catByName.set(_normalizePantryName(v.name), v.category || null);
       });
-    } catch { /* chips are cosmetic — never block the list */ }
+    } catch { /* chips are cosmetic - never block the list */ }
   }
 
   /* ── LIVE list ────────────────────────────────────────────
@@ -8209,7 +8380,7 @@ async function initShopping(type) {
     ul.innerHTML = `<li class="list-empty">Tap "＋ Add" to start your list.</li>`;
   });
 
-  // ✅ FLAT onSnapshot — filter by type in JS
+  // ✅ FLAT onSnapshot - filter by type in JS
   _unsub(`hist-${type}`);
   _unsubs[`hist-${type}`] = onSnapshot(collection(db, "expenses"), snap => {
     const rows = [];
@@ -8297,7 +8468,7 @@ async function sendEntry(type) {
   const entryAmount = parseFloat(amountEl.value) || 0;
 
   /* Ask who paid instead of assuming the active toggle. Cancelling here
-     aborts the whole checkout — nothing is written. */
+     aborts the whole checkout - nothing is written. */
   const payer = await askPayer(entryAmount, purchasedItems.length);
   if (!payer) return;
 
@@ -8314,7 +8485,7 @@ async function sendEntry(type) {
 
     /* Balance side. "split" is recorded as two half rows, one per person,
        so it nets to zero in the existing balance formula without touching
-       that formula — and the trip still shows up in the shared history. */
+       that formula - and the trip still shows up in the shared history. */
     const swName = type === "groceries" ? "קניות בסופר" : "שדרוג הבית";
     if (payer === "split") {
       const half = entryAmount / 2;
@@ -8353,7 +8524,7 @@ async function sendEntry(type) {
           if (ops.length) await Promise.all(ops);
         }
       } catch (e) {
-        console.warn("Pantry sync failed:", e);   // non-fatal — expense is already saved
+        console.warn("Pantry sync failed:", e);   // non-fatal - expense is already saved
       }
 
       if (syncedNames.length) {
@@ -8363,14 +8534,14 @@ async function sendEntry(type) {
         showToast("✅ Entry saved to Monthly Expenses!", "success");
       }
       // Log grocery trip with the list of checked/purchased items
-      _logActivity("🛒", `submitted a grocery trip — ₪${entryAmount.toFixed(0)}`, purchasedItems);
+      _logActivity("🛒", `submitted a grocery trip - ₪${entryAmount.toFixed(0)}`, purchasedItems);
     } else {
       showToast(`✅ ${purchasedItems.length} פריט(ים) נרשמו בהוצאות`, "success");
-      _logActivity("🏠", `logged a house upgrade — ₪${entryAmount.toFixed(0)}`, purchasedItems);
+      _logActivity("🏠", `logged a house upgrade - ₪${entryAmount.toFixed(0)}`, purchasedItems);
     }
 
     // 🧹 Purchased items leave the pending queue for good (both lists).
-    //    Sweep by NAME as well as by ID — covers items added moments earlier
+    //    Sweep by NAME as well as by ID - covers items added moments earlier
     //    whose Firestore write hadn't returned an ID yet.
     try {
       const boughtNorm = new Set(purchasedItems.map(_normalizePantryName));
@@ -8422,7 +8593,7 @@ const _PANTRY_CAT_LIST = [
 ];
 const _CAT_EMOJI = { fridge:"🧊", pantry:"🫙", produce:"🥦", freezer:"❄️", cleaning:"🧴" };
 
-/* Short labels for the shopping row chips — the full category names
+/* Short labels for the shopping row chips - the full category names
    are too long to sit beside an item name. */
 const _CAT_SHORT = { fridge:"מקרר", pantry:"מזווה", produce:"ירקות",
                      freezer:"מקפיא", cleaning:"פארם" };
@@ -8431,7 +8602,7 @@ const _CAT_SHORT = { fridge:"מקרר", pantry:"מזווה", produce:"ירקות
    produce first, chilled and frozen last so they spend least time out. */
 const _CAT_ORDER = ["produce", "pantry", "cleaning", "fridge", "freezer"];
 const _catRank = c => {
-  // Uncategorised items sort LAST, not into מזווה — defaulting them to a
+  // Uncategorised items sort LAST, not into מזווה - defaulting them to a
   // real department wedges "אחר" between named sections.
   if (!c) return _CAT_ORDER.length + 1;
   const n = _CAT_ORDER.indexOf(c);
@@ -8451,7 +8622,7 @@ window._setStapleCategory = async function(id, cat) {
   document.querySelectorAll(".staple-dropdown.open").forEach(d => d.classList.remove("open"));
   try {
     await setDoc(doc(db, "pantry", id), { category: cat }, { merge: true });
-    // onSnapshot re-renders automatically — no manual update needed
+    // onSnapshot re-renders automatically - no manual update needed
   } catch(e) { showToast("שגיאה: " + e.message, "error"); }
 };
 
@@ -8472,7 +8643,7 @@ function initPantry() {
   document.querySelectorAll(".pantry-cat-btn").forEach(b =>
     b.classList.toggle("active", b.dataset.cat === "all"));
   _unsub("pantry");
-  // ✅ FLAT onSnapshot — sort in JS
+  // ✅ FLAT onSnapshot - sort in JS
   _unsubs["pantry"] = onSnapshot(collection(db, "pantry"), snap => {
     const items = [];
     snap.forEach(d => items.push({ id: d.id, ...d.data() }));
@@ -8542,7 +8713,7 @@ function _renderPantryGrid(items) {
     ? items
     : items.filter(i => (i.category || "pantry") === _pantryCategory);
 
-  // 2. Filter by search query (fuzzy — normalised contains)
+  // 2. Filter by search query (fuzzy - normalised contains)
   const q = _normalizePantryName(_pantrySearch);
   const filtered = q
     ? byCat.filter(i => _normalizePantryName(i.name).includes(q))
@@ -8553,7 +8724,7 @@ function _renderPantryGrid(items) {
     const msg = q
       ? `🔍 לא נמצאו תוצאות עבור "${_pantrySearch}"`
       : _pantryCategory === "all"
-        ? "No staples yet — add one above!"
+        ? "No staples yet - add one above!"
         : "אין פריטים בקטגוריה זו עדיין";
     grid.innerHTML = `<div class="pantry-empty">
       <div class="empty-icon">🧺</div>
@@ -8658,7 +8829,7 @@ async function _deleteStaple(id, name) {
 }
 
 /* ══════════════════════════════════════════════════════════
-   EXPENSES — CURRENT STATUS  (flat query, no indexes)
+   EXPENSES - CURRENT STATUS  (flat query, no indexes)
 ══════════════════════════════════════════════════════════ */
 window.deleteExpense = async function(id) {
   if (!await askConfirm("Delete this entry?")) return;
@@ -8689,7 +8860,7 @@ async function _loadBudget() {
 
 window.setGroceryBudget = async function() {
   const cur = _budget.groceries || "";
-  const raw = await askText("יעד חודשי לקניות (₪) — השאר ריק כדי לבטל:", cur, {number:true});
+  const raw = await askText("יעד חודשי לקניות (₪) - השאר ריק כדי לבטל:", cur, {number:true});
   if (raw === null) return;
   const n = parseFloat(raw);
   const val = Number.isFinite(n) && n > 0 ? n : 0;
@@ -8730,7 +8901,7 @@ function _renderBudget() {
   const msg  = spent > target
     ? `חריגה של ₪${Math.abs(left).toFixed(0)}`
     : ahead > 12
-      ? `בקצב מהיר — נותרו ₪${left.toFixed(0)} ל-${days - day} ימים`
+      ? `בקצב מהיר - נותרו ₪${left.toFixed(0)} ל-${days - day} ימים`
       : `נותרו ₪${left.toFixed(0)} ל-${days - day} ימים`;
 
   el.innerHTML = `
@@ -8802,7 +8973,7 @@ function initExpensesStatus() {
     _paintStatusTotals();
   }, err => console.warn("Status bills listener:", err));
 
-  // ✅ FLAT onSnapshot — filter current month in JS
+  // ✅ FLAT onSnapshot - filter current month in JS
   _unsubs["status"] = onSnapshot(collection(db, "expenses"), snap => {
     const rows = [];
     snap.forEach(d => {
@@ -8875,7 +9046,7 @@ window.loadReport = async function(monthStr) {
     const dateFrom = monthStr + "-01";
     const dateTo   = monthStr + "-31";
 
-    // ✅ FLAT query — filter in JS
+    // ✅ FLAT query - filter in JS
     const [expSnap, bSnap] = await Promise.all([
       getDocs(collection(db, "expenses")),
       getDoc(doc(db, "bills", monthStr))
@@ -8892,7 +9063,7 @@ window.loadReport = async function(monthStr) {
 
     const b = bSnap.exists() ? bSnap.data() : {};
 
-    // Rent is a split payment — legacy docs stored a single `rent` field
+    // Rent is a split payment - legacy docs stored a single `rent` field
     const rentAlon = b.rentAlon ?? b.rent ?? 0;
     const rentTali = b.rentTali ?? 0;
 
@@ -8981,7 +9152,7 @@ function _renderReport(container, monthStr, groceries, upgrades, bills) {
       </table>
       <p style="font-size:.72rem;color:var(--text-muted);line-height:1.55;margin-top:10px;direction:rtl">
         כולל שכר דירה (אלון ₪${(bills.rentAlon||0).toFixed(0)} · טלי ₪${(bills.rentTali||0).toFixed(0)}),
-        שאינו נכנס להתחשבנות הזוגית — הסכומים מוסכמים מראש.
+        שאינו נכנס להתחשבנות הזוגית - הסכומים מוסכמים מראש.
       </p>
     </div>`;
 
@@ -9034,7 +9205,7 @@ function initSplitwise() {
   setSWPaidBy(_swPaidBy);
   document.getElementById("btn-add-sw").onclick = _addSWExpense;
   _unsub("splitwise");
-  // ✅ FLAT onSnapshot — filter/sort in JS, no composite index needed
+  // ✅ FLAT onSnapshot - filter/sort in JS, no composite index needed
   _unsubs["splitwise"] = onSnapshot(collection(db, "splitwise_expenses"), snap => {
     const items = [];
     snap.forEach(d => items.push({ id: d.id, ...d.data() }));
@@ -9046,7 +9217,7 @@ function initSplitwise() {
 /* Net balance, in ₪, that TALI owes ALON (negative ⇒ Alon owes Tali).
 
    Shared expenses split 50/50:   net = (paidAlon − paidTali) / 2
-   A settlement is NOT an expense — it's a direct transfer that
+   A settlement is NOT an expense - it's a direct transfer that
    pays the debt down, so it moves `net` by its full amount:
      Tali → Alon  reduces what Tali owes   (net −= amount)
      Alon → Tali  reduces what Alon owes   (net += amount)          */
@@ -9131,7 +9302,7 @@ function _renderSplitwise(items) {
     const dateTag = when ? `<span class="sw-date">${when}</span>` : "";
 
     if (e.kind === "settlement") {
-      // A repayment between partners — not a shared expense
+      // A repayment between partners - not a shared expense
       const fromHe = e.from === "Tali" ? "טלי" : "אלון";
       const toHe   = e.from === "Tali" ? "אלון" : "טלי";
       tr.className = "sw-settle-row";
@@ -9144,7 +9315,7 @@ function _renderSplitwise(items) {
       const isAlon = e.paidBy === "Alon";
       const isBill = e.source === "bill";
       tr.innerHTML = `
-        <td style="font-weight:500">${e.name || "—"}${isBill ? `<span class="sw-src-tag">חשבון</span>` : ""}${dateTag}</td>
+        <td style="font-weight:500">${e.name || "-"}${isBill ? `<span class="sw-src-tag">חשבון</span>` : ""}${dateTag}</td>
         <td style="font-weight:700;color:var(--primary-dark)">₪${(e.amount||0).toFixed(2)}</td>
         <td><span class="badge ${isAlon ? "badge-alon" : "badge-tali"}">${isAlon ? "אלון" : "טלי"}</span></td>
         <td><button class="btn-trash" title="Delete">🗑️</button></td>`;
@@ -9156,7 +9327,7 @@ function _renderSplitwise(items) {
   });
 
   listEl.insertAdjacentHTML("beforeend",
-    `<p class="sw-history-note">ההיסטוריה נשמרת גם אחרי סגירת חשבון — היתרה מתאפסת, הרישומים נשארים.</p>`);
+    `<p class="sw-history-note">ההיסטוריה נשמרת גם אחרי סגירת חשבון - היתרה מתאפסת, הרישומים נשארים.</p>`);
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -9185,7 +9356,7 @@ window.openSettleModal = function() {
     `${payerHe} מעביר/ה ל${payeeHe}<br><strong>₪${owed.toFixed(2)}</strong>`;
   document.getElementById("settle-amount").value = owed.toFixed(2);
   document.getElementById("settle-hint").textContent =
-    `אפשר לשנות לסכום חלקי — היתרה תתעדכן בהתאם.`;
+    `אפשר לשנות לסכום חלקי - היתרה תתעדכן בהתאם.`;
   document.getElementById("settle-date").value = new Date().toISOString().slice(0, 10);
   document.getElementById("btn-confirm-settle").onclick = () => _confirmSettle(payer);
   document.getElementById("settle-modal").classList.add("open");
@@ -9220,9 +9391,9 @@ async function _confirmSettle(payer) {
     closeSettleModal();
     const left = Math.abs(_swNet) - amount;
     showToast(left > 0.01
-      ? `✅ נרשם ₪${amount.toFixed(0)} — נותרו ₪${left.toFixed(0)}`
-      : "✅ החשבון נסגר — אתם מאוזנים! ⚖️", "success");
-    _logActivity("💸", `${payerHe} העביר/ה ל${payeeHe} ₪${amount.toFixed(0)} — סגירת חשבון`);
+      ? `✅ נרשם ₪${amount.toFixed(0)} - נותרו ₪${left.toFixed(0)}`
+      : "✅ החשבון נסגר - אתם מאוזנים! ⚖️", "success");
+    _logActivity("💸", `${payerHe} העביר/ה ל${payeeHe} ₪${amount.toFixed(0)} - סגירת חשבון`);
   } catch (err) {
     showToast("Error: " + err.message, "error");
   } finally {
@@ -9255,7 +9426,7 @@ async function _addSWExpense() {
     expenseId = expRef.id;
 
     /* Balance side. `expenseId` is the link that lets a later delete remove
-       both halves — rows created before this change simply won't have it. */
+       both halves - rows created before this change simply won't have it. */
     await addDoc(collection(db, "splitwise_expenses"), {
       name, amount, paidBy: _swPaidBy, type, date,
       expenseId, createdAt: serverTimestamp()
@@ -9263,7 +9434,7 @@ async function _addSWExpense() {
 
     nameEl.value = ""; amtEl.value = "";
     showToast("✅ הוצאה נוספה!", "success");
-    _logActivity("🤝", `רשם הוצאה משותפת — ${name} ₪${amount.toFixed(0)} (שילם: ${_swPaidBy === "Alon" ? "אלון" : "טלי"})`);
+    _logActivity("🤝", `רשם הוצאה משותפת - ${name} ₪${amount.toFixed(0)} (שילם: ${_swPaidBy === "Alon" ? "אלון" : "טלי"})`);
   } catch(err) {
     if (expenseId) {
       // Undo the budget row so the two sides can't drift apart
@@ -9289,7 +9460,7 @@ async function _deleteSWExpense(id, isSettlement = false, expenseId = null) {
 }
 
 /* ══════════════════════════════════════════════════════════
-   🍎 SIRI SHORTCUTS — FIRESTORE REST API REFERENCE
+   🍎 SIRI SHORTCUTS - FIRESTORE REST API REFERENCE
    ──────────────────────────────────────────────────────────
    Add items to the grocery queue directly from the iOS
    Shortcuts app ("Hey Siri, add milk to the list").
@@ -9318,7 +9489,7 @@ async function _deleteSWExpense(id, isSettlement = false, expenseId = null) {
        "addedAt":    { "timestampValue": "NOW_ISO" }
      }
    }
-   ⚠️ fromPantry MUST be false — omitting it makes the app show the
+   ⚠️ fromPantry MUST be false - omitting it makes the app show the
       item with a 🧺 badge as if it came from the Pantry.
 
    ── 2. ADD ITEM TO HOUSE UPGRADES ───────────────────────
@@ -9382,7 +9553,7 @@ async function _deleteSWExpense(id, isSettlement = false, expenseId = null) {
 let _laundryTick = null;
 const _laundryDoc = () => doc(db, "laundry_status", "current");
 
-// Global listener — started at boot, never torn down
+// Global listener - started at boot, never torn down
 function initLaundryGlobal() {
   onSnapshot(_laundryDoc(), snap => {
     const data = snap.exists() ? snap.data() : null;
@@ -9417,7 +9588,7 @@ function _laundryShowRunning(data) {
     </div>
     <button class="btn-laundry-cancel" onclick="cancelLaundry()">ביטול כביסה ✕</button>`;
 
-  // Live countdown — anchored to absolute endTime so stays synced across devices
+  // Live countdown - anchored to absolute endTime so stays synced across devices
   clearInterval(_laundryTick);
   const endMs = data.endTime; // plain number stored in Firestore
 
@@ -9425,7 +9596,7 @@ function _laundryShowRunning(data) {
     const rem = endMs - Date.now();
     if (rem <= 0) {
       clearInterval(_laundryTick);
-      // Trigger "done" state in Firestore (idempotent — safe if both phones fire)
+      // Trigger "done" state in Firestore (idempotent - safe if both phones fire)
       setDoc(_laundryDoc(), { status: "done" }, { merge: true }).catch(() => {});
       return;
     }
@@ -9470,19 +9641,19 @@ window.startLaundry = async function(durationMinutes) {
     await setDoc(_laundryDoc(), {
       status: "running",
       startTime: serverTimestamp(),
-      endTime,          // stored as plain ms — easy countdown math, cross-device accurate
+      endTime,          // stored as plain ms - easy countdown math, cross-device accurate
       durationMinutes,
       startedBy
     });
     showToast(`🧺 הכביסה רצה! ${durationMinutes} דקות`, "success");
-    _logActivity("🧺", `${startedBy === "Tali" ? "הפעילה" : "הפעיל"} מכונת כביסה — ${durationMinutes} דקות`);
+    _logActivity("🧺", `${startedBy === "Tali" ? "הפעילה" : "הפעיל"} מכונת כביסה - ${durationMinutes} דקות`);
 
-    // ── iOS Shortcut — passes exact remaining minutes to "Laundry" shortcut ─
+    // ── iOS Shortcut - passes exact remaining minutes to "Laundry" shortcut ─
     const diffInMs         = endTime - Date.now();
     const remainingMinutes = Math.max(1, Math.round(diffInMs / 60000));
     window.location.href = "shortcuts://run-shortcut?name=Laundry&input=" + remainingMinutes;
 
-    // ── Make.com Webhook — notifies WhatsApp when cycle finishes ─
+    // ── Make.com Webhook - notifies WhatsApp when cycle finishes ─
     fetch("https://hook.eu1.make.com/24x3i1h6jjnt8ofzxzynevdoh7l1v2tn", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -9525,7 +9696,7 @@ window.cancelLaundry = async function() {
 /* ══════════════════════════════════════════════════════════
    VAULT  (static Google Drive card)
 ══════════════════════════════════════════════════════════ */
-// Nothing to initialize — static HTML card
+// Nothing to initialize - static HTML card
 
 /* ══════════════════════════════════════════════════════════
    SMART HOUSE
@@ -9557,7 +9728,7 @@ const _VAC_LABEL = { clean:"התחל ניקוי", pause:"השהה", resume:"המ
 const _VAC_KEY   = { clean:"vacClean", pause:"vacPause", resume:"vacResume",
                      recharge:"vacRecharge", locate:"vacLocate" };
 
-/* App launchers — only where we genuinely can't do better ourselves:
+/* App launchers - only where we genuinely can't do better ourselves:
    the Tornado AC has no API worth chasing, and Philips' own app is a far
    better full remote than anything we'd rebuild. The vacuum needs none. */
 const _APP_KEY   = { tornado:"appTornado", philips:"appPhilips" };
@@ -9575,7 +9746,7 @@ function _shortcutURL(name, returnView) {
        + "&x-error="   + encodeURIComponent(back);
 }
 
-/* Which input feeds which config key — one list, used by both paint and save,
+/* Which input feeds which config key - one list, used by both paint and save,
    so the two can never drift apart again. */
 const _SH_FIELDS = {
   "sh-vac-clean":    "vacClean",
@@ -9599,7 +9770,7 @@ function _shPaintConfig() {
 
 async function initSmartHouse() {
   /* Paint from the local mirror first. Firestore can take a second or two on
-     mobile data, and a blank panel invites you to retype and save — which is
+     mobile data, and a blank panel invites you to retype and save - which is
      exactly how the settings used to get wiped. */
   try {
     const cached = JSON.parse(localStorage.getItem(_SH_CACHE) || "null");
@@ -9650,7 +9821,7 @@ function _renderShState() {
   el.textContent = `נשלח: ${_VAC_LABEL[v.action] || v.action}${when ? " · " + when : ""}${who}`;
 }
 
-/* ── Vacuum — via iOS Shortcuts, same path as the TV ─────── */
+/* ── Vacuum - via iOS Shortcuts, same path as the TV ─────── */
 window.vacuumCmd = async function(action) {
   const name = (_shConfig[_VAC_KEY[action]] || "").trim();
   const ind  = document.getElementById("vac-indicator");
@@ -9661,11 +9832,11 @@ window.vacuumCmd = async function(action) {
     return;
   }
 
-  // Record what we sent — honest about being a log, not a device reading
+  // Record what we sent - honest about being a log, not a device reading
   _shState.vacuum = { action, at: Date.now(), by: _currentUser() };
   _renderShState();
   try { await setDoc(_SH_STATE_DOC(), { vacuum: _shState.vacuum }, { merge:true }); } catch {}
-  try { _logActivity("🤖", `שואב — ${_VAC_LABEL[action] || action}`); } catch {}
+  try { _logActivity("🤖", `שואב - ${_VAC_LABEL[action] || action}`); } catch {}
 
   showToast(`🤖 ${_VAC_LABEL[action] || action}`, "success");
   if (ind) { ind.textContent = "✅ נשלח"; setTimeout(() => { if (ind) ind.textContent = ""; }, 2500); }
@@ -9673,7 +9844,7 @@ window.vacuumCmd = async function(action) {
 };
 
 /* ── Open a vendor app ───────────────────────────────────────
-   Deliberately does NOT log to the activity feed — opening an app
+   Deliberately does NOT log to the activity feed - opening an app
    isn't a household event, and the feed shouldn't fill up with it. */
 window.openDeviceApp = function(which) {
   const name = (_shConfig[_APP_KEY[which]] || "").trim();
@@ -9694,10 +9865,10 @@ window.toggleShSettings = function() {
 };
 
 window.saveShSettings = async function() {
-  /* Guard 1 — never save a form that was never filled from the database.
+  /* Guard 1 - never save a form that was never filled from the database.
      Saving mid-load used to write blanks over every stored name. */
   if (!_shConfigLoaded) {
-    showToast("⏳ ההגדרות עדיין נטענות — רגע ונסו שוב", "error");
+    showToast("⏳ ההגדרות עדיין נטענות - רגע ונסו שוב", "error");
     return;
   }
 
@@ -9707,12 +9878,12 @@ window.saveShSettings = async function() {
     if (el) next[key] = el.value.trim();      // absent field = leave key alone
   }
 
-  /* Guard 2 — if we had names and the form is now entirely blank, something
+  /* Guard 2 - if we had names and the form is now entirely blank, something
      went wrong rather than the user deliberately clearing all seven. */
   const had  = Object.values(_shConfig).some(v => (v || "").trim());
   const will = Object.values(next).some(v => v);
   if (had && !will) {
-    showToast("⚠️ כל השדות ריקים — לא נשמר כדי לא למחוק את ההגדרות", "error");
+    showToast("⚠️ כל השדות ריקים - לא נשמר כדי לא למחוק את ההגדרות", "error");
     return;
   }
 
@@ -9739,7 +9910,7 @@ let _cookingData     = { morning: [], noon: [], evening: [] }; // derived view
 let _wheelTotalAngle = 0;
 let _wheelSpinning   = false;
 let _editingDishId   = null;
-let _pantryMap       = {};  // { "מלח": "stock"|"low"|"out" } — loaded on enter
+let _pantryMap       = {};  // { "מלח": "stock"|"low"|"out" } - loaded on enter
 
 const _MEAL_LABELS = { morning:"🌅 בוקר", noon:"☀️ צהריים", evening:"🌙 ערב" };
 const _DISH_TYPE_LABELS = { meat:"🥩 בשר", carbs:"🍞 פחמימה", veggies:"🥦 ירקות" };
@@ -9966,7 +10137,7 @@ window.spinWheel = function() {
 
   /* ── Winner first, then the angle that lands on it ──────────
      The old code spun to a random angle and then derived the winner
-     from it — with the sign inverted, so it read the segment mirrored
+     from it - with the sign inverted, so it read the segment mirrored
      about the pointer and announced the wrong dish. It also had no
      protection against stopping exactly on a segment boundary.
 
@@ -10019,7 +10190,7 @@ function _showDishResult(dish) {
       <button class="btn-add-all-shop" id="btn-add-all-shop">🛒 הוסף הכל לרשימת קניות</button>
     </div>`;
 
-  // Bind after render — values carry on data-* so quotes/Hebrew are safe
+  // Bind after render - values carry on data-* so quotes/Hebrew are safe
   card.querySelectorAll(".btn-ingr-shop").forEach(b =>
     b.addEventListener("click", () => _addIngrToShop(b.dataset.ing)));
   card.querySelector("#btn-add-all-shop")
@@ -10215,7 +10386,7 @@ function _renderDishList() {
     </div>`;
   }).join("");
 
-  // Bind after render — ingredient names carry on data-* so quotes,
+  // Bind after render - ingredient names carry on data-* so quotes,
   // apostrophes and Hebrew can't break the markup
   el.querySelectorAll(".btn-ingr-add-sm").forEach(b =>
     b.addEventListener("click", e => { e.stopPropagation(); _addIngrToShop(b.dataset.ing); }));
@@ -10236,7 +10407,7 @@ async function initWeeklyPlanner() {
     const sel = document.getElementById("plan-select-" + type);
     if (!sel) return;
     const matching = _allDishes.filter(d => (d.dishTypes || []).includes(type));
-    sel.innerHTML = `<option value="">— בחר מנה —</option>` +
+    sel.innerHTML = `<option value="">- בחר מנה -</option>` +
       matching.map(d => `<option value="${d.id}">${d.name}</option>`).join("");
   });
 
@@ -10337,7 +10508,7 @@ async function _savePlan() {
    HELPERS
 ══════════════════════════════════════════════════════════ */
 function _fmtDate(str) {
-  if (!str) return "—";
+  if (!str) return "-";
   const [y, m, d] = str.split("-"); return `${d}/${m}/${y}`;
 }
 
@@ -10353,9 +10524,118 @@ window.showToast = function(msg, type = "") {
 };
 
 /* ══════════════════════════════════════════════════════════
+   APPEARANCE  -  Auto / Light / Dark
+
+   "Auto" follows the iPhone's own Light/Dark setting, which in turn can
+   switch at sunset - the same behaviour as Apple's apps. The choice is
+   per phone (localStorage), like any display preference.
+══════════════════════════════════════════════════════════ */
+const _THEME_KEY = "themePref";
+const _mqDark = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
+const _THEME_ICON = {
+  auto:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/></svg>`,
+  light: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/></svg>`,
+  dark:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>`
+};
+const _THEME_OPTS = [
+  { id:"auto",  title:"אוטומטי", sub:"לפי הגדרת הטלפון" },
+  { id:"light", title:"בהיר",    sub:"תמיד בהיר" },
+  { id:"dark",  title:"כהה",     sub:"תמיד כהה" }
+];
+
+function _themePref() {
+  try { const p = localStorage.getItem(_THEME_KEY); return _THEME_ICON[p] ? p : "auto"; }
+  catch { return "auto"; }
+}
+const _themeResolved = (p = _themePref()) =>
+  p === "auto" ? (_mqDark && _mqDark.matches ? "dark" : "light") : p;
+
+function _renderThemeUI() {
+  const pref = _themePref();
+  const btn = document.getElementById("theme-btn");
+  if (btn) btn.innerHTML = _THEME_ICON[pref];
+  const menu = document.getElementById("theme-menu");
+  if (menu) {
+    menu.innerHTML = _THEME_OPTS.map(o => `
+      <button role="menuitemradio" aria-checked="${o.id === pref}" class="${o.id === pref ? "on" : ""}"
+              data-theme-opt="${o.id}">
+        ${_THEME_ICON[o.id]}
+        <span class="tm-text"><b>${o.title}</b><small>${o.sub}</small></span>
+        <span class="tm-check"></span>
+      </button>`).join("");
+    menu.querySelectorAll("[data-theme-opt]").forEach(b =>
+      b.addEventListener("click", () => window.setThemePref(b.dataset.themeOpt)));
+  }
+}
+
+/* Charts read their colours once at draw time */
+function _syncChartTheme() {
+  if (!window.Chart) return;
+  const cs = getComputedStyle(document.documentElement);
+  Chart.defaults.color       = cs.getPropertyValue("--text-muted").trim() || "#60646C";
+  Chart.defaults.borderColor = cs.getPropertyValue("--border").trim()     || "#E8E8EC";
+}
+
+function _applyTheme(animate) {
+  const root = document.documentElement;
+  const next = _themeResolved();
+  _renderThemeUI();
+  if (root.getAttribute("data-theme") === next) return;
+
+  const swap = () => {
+    root.setAttribute("data-theme", next);
+    _applyUserTheme(_currentUser());      // dark/light versions of your colour
+    _syncChartTheme();
+  };
+  const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!animate || reduce) { swap(); return; }
+
+  if (document.startViewTransition) {
+    // Whole page cross-fades, including the gradient wash behind the cards
+    root.setAttribute("data-theme-switch", "");
+    const t = document.startViewTransition(swap);
+    t.finished.finally(() => root.removeAttribute("data-theme-switch"));
+  } else {
+    root.classList.add("theme-anim");
+    swap();
+    setTimeout(() => root.classList.remove("theme-anim"), 650);
+  }
+}
+
+window.toggleThemeMenu = function(force) {
+  const menu = document.getElementById("theme-menu");
+  const scrim = document.getElementById("theme-menu-scrim");
+  const btn = document.getElementById("theme-btn");
+  if (!menu || !btn) return;
+  const open = typeof force === "boolean" ? force : !menu.classList.contains("open");
+  if (open) {
+    _renderThemeUI();
+    const r = btn.getBoundingClientRect();
+    menu.style.top  = `${Math.round(r.bottom + 8)}px`;
+    // keep the menu fully on screen whatever the header layout
+    const left = Math.min(Math.max(8, r.left), window.innerWidth - 216);
+    menu.style.left = `${Math.round(left)}px`;
+  }
+  menu.classList.toggle("open", open);
+  scrim.classList.toggle("open", open);
+};
+
+window.setThemePref = function(pref) {
+  try { localStorage.setItem(_THEME_KEY, pref); } catch {}
+  window.toggleThemeMenu(false);
+  // let the menu close first so it isn't captured mid-fade
+  setTimeout(() => _applyTheme(true), 120);
+};
+
+// Phone switches at sunset/sunrise → follow it, smoothly, if on Auto
+_mqDark?.addEventListener?.("change", () => { if (_themePref() === "auto") _applyTheme(true); });
+_applyTheme(false);
+_syncChartTheme();
+
+/* ══════════════════════════════════════════════════════════
    RECEIPT SCAN  (free, on-device, barcode-first)
 
-   Reads a receipt photo on the phone with Tesseract — no server, no
+   Reads a receipt photo on the phone with Tesseract - no server, no
    per-scan cost. Hebrew words on a thermal receipt read poorly, digits
    read well, so matching leans on the barcode printed on each line:
    the first time you confirm "barcode X = Pantry item Y" it is stored
@@ -10364,7 +10644,7 @@ window.showToast = function(msg, type = "") {
    Deliberately does NOT save an expense. Confirming only (a) ticks the
    bought items on the normal shopping list and (b) fills in the amount
    and date. The existing "Send to Monthly Expenses" button then runs
-   exactly as it always has — who-paid, Pantry restock, Splitwise.
+   exactly as it always has - who-paid, Pantry restock, Splitwise.
 
    Firestore: /receipt_codes/{code | plu_<code>} → { pantryId, name, updatedAt }
 ══════════════════════════════════════════════════════════ */
@@ -10382,7 +10662,7 @@ function _rxLoadEngine() {
     const s = document.createElement("script");
     s.src = _RX_TESS;
     s.onload = () => res();
-    s.onerror = () => rej(new Error("לא ניתן לטעון את מנוע הסריקה — בדקו חיבור לאינטרנט"));
+    s.onerror = () => rej(new Error("לא ניתן לטעון את מנוע הסריקה - בדקו חיבור לאינטרנט"));
     document.head.appendChild(s);
   });
 }
@@ -10444,7 +10724,7 @@ function _rxParse(text) {
     const lc = l.match(/שורות\D{0,8}(\d{1,3})|(\d{1,3})\D{0,8}שורות/);
     if (lc) lineCount = +(lc[1] || lc[2]);
 
-    // Total lines — and everything after them is footer, not products
+    // Total lines - and everything after them is footer, not products
     if (/סה.{0,2}כ|לתשלום|נתקבל/.test(l) && !/פריטים|שורות|חסכת|מע.?מ/.test(l)) {
       (l.match(/\d+\.\d{2}(?!\d)/g) || []).forEach(v => totals.push(+v));
       ended = true; continue;
@@ -10509,7 +10789,7 @@ function _rxTokens(s) {
     .replace(/[^֐-׿a-z0-9 ]/g, " ")
     .split(/\s+/).filter(t => t.length >= 2);
 }
-/* A suggestion, never a decision — "תפו"א אדום" vs "תפוח אדום" is exactly
+/* A suggestion, never a decision - "תפו"א אדום" vs "תפוח אדום" is exactly
    why a human confirms anything that didn't come from barcode memory. */
 /* Abbreviations Israeli tills print. Expanded before matching so that
    תפו"א reads as potatoes, not as the "תפוח" in an apple. */
@@ -10546,7 +10826,7 @@ function _rxBuildRows(parsedPages) {
   const rows = [], seen = new Map();   // signature → photo it first appeared in
   parsedPages.forEach((pg, pi) => {
     pg.items.forEach(it => {
-      /* Overlapping photos repeat the lines at the seam — drop a repeat only
+      /* Overlapping photos repeat the lines at the seam - drop a repeat only
          when it came from a DIFFERENT photo. Two identical lines in the same
          photo are a real double purchase and both count. */
       const sig = it.code ? `${it.code}|${it.total}` : null;
@@ -10620,7 +10900,7 @@ function _rxRenderCapture() {
     <div class="rx-hero">
       <div class="rx-hero-ic">🧾</div>
       <h3>צלמו את הקבלה</h3>
-      <p>האפליקציה תזהה את המוצרים והסכום, תסמן אותם ברשימה<br>ותמלא את הסכום — אתם מאשרים לפני שמשהו נשמר.</p>
+      <p>האפליקציה תזהה את המוצרים והסכום, תסמן אותם ברשימה<br>ותמלא את הסכום - אתם מאשרים לפני שמשהו נשמר.</p>
     </div>
     <div class="rx-src">
       <button id="rx-btn-cam"><span>📷</span>צילום עכשיו</button>
@@ -10629,14 +10909,14 @@ function _rxRenderCapture() {
     <div class="rx-tips">
       <b>לתוצאה הכי טובה:</b><br>
       • קבלה <b>שטוחה</b> ובאור טוב, בלי צל של הטלפון<br>
-      • <b>כל הקבלה</b> בפריים — כולל השורה של הסה״כ<br>
+      • <b>כל הקבלה</b> בפריים - כולל השורה של הסה״כ<br>
       • קבלה ארוכה? <b>צלמו בחלקים</b> מלמעלה למטה<br>
       • קבלה דיגיטלית? צלמו <b>צילום מסך</b> ובחרו מהגלריה
     </div>`;
 
   _rx$("rx-foot").innerHTML = ph.length
     ? `<button class="rx-primary" id="rx-go">🔍 קרא את הקבלה</button>
-       <span class="rx-sub">הכול קורה בטלפון — חינם, בלי שליחה לשרת</span>` : "";
+       <span class="rx-sub">הכול קורה בטלפון - חינם, בלי שליחה לשרת</span>` : "";
 
   _rx$("rx-btn-cam")?.addEventListener("click", () => _rx$("rx-cam").click());
   _rx$("rx-btn-lib")?.addEventListener("click", () => _rx$("rx-lib").click());
@@ -10675,7 +10955,7 @@ async function _rxRun() {
   const total = _rx.photos.length;
   let worker = null;
   try {
-    _rxRenderWork("מכין את מנוע הסריקה", "בפעם הראשונה יורדת חבילת עברית (כמה MB) — אחר כך זה מהיר", 0.02);
+    _rxRenderWork("מכין את מנוע הסריקה", "בפעם הראשונה יורדת חבילת עברית (כמה MB) - אחר כך זה מהיר", 0.02);
 
     // Load data in parallel with the engine
     const dataP = Promise.all([
@@ -10706,7 +10986,7 @@ async function _rxRun() {
       const canvas = await _rxPrep(_rx.photos[page].file);
       const { data } = await worker.recognize(canvas);
       if (!_rx) return;
-      _rx.raw += (page ? "\n\n— — —\n\n" : "") + (data.text || "");
+      _rx.raw += (page ? "\n\n- - -\n\n" : "") + (data.text || "");
       pages.push(_rxParse(data.text));
     }
 
@@ -10744,12 +11024,12 @@ function _rxRenderReview() {
      can tell you when part of it wasn't in the photo. */
   const checks = [];
   if (total == null)
-    checks.push(`<div class="rx-check warn">⚠️ לא זוהה סה״כ — הקלידו את הסכום מהקבלה</div>`);
+    checks.push(`<div class="rx-check warn">⚠️ לא זוהה סה״כ - הקלידו את הסכום מהקבלה</div>`);
   else if (Math.abs(sum - total) <= 0.05)
     checks.push(`<div class="rx-check ok">✓ סכום השורות תואם לסה״כ בקבלה</div>`);
   else {
     const diff = total - sum;
-    checks.push(`<div class="rx-check warn">⚠️ השורות שזוהו מסתכמות ב-${_rxMoney(sum)} — ${
+    checks.push(`<div class="rx-check warn">⚠️ השורות שזוהו מסתכמות ב-${_rxMoney(sum)} - ${
       diff > 0 ? `חסרים ${_rxMoney(diff)}. כנראה חלק מהקבלה לא צולם או לא נקרא.`
                : `יותר ב-${_rxMoney(-diff)} מהסה״כ. ייתכן שהנחות לא נקראו.`}</div>`);
   }
@@ -10761,10 +11041,10 @@ function _rxRenderReview() {
   }
 
   const row = r => {
-    const dot = { matched:"✓", new:"＋", suggest:"?", unknown:"•", ignore:"–" }[r.state];
+    const dot = { matched:"✓", new:"＋", suggest:"?", unknown:"•", ignore:"-" }[r.state];
     const title = r.state === "new" ? r.newName
                 : r.state === "ignore" ? (r.hint || "שורה")
-                : r.pantryName || "לא זוהה — לחצו לבחירה";
+                : r.pantryName || "לא זוהה - לחצו לבחירה";
     const sub = [
       r.hint && r.state !== "ignore" ? `בקבלה: ${r.hint}` : "",
       r.state === "matched" && r.fromMemory ? "זוהה לפי ברקוד" : "",
@@ -10804,7 +11084,7 @@ function _rxRenderReview() {
     <div class="rx-sumrow">
       <span class="rx-pill">✓ ${ready} מוכנים</span>
       ${open ? `<span class="rx-pill">? ${open} לבדיקה</span>` : ""}
-      ${counts.ignore ? `<span class="rx-pill">– ${counts.ignore} מדולגים</span>` : ""}
+      ${counts.ignore ? `<span class="rx-pill">- ${counts.ignore} מדולגים</span>` : ""}
       ${counts.suggest > 1 ? `<button class="rx-acc-all" id="rx-acc-all">✓ אשר את כל ההצעות (${counts.suggest})</button>` : ""}
     </div>
 
@@ -10822,7 +11102,7 @@ function _rxRenderReview() {
       ${ready === 1 ? "סמן פריט אחד" : `סמן ${ready} פריטים`} ומלא סכום</button>
     <span class="rx-sub">${open
       ? `${open} שורות שלא אושרו לא יסומנו · שום הוצאה לא נשמרת עדיין`
-      : "שום הוצאה לא נשמרת עדיין — תאשרו בכפתור השליחה הרגיל"}</span>`;
+      : "שום הוצאה לא נשמרת עדיין - תאשרו בכפתור השליחה הרגיל"}</span>`;
 
   _rx$("rx-body").querySelectorAll("[data-row]").forEach(b =>
     b.addEventListener("click", e => {
@@ -10882,7 +11162,7 @@ function _rxRenderPickList() {
       <span>${_CAT_EMOJI[p.category] || "🛒"}</span><span>${esc(p.name)}</span>
       <small>${p.id === r.pantryId ? "מוצע" : (_CAT_SHORT[p.category] || "")}</small>
     </button>`).join("")
-    : `<div class="rx-pick-empty">אין במלאי מוצר כזה — אפשר להוסיף אותו כחדש למטה.</div>`;
+    : `<div class="rx-pick-empty">אין במלאי מוצר כזה - אפשר להוסיף אותו כחדש למטה.</div>`;
   _rx$("rx-pick-list").querySelectorAll("[data-pid]").forEach(b =>
     b.addEventListener("click", () => {
       const p = _rx.pantry.find(x => x.id === b.dataset.pid);
@@ -10940,10 +11220,10 @@ async function _rxConfirm() {
     if (amt && total != null) amt.value = total.toFixed(2);
     if (dt) dt.value = _rx.date || new Date().toISOString().slice(0, 10);
 
-    _logActivity("🧾", `סרק קבלה — ${tick.size} פריטים${total != null ? `, ${_rxMoney(total)}` : ""}`);
+    _logActivity("🧾", `סרק קבלה - ${tick.size} פריטים${total != null ? `, ${_rxMoney(total)}` : ""}`);
     const n = tick.size;
     await _rxClose(true);
-    showToast(`✅ ${n} פריטים סומנו — בדקו ולחצו "Send"`, "success");
+    showToast(`✅ ${n} פריטים סומנו - בדקו ולחצו "Send"`, "success");
     setTimeout(() => _rx$("btn-send-groceries")?.scrollIntoView({ behavior: "smooth", block: "center" }), 500);
   } catch (err) {
     showToast("שגיאה: " + err.message, "error");
@@ -10983,7 +11263,7 @@ window._rxParse = _rxParse;
 
 
 /* ══════════════════════════════════════════════════════════
-   ASK — in-app confirm() and prompt()
+   ASK - in-app confirm() and prompt()
 
    iOS silently ignores window.confirm/prompt/alert in a web app
    launched from the Home Screen. Every "are you sure?" in this app
@@ -11072,7 +11352,7 @@ window.askText    = askText;
 
 /* ══════════════════════════════════════════════════════════
    PUSH NOTIFICATIONS
-   Standard Web Push (VAPID) — no Firebase Messaging, no Apple
+   Standard Web Push (VAPID) - no Firebase Messaging, no Apple
    developer account, no cost. A scheduled GitHub Action reads
    Firestore once a day and posts to Apple's push service.
 
@@ -11122,7 +11402,7 @@ async function _renderPushStatus() {
   if (!_pushSupported())            return set("❌ הדפדפן הזה לא תומך בהתראות", true);
   if (_isIOS() && !_isStandalone()) return set("⚠️ פתחו את האפליקציה מהאייקון במסך הבית כדי להפעיל התראות", true);
   if (Notification.permission === "denied")
-    return set("🚫 ההתראות חסומות — יש לאשר בהגדרות האייפון", true);
+    return set("🚫 ההתראות חסומות - יש לאשר בהגדרות האייפון", true);
 
   try {
     const reg = await navigator.serviceWorker.getRegistration();
@@ -11177,7 +11457,7 @@ window.enablePush = async function() {
 };
 
 /* Register the worker on load when notifications are already on, so an
-   existing subscription stays alive. Never registers otherwise — no worker,
+   existing subscription stays alive. Never registers otherwise - no worker,
    no behaviour change for anyone who hasn't opted in. */
 (async function _pushBoot() {
   try {
@@ -11190,7 +11470,7 @@ window.enablePush = async function() {
    BOOT
 ══════════════════════════════════════════════════════════ */
 initDashboard();
-initLaundryGlobal(); // global listener — keeps widget in sync on all views
+initLaundryGlobal(); // global listener - keeps widget in sync on all views
 
 /* Coming back from an iOS Shortcut (x-success) reloads the page, which would
    otherwise dump you on the dashboard. The hash says where you were. */
@@ -11267,7 +11547,7 @@ setTimeout(() => {
   const days = last ? Math.floor((Date.now() - last) / 86400000) : Infinity;
   if (days >= 30 && navigator.onLine) {
     showToast(last
-      ? `💾 הגיבוי האחרון לפני ${days} ימים — כדאי לגבות`
+      ? `💾 הגיבוי האחרון לפני ${days} ימים - כדאי לגבות`
       : "💾 כדאי ליצור גיבוי ראשון (Payments ← גיבוי נתונים)", "");
   }
 }, 6000);
