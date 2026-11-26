@@ -2031,6 +2031,79 @@
     font-weight:450;opacity:.7}
   .btn-shop-mode:active{filter:brightness(.93)}
 
+  /* ══ STORES & PRICES ══════════════════════════════════ */
+  .pay-label{font-size:.74rem;font-weight:800;color:var(--text-muted);
+    margin:4px 2px 8px;direction:rtl}
+  .store-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;direction:rtl}
+  .store-chip{padding:9px 13px;border-radius:20px;cursor:pointer;
+    border:1.5px solid var(--border);background:var(--bg-card);color:var(--text);
+    font-family:inherit;font-size:.8rem;font-weight:700;transition:var(--T)}
+  .store-chip.on{background:var(--user-deep,#2A4A7F);border-color:var(--user-deep,#2A4A7F);color:#fff}
+  .store-chip.add{border-style:dashed;color:var(--text-muted)}
+  #store-modal{z-index:570}
+  /* The in-app confirm/prompt must sit above every overlay, including the
+     full-screen scanner - at the default layer it opened invisibly beneath. */
+  #ask-modal{z-index:700}
+
+  .rx-store{display:flex;align-items:center;gap:9px;width:100%;margin-bottom:10px;
+    padding:11px 14px;border-radius:var(--radius-sm);cursor:pointer;
+    border:1px solid var(--border);background:var(--bg-card);color:var(--text);
+    font-family:inherit;text-align:start;direction:rtl}
+  .rx-store-name{flex:1;font-size:.88rem;font-weight:700}
+  .rx-store small{font-size:.7rem;color:var(--text-muted);font-weight:600}
+
+  .px-chip{display:inline-block;margin-top:3px;padding:2px 7px;border-radius:10px;
+    font-size:.62rem;font-weight:800;white-space:nowrap;direction:rtl}
+  .px-chip.up{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger)}
+  .px-chip.down{background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary-dark)}
+  .px-chip.tip{background:color-mix(in srgb,var(--info) 14%,transparent);color:var(--info)}
+
+  .ps-sheet{max-height:90vh;display:flex;flex-direction:column;direction:rtl}
+  .ps-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .ps-x{width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;
+    background:var(--bg-surface);color:var(--text);font-size:.85rem}
+  .ps-body{overflow-y:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch}
+  .ps-sec{font-size:.72rem;font-weight:800;color:var(--text-muted);margin:16px 2px 8px}
+  .ps-store{padding:13px 14px;margin-bottom:8px;border-radius:var(--radius-sm);
+    border:1px solid var(--border);background:var(--bg-card)}
+  .ps-store.best{border-color:var(--primary);border-width:1.5px}
+  .ps-store-top{display:flex;align-items:center;gap:8px}
+  .ps-store-top b{font-size:.95rem}
+  .ps-best{margin-inline-start:auto;font-size:.66rem;font-weight:800;color:#fff;
+    background:var(--primary);padding:3px 9px;border-radius:10px}
+  .ps-store-nums{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;
+    font-size:.72rem;color:var(--text-muted)}
+  .ps-store-nums b{color:var(--text);font-size:.82rem}
+  .ps-item{padding:10px 2px;border-bottom:1px solid var(--border)}
+  .ps-item-name{font-size:.86rem;font-weight:700;margin-bottom:6px}
+  .ps-item-prices{display:flex;flex-wrap:wrap;gap:6px}
+  .ps-p{font-size:.72rem;padding:4px 9px;border-radius:10px;
+    background:var(--bg-surface);color:var(--text-muted)}
+  .ps-p b{color:var(--text);unicode-bidi:isolate}
+  .ps-p.low{background:color-mix(in srgb,var(--primary) 15%,transparent);color:var(--primary-dark)}
+  .ps-p.low b{color:var(--primary-dark)}
+  .ps-change{display:flex;align-items:center;gap:10px;padding:9px 2px;
+    border-bottom:1px solid var(--border)}
+  .ps-arrow{flex-shrink:0;min-width:52px;text-align:center;font-size:.74rem;font-weight:800;
+    padding:4px 6px;border-radius:9px;direction:ltr}
+  .ps-change.up .ps-arrow{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger)}
+  .ps-change.down .ps-arrow{background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary-dark)}
+  .ps-change-main{display:flex;flex-direction:column;min-width:0}
+  .ps-change-main b{font-size:.84rem}
+  .ps-change-main small{font-size:.7rem;color:var(--text-muted);direction:rtl;unicode-bidi:isolate}
+  .ps-manage{display:flex;flex-direction:column;gap:6px}
+  .ps-manage-row{display:flex;align-items:center;gap:6px;padding:8px 12px;
+    border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-card)}
+  .ps-manage-row span{flex:1;font-size:.86rem;font-weight:600}
+  .ps-manage-row button{width:36px;height:36px;border:none;border-radius:8px;
+    background:var(--bg-surface);cursor:pointer;font-size:.85rem}
+  .ps-add{padding:11px;border-radius:var(--radius-sm);cursor:pointer;
+    border:1.5px dashed var(--border-strong);background:none;color:var(--text);
+    font-family:inherit;font-size:.82rem;font-weight:700}
+  .ps-note{font-size:.72rem;color:var(--text-muted);margin:2px 2px 4px;line-height:1.6}
+  .ps-empty{font-size:.8rem;color:var(--text-muted);padding:14px 4px;line-height:1.6}
+  .ps-foot{font-size:.68rem;color:var(--text-muted);margin:18px 2px 0;line-height:1.6}
+
   /* ══ RECEIPT SCAN ═════════════════════════════════════ */
   .btn-rx{background:var(--bg-card);color:var(--text);
     border:1.5px dashed var(--border-strong)}
@@ -3403,6 +3476,10 @@ html.theme-anim, html.theme-anim *, html.theme-anim *::before, html.theme-anim *
     🧾 <span>סריקת קבלה</span>
     <small>מסמן את מה שנקנה וממלא סכום</small>
   </button>
+  <button class="btn-shop-mode btn-rx" onclick="openPriceSheet()">
+    🏷️ <span>איפה הכי משתלם?</span>
+    <small>השוואת מחירים בין חנויות</small>
+  </button>
 
   <div class="list-wrap">
     <div class="list-header"><h4>🛒 Items</h4><button class="btn-add" onclick="openAddModal('groceries')">＋ Add</button></div>
@@ -3814,13 +3891,38 @@ html.theme-anim, html.theme-anim *, html.theme-anim *::before, html.theme-anim *
   </div>
 </div>
 
+<!-- Store chooser (from the receipt review) -->
+<div id="store-modal" class="modal-bg">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🏪 באיזו חנות קניתם?</div>
+    <div class="store-chips" id="store-modal-chips"></div>
+    <button class="pay-cancel" id="store-modal-cancel">ביטול</button>
+  </div>
+</div>
+
+<!-- Where's cheapest -->
+<div id="price-sheet" class="modal-bg">
+  <div class="modal-sheet ps-sheet">
+    <div class="modal-handle"></div>
+    <div class="ps-head">
+      <div class="modal-title" style="margin:0">🏷️ איפה הכי משתלם?</div>
+      <button class="ps-x" id="ps-close" aria-label="סגור">✕</button>
+    </div>
+    <div class="ps-body" id="ps-body"></div>
+  </div>
+</div>
+
 <!-- Who paid for this shopping trip. Asked at checkout instead of silently
      assuming whoever's name is in the top toggle. -->
 <div id="pay-modal" class="modal-bg">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div class="modal-title">💳 מי שילם?</div>
+    <div class="modal-title">💳 סיום קנייה</div>
     <div class="pay-sum" id="pay-sum">-</div>
+    <div class="pay-label">🏪 איפה קניתם?</div>
+    <div class="store-chips" id="pay-stores"></div>
+    <div class="pay-label">מי שילם?</div>
     <div class="pay-opts">
       <button class="pay-opt" data-pay="Alon"><span>🧑</span><span>אלון שילם</span></button>
       <button class="pay-opt" data-pay="Tali"><span>👩</span><span>טלי שילמה</span></button>
@@ -4064,7 +4166,7 @@ const _BACKUP_COLLECTIONS = [
   "cleaning_templates", "checklists", "maintenance",
   "plants", "watering", "activity", "smart_home",
   "laundry_status", "meal_wheels", "weekly_plan",
-  "receipt_codes"
+  "receipt_codes", "stores", "price_log"
 ];
 
 window.exportAllData = async function(btnId) {
@@ -8469,8 +8571,10 @@ async function sendEntry(type) {
 
   /* Ask who paid instead of assuming the active toggle. Cancelling here
      aborts the whole checkout - nothing is written. */
+  await _loadStores().catch(() => {});        // for the store row in the sheet
   const payer = await askPayer(entryAmount, purchasedItems.length);
   if (!payer) return;
+  const store = _payStore;                      // may be null - store is optional
 
   const btn = document.getElementById(`btn-send-${type}`);
   btn.disabled = true; btn.textContent = "⏳ Sending…";
@@ -8480,8 +8584,21 @@ async function sendEntry(type) {
       amount:    parseFloat(amountEl.value),
       items:     purchasedItems,   // only checked items
       paidBy:    payer,
+      storeId:   store?.id || null,
+      storeName: store?.name || null,
       createdAt: serverTimestamp()
     });
+
+    /* Item prices from a scanned receipt are held until now, so they're only
+       recorded for a trip you actually confirmed - and under the store you
+       picked here. Failure here never blocks the expense. */
+    if (type === "groceries") {
+      try {
+        const n = await _flushPendingPrices(store, dateEl.value);
+        if (n) _logActivity("🏷️", `נשמרו ${n} מחירים${store ? " - " + store.name : ""}`);
+      } catch (e) { console.warn("price log:", e); }
+    }
+    if (store) _touchStore(store.id);
 
     /* Balance side. "split" is recorded as two half rows, one per person,
        so it nets to zero in the existing balance formula without touching
@@ -10633,6 +10750,323 @@ _applyTheme(false);
 _syncChartTheme();
 
 /* ══════════════════════════════════════════════════════════
+   STORES & PRICE MEMORY
+
+   /stores/{id}    → { name, createdAt, lastUsed }        your own list
+   /price_log/{id} → { pantryId, name, storeId, storeName, date,
+                       unit, qty, total, weighed, code, at }
+
+   Prices come only from scanned receipts (a manual checkout has a total,
+   not item prices). They are held in sessionStorage after the scan and
+   written only when the trip is actually sent, under the store picked in
+   the checkout sheet. Comparisons are per Pantry item, so packaged goods
+   (same barcode everywhere) and produce (per kg) both line up.
+══════════════════════════════════════════════════════════ */
+let _stores = null;
+let _payStore = null;
+
+async function _loadStores(force) {
+  if (_stores && !force) return _stores;
+  const snap = await getDocs(collection(db, "stores"));
+  const list = [];
+  snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+  // Most recently used first - that's the one you're most likely tapping
+  list.sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0) ||
+                      String(a.name).localeCompare(String(b.name), "he"));
+  _stores = list;
+  return list;
+}
+
+async function _addStore() {
+  const name = ((await askText("שם החנות, ואפשר גם סניף", "",
+    { title: "חנות חדשה", okText: "הוספה", placeholder: "למשל: חינם פלוס - ראשון" })) || "").trim();
+  if (!name) return null;
+  await _loadStores().catch(() => {});
+  const dupe = (_stores || []).find(s => _normalizePantryName(s.name) === _normalizePantryName(name));
+  if (dupe) return dupe;
+  const ref = await addDoc(collection(db, "stores"), { name, createdAt: serverTimestamp() });
+  const s = { id: ref.id, name };
+  (_stores = _stores || []).unshift(s);
+  return s;
+}
+
+function _touchStore(id) {
+  setDoc(doc(db, "stores", id), { lastUsed: Date.now() }, { merge: true }).catch(() => {});
+  const s = (_stores || []).find(x => x.id === id);
+  if (s) s.lastUsed = Date.now();
+}
+
+/* Pre-select only what came from a receipt. Defaulting to "last used"
+   would quietly file a trip under the wrong store whenever you forgot to
+   change it - and wrong prices are worse than missing ones. */
+function _storeForCheckout() {
+  const p = _getPendingPrices();
+  if (!p?.storeId) return null;
+  return (_stores || []).find(s => s.id === p.storeId) ||
+         { id: p.storeId, name: p.storeName || "" };
+}
+
+/** Chip row of stores + "add". Tapping the selected chip clears it. */
+function _renderStoreChips(box, getSelected, onPick) {
+  if (!box) return;
+  const sel = getSelected();
+  box.innerHTML = (_stores || []).map(s => `
+      <button class="store-chip ${s.id === sel ? "on" : ""}" data-sid="${s.id}">${esc(s.name)}</button>`).join("") +
+    `<button class="store-chip add" data-add="1">＋ חנות</button>`;
+  box.querySelectorAll("[data-sid]").forEach(b => b.addEventListener("click", () => {
+    const s = _stores.find(x => x.id === b.dataset.sid);
+    onPick(getSelected() === s.id ? null : s);
+    _renderStoreChips(box, getSelected, onPick);
+  }));
+  box.querySelector("[data-add]")?.addEventListener("click", async () => {
+    const s = await _addStore();
+    if (s) onPick(s);
+    _renderStoreChips(box, getSelected, onPick);
+  });
+}
+
+/** Store chooser sheet. Resolves a store, null for "no store", undefined if cancelled. */
+let _storeResolve = null;
+function askStore(currentId) {
+  return new Promise(async resolve => {
+    if (_storeResolve) { const r = _storeResolve; _storeResolve = null; r(undefined); }
+    _storeResolve = resolve;
+    await _loadStores().catch(() => {});
+    const bg = document.getElementById("store-modal");
+    const close = v => { bg.classList.remove("open"); const r = _storeResolve; _storeResolve = null; if (r) r(v); };
+    let picked = currentId || null;
+    _renderStoreChips(document.getElementById("store-modal-chips"), () => picked, s => {
+      picked = s?.id || null;
+      close(s || null);
+    });
+    document.getElementById("store-modal-cancel").onclick = () => close(undefined);
+    bg.onclick = e => { if (e.target === bg) close(undefined); };
+    bg.classList.add("open");
+  });
+}
+window.askStore = askStore;
+
+/* Every word of the chain name (the part before " - ") must appear in the
+   receipt text. Tesseract often garbles Hebrew, so a miss is common and
+   harmless - you just pick the store yourself. */
+function _guessStore(raw) {
+  if (!_stores?.length || !raw) return null;
+  const text = " " + _rxTokens(raw).join(" ") + " ";
+  let best = null, bestLen = 0;
+  for (const s of _stores) {
+    const toks = _rxTokens(String(s.name).split(/\s-\s/)[0]);
+    if (!toks.length) continue;
+    if (toks.every(t => text.includes(" " + t + " ") || text.includes(t)) && toks.length > bestLen) {
+      best = s; bestLen = toks.length;
+    }
+  }
+  return best;
+}
+
+/* ── Prices waiting for Send ──────────────────────────────── */
+const _PX_KEY = "rxPendingPrices";
+function _setPendingPrices(p) {
+  try { p ? sessionStorage.setItem(_PX_KEY, JSON.stringify(p)) : sessionStorage.removeItem(_PX_KEY); } catch {}
+}
+function _getPendingPrices() {
+  try { return JSON.parse(sessionStorage.getItem(_PX_KEY) || "null"); } catch { return null; }
+}
+async function _flushPendingPrices(store, date) {
+  const p = _getPendingPrices();
+  if (!p?.rows?.length) return 0;
+  const d = date || p.date || new Date().toISOString().slice(0, 10);
+  await Promise.all(p.rows.map(r => addDoc(collection(db, "price_log"), {
+    pantryId: r.pantryId, name: r.name, code: r.code || null,
+    storeId: store?.id || null, storeName: store?.name || null,
+    date: d, unit: r.unit, qty: r.qty, total: r.total, weighed: !!r.weighed, at: Date.now()
+  })));
+  _setPendingPrices(null);
+  return p.rows.length;
+}
+
+/* ── Helpers over the price log ───────────────────────────── */
+const _pxNewer = (a, b) => (a.date || "") > (b.date || "") ||
+                           ((a.date || "") === (b.date || "") && (a.at || 0) > (b.at || 0));
+function _pxLatest(log) {                       // pantryId → storeId → newest entry
+  const m = new Map();
+  log.forEach(e => {
+    if (!e.pantryId || !e.storeId || !(e.unit > 0)) return;
+    if (!m.has(e.pantryId)) m.set(e.pantryId, new Map());
+    const inner = m.get(e.pantryId), cur = inner.get(e.storeId);
+    if (!cur || _pxNewer(e, cur)) inner.set(e.storeId, e);
+  });
+  return m;
+}
+const _pxUnit = e => `₪${e.unit.toFixed(2)}${e.weighed ? " לק״ג" : ""}`;   // no slash: it scrambles RTL
+
+/* Chip beside a price on the receipt review screen */
+function _rxPriceChip(r) {
+  if (!_rx?.prices?.length || !r.pantryId || !(r.total > 0)) return "";
+  if (r.state !== "matched" && r.state !== "suggest") return "";
+  const unit = r.unit != null ? r.unit : r.total / (r.qty || 1);
+  const mine = _rx.prices.filter(e => e.pantryId === r.pantryId && e.storeId && e.unit > 0);
+  if (!mine.length) return "";
+  const sid = _rx.store?.id;
+  if (sid) {
+    const prev = mine.filter(e => e.storeId === sid).sort((a, b) => _pxNewer(a, b) ? -1 : 1)[0];
+    if (prev) {
+      const d = unit - prev.unit;
+      if (Math.abs(d) >= 0.1 && Math.abs(d) / prev.unit >= 0.03)
+        return `<span class="px-chip ${d > 0 ? "up" : "down"}">${d > 0 ? "↑" : "↓"} ₪${Math.abs(d).toFixed(2)}</span>`;
+    }
+  }
+  // Cheaper somewhere else, by at least 5%?
+  const others = [..._pxLatest(mine).get(r.pantryId)?.values() || []].filter(e => e.storeId !== sid);
+  const best = others.sort((a, b) => a.unit - b.unit)[0];
+  if (best && best.unit < unit * 0.95)
+    return `<span class="px-chip tip">זול יותר ב${esc(best.storeName || "חנות אחרת")}</span>`;
+  return "";
+}
+
+/* ── "Where's cheapest?" sheet ────────────────────────────── */
+window.openPriceSheet = async function() {
+  const bg = document.getElementById("price-sheet"), body = document.getElementById("ps-body");
+  body.innerHTML = `<div class="ps-empty">טוען…</div>`;
+  bg.classList.add("open");
+  try {
+    const [, prSnap, qSnap] = await Promise.all([
+      _loadStores(true), getDocs(collection(db, "price_log")), getDocs(collection(db, "grocery_queue"))
+    ]);
+    const log = []; prSnap.forEach(d => log.push({ id: d.id, ...d.data() }));
+    const list = []; qSnap.forEach(d => list.push({ id: d.id, name: d.data().name || "" }));
+    _renderPriceSheet(log, list);
+  } catch (e) {
+    body.innerHTML = `<div class="ps-empty">שגיאה בטעינה: ${esc(e.message)}</div>`;
+  }
+};
+
+function _renderPriceSheet(log, list) {
+  const body = document.getElementById("ps-body");
+  const latest = _pxLatest(log);
+  const storeName = id => (_stores.find(s => s.id === id)?.name) ||
+                          (log.find(e => e.storeId === id)?.storeName) || "חנות";
+  // Pantry id isn't always the queue id (manually typed items) - fall back to name
+  const byName = new Map();
+  log.forEach(e => { if (e.pantryId && e.name) byName.set(_normalizePantryName(e.name), e.pantryId); });
+  const pidOf = it => latest.has(it.id) ? it.id : byName.get(_normalizePantryName(it.name));
+  const lastQty = pid => {
+    const all = log.filter(e => e.pantryId === pid && e.qty > 0).sort((a, b) => _pxNewer(a, b) ? -1 : 1);
+    return all[0]?.qty || 1;
+  };
+
+  /* 1. Per store, for what's on the list now */
+  const perStore = new Map();      // storeId → {est, covered, wins}
+  const items = [], noData = [];
+  list.forEach(it => {
+    const pid = pidOf(it), prices = pid && latest.get(pid);
+    if (!prices || !prices.size) { noData.push(it.name); return; }
+    const sorted = [...prices.values()].sort((a, b) => a.unit - b.unit);
+    items.push({ name: it.name, sorted });
+    const q = lastQty(pid);
+    sorted.forEach((e, i) => {
+      const s = perStore.get(e.storeId) || { est: 0, covered: 0, wins: 0 };
+      s.est += e.unit * q; s.covered++;
+      if (i === 0 && sorted.length > 1) s.wins++;
+      perStore.set(e.storeId, s);
+    });
+  });
+  const comparable = items.filter(i => i.sorted.length > 1).length;
+  const stores = [...perStore.entries()].sort((a, b) => b[1].wins - a[1].wins || b[1].covered - a[1].covered);
+
+  const storeCards = stores.length ? stores.map(([sid, s], i) => `
+      <div class="ps-store ${i === 0 && s.wins ? "best" : ""}">
+        <div class="ps-store-top">
+          <b>${esc(storeName(sid))}</b>
+          ${i === 0 && s.wins ? `<span class="ps-best">הכי משתלם</span>` : ""}
+        </div>
+        <div class="ps-store-nums">
+          <span>אומדן <b>₪${s.est.toFixed(0)}</b></span>
+          <span>מחיר ידוע ל-${s.covered} מתוך ${list.length}</span>
+          ${comparable ? `<span>הכי זול ב-${s.wins} מתוך ${comparable}</span>` : ""}
+        </div>
+      </div>`).join("")
+    : `<div class="ps-empty">${list.length
+        ? "עוד אין מחירים לפריטים שברשימה. כל קבלה שתסרקו, עם חנות, מלמדת את האפליקציה."
+        : "רשימת הקניות ריקה כרגע."}</div>`;
+
+  /* 2. Item by item */
+  const itemRows = items.map(it => `
+      <div class="ps-item">
+        <div class="ps-item-name">${esc(it.name)}</div>
+        <div class="ps-item-prices">${it.sorted.map((e, i) => `
+          <span class="ps-p ${i === 0 && it.sorted.length > 1 ? "low" : ""}">
+            ${esc(storeName(e.storeId))} <b>${_pxUnit(e)}</b></span>`).join("")}</div>
+      </div>`).join("");
+
+  /* 3. Recent changes at the same store */
+  const changes = [];
+  const series = new Map();
+  log.forEach(e => {
+    if (!e.pantryId || !e.storeId || !(e.unit > 0)) return;
+    const k = e.pantryId + "|" + e.storeId;
+    (series.get(k) || series.set(k, []).get(k)).push(e);
+  });
+  const cutoff = new Date(Date.now() - 90 * 864e5).toISOString().slice(0, 10);
+  series.forEach(arr => {
+    if (arr.length < 2) return;
+    arr.sort((a, b) => _pxNewer(a, b) ? -1 : 1);
+    const [now, prev] = arr;
+    if ((now.date || "") < cutoff) return;
+    const pct = (now.unit - prev.unit) / prev.unit;
+    if (Math.abs(pct) >= 0.03 && Math.abs(now.unit - prev.unit) >= 0.1) changes.push({ now, prev, pct });
+  });
+  changes.sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct));
+  const changeRows = changes.slice(0, 10).map(c => `
+      <div class="ps-change ${c.pct > 0 ? "up" : "down"}">
+        <span class="ps-arrow">${c.pct > 0 ? "↑" : "↓"} ${Math.round(Math.abs(c.pct) * 100)}%</span>
+        <span class="ps-change-main"><b>${esc(c.now.name)}</b>
+          <small>${esc(storeName(c.now.storeId))} · ${_pxUnit(c.prev)} ← ${_pxUnit(c.now)}</small></span>
+      </div>`).join("");
+
+  /* 4. Your stores */
+  const manage = (_stores || []).map(s => `
+      <div class="ps-manage-row"><span>${esc(s.name)}</span>
+        <button data-ren="${s.id}" aria-label="שינוי שם">✏️</button>
+        <button data-delst="${s.id}" aria-label="מחיקה">🗑️</button></div>`).join("");
+
+  body.innerHTML = `
+    <div class="ps-sec">לרשימה הנוכחית${list.length ? ` · ${list.length} פריטים` : ""}</div>
+    ${storeCards}
+    ${noData.length && stores.length ? `<div class="ps-note">אין עדיין מחיר ל: ${noData.slice(0, 8).map(esc).join(", ")}${noData.length > 8 ? "…" : ""}</div>` : ""}
+    ${itemRows ? `<div class="ps-sec">פריט אחר פריט</div>${itemRows}` : ""}
+    ${changeRows ? `<div class="ps-sec">שינויי מחיר אחרונים</div>${changeRows}` : ""}
+    <div class="ps-sec">החנויות שלכם</div>
+    <div class="ps-manage">${manage || `<div class="ps-empty">עוד לא הוספתם חנויות.</div>`}
+      <button class="ps-add" id="ps-add">＋ הוספת חנות</button></div>
+    <p class="ps-foot">המחירים נלמדים רק מקבלות שנסרקו. אומדן לחנות כולל רק פריטים שיש לה מחיר עבורם.</p>`;
+
+  body.querySelector("#ps-add")?.addEventListener("click", async () => {
+    if (await _addStore()) _renderPriceSheet(log, list);
+  });
+  body.querySelectorAll("[data-ren]").forEach(b => b.addEventListener("click", async () => {
+    const s = _stores.find(x => x.id === b.dataset.ren);
+    const name = ((await askText("שם חדש לחנות", s.name, { title: "שינוי שם", okText: "שמירה" })) || "").trim();
+    if (!name || name === s.name) return;
+    await setDoc(doc(db, "stores", s.id), { name }, { merge: true });
+    s.name = name;
+    _renderPriceSheet(log, list);
+  }));
+  body.querySelectorAll("[data-delst]").forEach(b => b.addEventListener("click", async () => {
+    const s = _stores.find(x => x.id === b.dataset.delst);
+    if (!await askConfirm(`למחוק את "${s.name}" מהרשימה? המחירים שנשמרו בה יישארו.`, { okText: "מחיקה" })) return;
+    await deleteDoc(doc(db, "stores", s.id));
+    _stores = _stores.filter(x => x.id !== s.id);
+    _renderPriceSheet(log, list);
+  }));
+}
+
+(function _pxWire() {
+  const bg = document.getElementById("price-sheet");
+  bg?.addEventListener("click", e => { if (e.target === bg) bg.classList.remove("open"); });
+  document.getElementById("ps-close")?.addEventListener("click", () => bg.classList.remove("open"));
+})();
+
+/* ══════════════════════════════════════════════════════════
    RECEIPT SCAN  (free, on-device, barcode-first)
 
    Reads a receipt photo on the phone with Tesseract - no server, no
@@ -10961,7 +11395,9 @@ async function _rxRun() {
     const dataP = Promise.all([
       getDocs(collection(db, "pantry")),
       getDocs(collection(db, "receipt_codes")).catch(() => null),
-      getDocs(collection(db, "grocery_queue"))
+      getDocs(collection(db, "grocery_queue")),
+      _loadStores().catch(() => []),
+      getDocs(collection(db, "price_log")).catch(() => null)
     ]);
     await _rxLoadEngine();
 
@@ -10975,7 +11411,9 @@ async function _rxRun() {
     });
     await worker.setParameters({ preserve_interword_spaces: "1" });
 
-    const [pSnap, cSnap, qSnap] = await dataP;
+    const [pSnap, cSnap, qSnap, , prSnap] = await dataP;
+    _rx.prices = [];
+    prSnap?.forEach(d => _rx.prices.push(d.data()));
     if (!_rx) return;                                   // closed meanwhile
     pSnap.forEach(d => _rx.pantry.push({ id: d.id, ...d.data() }));
     cSnap?.forEach(d => _rx.codes.set(d.id, d.data()));
@@ -10994,6 +11432,9 @@ async function _rxRun() {
     _rx.date      = pages.map(p => p.date).find(Boolean) || null;
     _rx.lineCount = pages.map(p => p.lineCount).find(Boolean) || null;
     _rx.rows      = _rxBuildRows(pages);
+    // Store name is printed at the top/bottom of the receipt - try to spot it
+    _rx.store        = _guessStore(_rx.raw);
+    _rx.storeGuessed = !!_rx.store;
 
     _rxStep(3);
     _rxRenderReview();
@@ -11062,7 +11503,7 @@ function _rxRenderReview() {
           ${sub ? `<div class="rx-hint">${esc(sub)}</div>` : ""}
         </span>
         ${r.state === "suggest" ? `<span class="rx-accept" data-accept="${r.id}">✓ נכון</span>` : ""}
-        <span class="rx-price"><b>${_rxMoney(r.total)}</b>${qty ? `<small>${qty}</small>` : ""}</span>
+        <span class="rx-price"><b>${_rxMoney(r.total)}</b>${qty ? `<small>${qty}</small>` : ""}${_rxPriceChip(r)}</span>
       </button>`;
   };
 
@@ -11071,6 +11512,11 @@ function _rxRenderReview() {
   const discounts = rows.filter(r => r.state === "discount");
 
   _rx$("rx-body").innerHTML = `
+    <button class="rx-store" id="rx-store">
+      <span>🏪</span>
+      <span class="rx-store-name">${_rx.store ? esc(_rx.store.name) : "באיזו חנות קניתם?"}</span>
+      <small>${_rx.store ? (_rx.storeGuessed ? "זוהתה מהקבלה · שינוי" : "שינוי") : "בחירה"}</small>
+    </button>
     <div class="rx-total">
       <label>סה״כ לתשלום${_rx.date ? ` · ${_rx.date.split("-").reverse().join("/")}` : ""}</label>
       <div class="rx-total-row">
@@ -11117,6 +11563,12 @@ function _rxRenderReview() {
     }));
   _rx$("rx-acc-all")?.addEventListener("click", () => {
     _rx.rows.forEach(r => { if (r.state === "suggest") r.state = "matched"; });
+    _rxRenderReview();
+  });
+  _rx$("rx-store")?.addEventListener("click", async () => {
+    const s = await askStore(_rx.store?.id);
+    if (s === undefined) return;               // cancelled
+    _rx.store = s; _rx.storeGuessed = false;
     _rxRenderReview();
   });
   _rx$("rx-total-in").addEventListener("input", e => {
@@ -11182,6 +11634,7 @@ async function _rxConfirm() {
     const byNorm = new Map(_rx.pantry.map(p => [_normalizePantryName(p.name), p]));
     const tick = new Map();      // pantryId → name
     const learned = [];
+    const priceRows = [];        // held until the trip is actually sent
 
     for (const r of _rx.rows) {
       if (r.state !== "matched" && r.state !== "new") continue;
@@ -11199,6 +11652,12 @@ async function _rxConfirm() {
         }
       }
       tick.set(pid, pname);
+      if (r.total > 0) {
+        const qty = r.qty || 1;
+        priceRows.push({ pantryId: pid, name: pname, code: r.code || null,
+          qty, total: r.total, weighed: Math.abs(qty - Math.round(qty)) > 0.0005,
+          unit: Math.round(((r.unit != null ? r.unit : r.total / qty)) * 100) / 100 });
+      }
       const key = _rxCodeKey(r.code);
       if (key) learned.push(setDoc(doc(db, "receipt_codes", key),
         { pantryId: pid, name: pname, updatedAt: Date.now() }, { merge: true }));
@@ -11214,6 +11673,9 @@ async function _rxConfirm() {
       return setDoc(doc(db, "grocery_queue", pid), data, { merge: true });
     }));
     await Promise.all(learned).catch(e => console.warn("barcode memory:", e));
+
+    _setPendingPrices({ rows: priceRows, date: _rx.date || null,
+      storeId: _rx.store?.id || null, storeName: _rx.store?.name || null });
 
     const amt = _rx$("grocery-amount"), dt = _rx$("grocery-date");
     const total = _rx.total;
@@ -11323,6 +11785,11 @@ function askPayer(amount, itemCount) {
     const bg = document.getElementById("pay-modal");
     document.getElementById("pay-sum").textContent =
       `₪${(amount || 0).toFixed(0)} · ${itemCount} פריטים`;
+    /* Store row. Pre-selects the store read off a scanned receipt, else the
+       store used last. Optional: tapping the selected chip clears it. */
+    _payStore = _storeForCheckout();
+    _renderStoreChips(document.getElementById("pay-stores"),
+      () => _payStore?.id, s => { _payStore = s; });
     const close = v => {
       bg.classList.remove("open");
       const r = _payResolve; _payResolve = null; if (r) r(v);
